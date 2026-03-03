@@ -205,8 +205,13 @@
             opacity: 0.8;
         }
 
-        /* ── Solar panel counter (Moved to bottom nav) ────────────────────────── */
+        /* ── Solar panel counter ────────────────────────── */
         #panel-counter {
+            position: fixed;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
             display: none;
             flex-direction: row;
             align-items: center;
@@ -267,6 +272,110 @@
             text-transform: uppercase;
             letter-spacing: 0.06em;
             opacity: 0.6;
+        }
+
+        /* ── Back Button (room zoom) ────────────────────────── */
+        #back-btn {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 101;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        #back-btn:hover {
+            transform: translateX(-50%) translateY(-2px) scale(1.05);
+        }
+
+        #back-btn.visible {
+            display: block;
+        }
+
+        /* ── Energy Bar Chart ────────────────────────── */
+        #energy-chart {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            width: 220px;
+        }
+
+        #energy-chart h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
+        .bar-row {
+            margin-bottom: 8px;
+        }
+
+        .bar-label {
+            font-size: 0.65rem;
+            margin-bottom: 3px;
+            opacity: 0.8;
+        }
+
+        .bar-track {
+            height: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 9px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 9px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 6px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            min-width: 30px;
+        }
+
+        .bar-fill.grid {
+            background: linear-gradient(90deg, #e74c3c, #ff6b81);
+        }
+
+        .bar-fill.solar {
+            background: linear-gradient(90deg, #FFD700, #FF8C00);
+            color: #1a1a2e;
+        }
+
+        .calc-summary {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.65rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .calc-summary .highlight {
+            color: #FFD700;
+            font-weight: 600;
         }
 
         /* ── Upgrade Button ────────────────────────── */
@@ -406,78 +515,6 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
         }
-
-        /* ── Room Navigation Buttons ────────────────────────── */
-        .room-nav-btn {
-            display: inline-block;
-            padding: 6px 14px;
-            margin: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(8px);
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .room-nav-btn:hover {
-            background: rgba(255, 215, 0, 0.25);
-            border-color: rgba(255, 215, 0, 0.5);
-            transform: scale(1.05);
-        }
-
-        .room-nav-btn.active {
-            background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 140, 0, 0.3));
-            border-color: #FFD700;
-            color: #FFD700;
-            font-weight: 700;
-        }
-
-        #room-nav-panel {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            display: none;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 4px;
-            max-width: 500px;
-            padding: 8px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 18px;
-        }
-
-        #room-nav-panel.visible {
-            display: flex;
-        }
-
-        #back-to-full-btn {
-            display: none;
-            padding: 6px 14px;
-            margin: 3px;
-            border: none;
-            border-radius: 20px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.75rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
-            color: #fff;
-            box-shadow: 0 2px 10px rgba(238, 90, 36, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        #back-to-full-btn:hover {
-            transform: translateX(-50%) translateY(-2px) scale(1.05);
-        }
     </style>
 </head>
 
@@ -491,7 +528,7 @@
             <div class="logo-icon">☀️</div>
             <span>SolarHome</span>
         </div>
-        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 Simple House</button>
+        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 1BHK House</button>
         <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
             style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
             2BHK House</button>
@@ -554,6 +591,31 @@
     <!-- Zoom Hint -->
     <div id="zoom-hint">
         🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
+    </div>
+
+    <!-- Back Button for Room Zoom -->
+    <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
+
+    <!-- Energy Bar Chart -->
+    <div id="energy-chart">
+        <h3>⚡ Energy Comparison</h3>
+        <div class="bar-row">
+            <div class="bar-label">Grid Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill grid" id="grid-bar" style="width:100%">100%</div>
+            </div>
+        </div>
+        <div class="bar-row">
+            <div class="bar-label">Solar Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill solar" id="solar-bar" style="width:0%">0%</div>
+            </div>
+        </div>
+        <div class="calc-summary" id="calc-summary">
+            Daily Grid Cost: <span class="highlight" id="calc-grid">₹0</span><br>
+            Daily Solar Savings: <span class="highlight" id="calc-solar">₹0</span><br>
+            Monthly Bill: <span class="highlight" id="calc-monthly">₹0</span>
+        </div>
     </div>
 
     <!-- Three.js -->
@@ -669,14 +731,50 @@
         ground.receiveShadow = true;
         scene.add(ground);
 
-        // Pathway
-        const pathGeo = new THREE.PlaneGeometry(2.5, 10);
-        const pathMat = new THREE.MeshStandardMaterial({ color: 0xb8a089, roughness: 0.95 });
-        const pathway = new THREE.Mesh(pathGeo, pathMat);
-        pathway.rotation.x = -Math.PI / 2;
-        pathway.position.set(0, 0.02, 9);
-        pathway.receiveShadow = true;
-        scene.add(pathway);
+        // ═══════════════════════════════════════════════
+        //  ROAD IN FRONT OF HOUSES
+        // ═══════════════════════════════════════════════
+        const roadGeo = new THREE.PlaneGeometry(90, 7);
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.95 });
+        const road = new THREE.Mesh(roadGeo, roadMat);
+        road.rotation.x = -Math.PI / 2;
+        road.position.set(1, 0.03, 13);
+        road.receiveShadow = true;
+        scene.add(road);
+
+        // Yellow dashed center line
+        for (let i = -20; i <= 20; i++) {
+            const mk = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.15), new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.8 }));
+            mk.rotation.x = -Math.PI / 2;
+            mk.position.set(i * 2.2, 0.04, 13);
+            scene.add(mk);
+        }
+        // White edge lines
+        [-3.4, 3.4].forEach(zOff => {
+            const edge = new THREE.Mesh(new THREE.PlaneGeometry(90, 0.12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 }));
+            edge.rotation.x = -Math.PI / 2;
+            edge.position.set(1, 0.04, 13 + zOff);
+            scene.add(edge);
+        });
+        // Sidewalks
+        [-4.3, 4.3].forEach(zOff => {
+            const sw = new THREE.Mesh(new THREE.PlaneGeometry(90, 1.2), new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.9 }));
+            sw.rotation.x = -Math.PI / 2;
+            sw.position.set(1, 0.025, 13 + zOff + (zOff > 0 ? 0.6 : -0.6));
+            scene.add(sw);
+        });
+        // Driveways from road to each house
+        const driveMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 });
+        // 1BHK driveway
+        const drive1 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
+        drive1.rotation.x = -Math.PI / 2;
+        drive1.position.set(-14, 0.02, 9.5);
+        scene.add(drive1);
+        // 2BHK driveway
+        const drive2 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
+        drive2.rotation.x = -Math.PI / 2;
+        drive2.position.set(16, 0.02, 11);
+        scene.add(drive2);
 
         // ═══════════════════════════════════════════════
         //  SUN SPHERE
@@ -731,16 +829,16 @@
         //  HOUSE STRUCTURE
         // ═══════════════════════════════════════════════
         const houseGroup = new THREE.Group();
-        houseGroup.position.set(-11, 0, 0);
+        houseGroup.position.set(-14, 0, 0);
         scene.add(houseGroup);
 
-        // Dimensions (declared early so labels can use them)
-        const W = 12, D = 10, H = 6, roofH = 4;
+        // Dimensions
+        const W = 16, D = 12, H = 6, roofH = 4;
 
         // Simple house ground label
         const simpleLabelDiv = document.createElement('div');
         simpleLabelDiv.className = 'appliance-label';
-        simpleLabelDiv.innerHTML = '<span class="name" style="font-size:1.1rem;">🏠 Simple House</span>';
+        simpleLabelDiv.innerHTML = '<span class="name" style="font-size:1.1rem;">🏠 1BHK House</span>';
         const simpleLabel = new THREE.CSS2DObject(simpleLabelDiv);
         simpleLabel.position.set(0, H + roofH + 3, 0);
         houseGroup.add(simpleLabel);
@@ -983,130 +1081,179 @@
         interiorGroup.add(clockRim);
 
         // ═══════════════════════════════════════════════
-        //  POWER LINE / UTILITY POLE
+        //  1BHK ROOM PARTITIONS & DOORS
+        // ═══════════════════════════════════════════════
+        const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85 });
+        // Horizontal wall at z=-1 (Bedroom back, Hall/Kitchen front)
+        const pw1 = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, H, 0.2), partWallMat1BHK);
+        pw1.position.set(0, H / 2 + 0.3, -1); pw1.castShadow = true; houseGroup.add(pw1);
+        // Vertical wall at x=-2 (Kitchen left, Hall right) front section only
+        const pw2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, D / 2 - 1 - 0.2), partWallMat1BHK);
+        pw2.position.set(-2, H / 2 + 0.3, (D / 2 - 1) / 2 + 0.5); pw2.castShadow = true; houseGroup.add(pw2);
+
+        // Room doors
+        const roomDoorMat1 = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
+        function add1BHKDoor(x, y, z, ry) {
+            const d = new THREE.Mesh(new THREE.BoxGeometry(1.5, 3.5, 0.25), roomDoorMat1);
+            d.position.set(x, y, z); d.rotation.y = ry || 0; houseGroup.add(d);
+            const h = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), handleMat);
+            h.position.set(x + (ry ? 0 : 0.5), y, z + (ry ? 0.5 : 0)); houseGroup.add(h);
+        }
+        add1BHKDoor(2, 2.05, -1, 0);                  // Bedroom → Hall
+        add1BHKDoor(-2, 2.05, 3, Math.PI / 2);        // Kitchen → Hall
+
+        // Room colored floor tiles
+        const hallTile = new THREE.Mesh(new THREE.PlaneGeometry(W / 2 - 2, D / 2 - 1), new THREE.MeshStandardMaterial({ color: 0xd4b896, roughness: 0.75 }));
+        hallTile.rotation.x = -Math.PI / 2; hallTile.position.set(3, 0.32, (D / 2 - 1) / 2 + 0.5); houseGroup.add(hallTile);
+        const kitchenTile = new THREE.Mesh(new THREE.PlaneGeometry(W / 2 - 2, D / 2 - 1), new THREE.MeshStandardMaterial({ color: 0xf5f0e0, roughness: 0.75 }));
+        kitchenTile.rotation.x = -Math.PI / 2; kitchenTile.position.set(-5, 0.32, (D / 2 - 1) / 2 + 0.5); houseGroup.add(kitchenTile);
+        const bedTile = new THREE.Mesh(new THREE.PlaneGeometry(W - 0.4, D / 2 - 1), new THREE.MeshStandardMaterial({ color: 0xa8c8e8, roughness: 0.75 }));
+        bedTile.rotation.x = -Math.PI / 2; bedTile.position.set(0, 0.32, -(D / 2 + 1) / 2); houseGroup.add(bedTile);
+
+        // 1BHK Room Labels
+        function add1BHKLabel(name, x, y, z) {
+            const div = document.createElement('div');
+            div.className = 'appliance-label';
+            div.innerHTML = '<span class="name" style="font-size:0.9rem">' + name + '</span>';
+            const l = new THREE.CSS2DObject(div);
+            l.position.set(x, y, z); houseGroup.add(l); return l;
+        }
+        const bhk1RoomLabels = [
+            add1BHKLabel('🏠 Hall', 3, 4, 2.5),
+            add1BHKLabel('🍳 Kitchen', -5, 4, 2.5),
+            add1BHKLabel('🛏️ Bedroom', 0, 4, -3.5)
+        ];
+
+        // ═══════════════════════════════════════════════
+        //  1BHK BEDROOM FURNITURE
+        // ═══════════════════════════════════════════════
+        // Bed
+        const bedFrameMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7 });
+        const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(3, 0.5, 3.8), bedFrameMat);
+        bedFrame.position.set(0, 0.55, -3.5); bedFrame.castShadow = true; houseGroup.add(bedFrame);
+        const bedMattress = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.3, 3.6), new THREE.MeshStandardMaterial({ color: 0x6495ED, roughness: 0.9 }));
+        bedMattress.position.set(0, 0.95, -3.5); houseGroup.add(bedMattress);
+        const pillowMat1 = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 });
+        const pillow1 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat1);
+        pillow1.position.set(-0.5, 1.18, -5.1); houseGroup.add(pillow1);
+        const pillow2 = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat1);
+        pillow2.position.set(0.5, 1.18, -5.1); houseGroup.add(pillow2);
+        const bedHead = new THREE.Mesh(new THREE.BoxGeometry(3, 1.5, 0.2), bedFrameMat);
+        bedHead.position.set(0, 1.3, -5.3); houseGroup.add(bedHead);
+
+        // Wardrobe
+        const wardrobeMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.8 });
+        const wardrobe = new THREE.Mesh(new THREE.BoxGeometry(2, 4.2, 0.9), wardrobeMat);
+        wardrobe.position.set(-6, 2.4, -5); wardrobe.castShadow = true; houseGroup.add(wardrobe);
+
+        // ═══════════════════════════════════════════════
+        //  1BHK KITCHEN FURNITURE
+        // ═══════════════════════════════════════════════
+        const counterMat1 = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.3 });
+        const counter1 = new THREE.Mesh(new THREE.BoxGeometry(3, 1.8, 0.8), counterMat1);
+        counter1.position.set(-5, 1.2, -0.5); counter1.castShadow = true; houseGroup.add(counter1);
+        const stove1 = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.3 }));
+        stove1.position.set(-5, 2.15, -0.5); houseGroup.add(stove1);
+        // Kitchen wall cabinet
+        const cabinet1 = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 }));
+        cabinet1.position.set(-5, 4.5, -0.8); houseGroup.add(cabinet1);
+
+        // ═══════════════════════════════════════════════
+        //  ELECTRICAL TRANSFORMER & POWER LINES
         // ═══════════════════════════════════════════════
         const poleGroup = new THREE.Group();
 
-        const poleMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
-        const poleGeo = new THREE.CylinderGeometry(0.2, 0.25, 14, 8);
-        const pole = new THREE.Mesh(poleGeo, poleMat);
-        pole.position.set(16, 7, 8);
-        pole.castShadow = true;
-        poleGroup.add(pole);
-
+        // Transformer body
+        const tfMat = new THREE.MeshStandardMaterial({ color: 0x556655, roughness: 0.6, metalness: 0.3 });
+        const tfBody = new THREE.Mesh(new THREE.BoxGeometry(2, 2.5, 1.5), tfMat);
+        tfBody.position.set(1, 5.25, 10); tfBody.castShadow = true; poleGroup.add(tfBody);
+        // Transformer pole
+        const tfPoleMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
+        const tfPole = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.3, 12, 8), tfPoleMat);
+        tfPole.position.set(1, 3, 10); tfPole.castShadow = true; poleGroup.add(tfPole);
         // Cross beam
-        const crossGeo = new THREE.BoxGeometry(4, 0.2, 0.2);
-        const crossBeam = new THREE.Mesh(crossGeo, poleMat);
-        crossBeam.position.set(16, 13.5, 8);
-        poleGroup.add(crossBeam);
+        const tfCross = new THREE.Mesh(new THREE.BoxGeometry(5, 0.2, 0.2), tfPoleMat);
+        tfCross.position.set(1, 8.5, 10); poleGroup.add(tfCross);
+        // Bushings (cylindrical insulators on top)
+        const bushingMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.6 });
+        for (let bi = -1; bi <= 1; bi++) {
+            const bushing = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.8, 8), bushingMat);
+            bushing.position.set(1 + bi * 0.6, 7, 10); poleGroup.add(bushing);
+        }
+        // Transformer label
+        const tfLabelDiv = document.createElement('div');
+        tfLabelDiv.className = 'appliance-label';
+        tfLabelDiv.innerHTML = '<span class="name" style="font-size:0.8rem">⚡ Grid Transformer</span>';
+        const tfLabel = new THREE.CSS2DObject(tfLabelDiv);
+        tfLabel.position.set(1, 9.5, 10); poleGroup.add(tfLabel);
 
-        // Wires
+        // Wires from transformer to 1BHK house
         const wireMat = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 });
         for (let i = -1; i <= 1; i++) {
-            const points = [];
-            const startX = 16 + i * 1.5;
+            const pts = [];
             for (let t = 0; t <= 20; t++) {
-                const frac = t / 20;
-                const x = startX + (W / 2 - startX) * frac;
-                const y = 13.5 - Math.sin(frac * Math.PI) * 2.5 + (H + 1 - 13.5) * frac;
-                const z = 8 + (0 - 8) * frac;
-                points.push(new THREE.Vector3(x, y, z));
+                const f = t / 20;
+                const x = (1 + i * 1.5) + (-14 + W / 2 - (1 + i * 1.5)) * f;
+                const y = 8.5 - Math.sin(f * Math.PI) * 3 + (H + 1 - 8.5) * f;
+                const z = 10 + (0 - 10) * f;
+                pts.push(new THREE.Vector3(x, y, z));
             }
-            const wireGeo = new THREE.BufferGeometry().setFromPoints(points);
-            const wire = new THREE.Line(wireGeo, wireMat);
-            poleGroup.add(wire);
+            poleGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wireMat));
+        }
+        // Wires from transformer to 2BHK house
+        for (let i = -1; i <= 1; i++) {
+            const pts = [];
+            for (let t = 0; t <= 20; t++) {
+                const f = t / 20;
+                const x = (1 + i * 1.5) + (16 - 10 - (1 + i * 1.5)) * f;
+                const y = 8.5 - Math.sin(f * Math.PI) * 3 + (H + 1 - 8.5) * f;
+                const z = 10 + (0 - 10) * f;
+                pts.push(new THREE.Vector3(x, y, z));
+            }
+            poleGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), wireMat));
         }
         scene.add(poleGroup);
 
         // ═══════════════════════════════════════════════
-        //  TREES AROUND HOUSES
+        //  TREES & BUSHES ALONG ROAD
         // ═══════════════════════════════════════════════
         function createTree(x, y, z, scale) {
-            const treeGroup = new THREE.Group();
-            // Trunk
-            const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.25 * scale, 2.5 * scale, 8);
+            const g = new THREE.Group();
             const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.9 });
-            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
-            trunk.position.y = 1.25 * scale;
-            trunk.castShadow = true;
-            treeGroup.add(trunk);
-            // Foliage layers (multiple spheres for natural look)
-            const foliageColors = [0x2d7d2d, 0x3a9d3a, 0x228B22, 0x2e8b2e];
-            const foliagePositions = [
-                { y: 3.0, r: 1.4 }, { y: 3.8, r: 1.1 }, { y: 4.4, r: 0.75 },
-                { y: 3.2, r: 0.9, x: 0.5, z: 0.3 }, { y: 3.2, r: 0.9, x: -0.4, z: -0.3 }
-            ];
-            foliagePositions.forEach((fp, i) => {
-                const fGeo = new THREE.SphereGeometry(fp.r * scale, 10, 10);
-                const fMat = new THREE.MeshStandardMaterial({ color: foliageColors[i % foliageColors.length], roughness: 0.85 });
-                const foliage = new THREE.Mesh(fGeo, fMat);
-                foliage.position.set((fp.x || 0) * scale, fp.y * scale, (fp.z || 0) * scale);
-                foliage.castShadow = true;
-                treeGroup.add(foliage);
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * scale, 0.25 * scale, 2.5 * scale, 8), trunkMat);
+            trunk.position.y = 1.25 * scale; trunk.castShadow = true; g.add(trunk);
+            const foliageColors = [0x2d7d2d, 0x3a9d3a, 0x228B22];
+            [{ y: 3.0, r: 1.4 }, { y: 3.8, r: 1.1 }, { y: 4.4, r: 0.75 }].forEach((fp, i) => {
+                const f = new THREE.Mesh(new THREE.SphereGeometry(fp.r * scale, 10, 10), new THREE.MeshStandardMaterial({ color: foliageColors[i], roughness: 0.85 }));
+                f.position.y = fp.y * scale; f.castShadow = true; g.add(f);
             });
-            treeGroup.position.set(x, y, z);
-            scene.add(treeGroup);
-            return treeGroup;
+            g.position.set(x, y, z); scene.add(g); return g;
         }
-
-        // Trees around simple house (centered at -11, 0, 0)
-        // Create trees around simple house
-        createTree(-14, 0, 8, 1.2); createTree(-8, 0, 8, 1.0);
-        createTree(-16, 0, -6, 1.3); createTree(-6, 0, -6, 1.1);
-        createTree(-11, 0, -9, 0.9);
-        // Create trees around 2BHK (shifted further away to avoid interior)
-        createTree(4, 0, -10, 1.2); createTree(28, 0, -10, 1.4);
-        createTree(16, 0, -12, 1.0);
-        // Scattered background trees
-        createTree(-30, 0, -15, 1.5); createTree(30, 0, -15, 1.6);
-        createTree(-25, 0, 20, 1.4); createTree(25, 0, 20, 1.3);
-        createTree(30, 0, 10, 1.2);
-
-        // ═══════════════════════════════════════════════
-        //  ANIMATED BIRDS
-        // ═══════════════════════════════════════════════
-        const birds = [];
-        function createBird(cx, cy, cz, radiusX, radiusZ, speed, phase) {
-            const birdGroup = new THREE.Group();
-            // Body
-            const bodyGeo = new THREE.ConeGeometry(0.12, 0.5, 6);
-            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7 });
-            const body = new THREE.Mesh(bodyGeo, bodyMat);
-            body.rotation.z = -Math.PI / 2;
-            birdGroup.add(body);
-            // Left wing
-            const wingGeo = new THREE.PlaneGeometry(0.5, 0.15);
-            const wingMat = new THREE.MeshStandardMaterial({ color: 0x444444, side: THREE.DoubleSide, roughness: 0.8 });
-            const leftWing = new THREE.Mesh(wingGeo, wingMat);
-            leftWing.position.set(0, 0.08, -0.15);
-            leftWing.rotation.x = 0;
-            birdGroup.add(leftWing);
-            // Right wing
-            const rightWing = new THREE.Mesh(wingGeo, wingMat);
-            rightWing.position.set(0, 0.08, 0.15);
-            rightWing.rotation.x = 0;
-            birdGroup.add(rightWing);
-            // Tail
-            const tailGeo = new THREE.PlaneGeometry(0.2, 0.08);
-            const tail = new THREE.Mesh(tailGeo, wingMat);
-            tail.position.set(-0.3, 0.05, 0);
-            birdGroup.add(tail);
-            birdGroup.position.set(cx, cy, cz);
-            scene.add(birdGroup);
-            birds.push({
-                group: birdGroup, leftWing, rightWing,
-                cx, cy, cz, radiusX, radiusZ, speed, phase,
-                flapSpeed: 5 + Math.random() * 3
-            });
-            return birdGroup;
+        function createBush(x, y, z, scale) {
+            const g = new THREE.Group();
+            const bushMat = new THREE.MeshStandardMaterial({ color: 0x2e8b2e, roughness: 0.9 });
+            const b1 = new THREE.Mesh(new THREE.SphereGeometry(0.5 * scale, 8, 8), bushMat);
+            b1.position.y = 0.3 * scale; g.add(b1);
+            const b2 = new THREE.Mesh(new THREE.SphereGeometry(0.35 * scale, 8, 8), bushMat);
+            b2.position.set(0.3 * scale, 0.25 * scale, 0.2 * scale); g.add(b2);
+            g.position.set(x, y, z); scene.add(g); return g;
         }
-
-        createBird(0, 22, -5, 18, 12, 0.3, 0);
-        createBird(-5, 24, -8, 15, 10, 0.25, 1.2);
-        createBird(8, 20, -3, 20, 14, 0.35, 2.5);
-        createBird(-10, 26, -10, 12, 8, 0.2, 3.8);
-        createBird(15, 23, -6, 16, 11, 0.28, 5.0);
-        createBird(-3, 21, -4, 14, 9, 0.32, 0.7);
+        // Trees along far side of road (z > 16)
+        createTree(-30, 0, 19, 1.3); createTree(-22, 0, 18, 1.1); createTree(-12, 0, 20, 1.4);
+        createTree(-2, 0, 19, 1.0); createTree(8, 0, 20, 1.5); createTree(18, 0, 18, 1.2);
+        createTree(28, 0, 19, 1.3); createTree(35, 0, 20, 1.1);
+        // Trees along near side of road (z ~ 7-8)
+        createTree(-28, 0, 7, 1.0); createTree(-20, 0, 8, 1.3);
+        createTree(8, 0, 7, 1.1); createTree(28, 0, 8, 1.4);
+        // Trees behind houses
+        createTree(-22, 0, -8, 1.2); createTree(-8, 0, -9, 1.0);
+        createTree(10, 0, -10, 1.3); createTree(24, 0, -11, 1.1);
+        // Bushes along road
+        createBush(-25, 0, 18, 1.2); createBush(-16, 0, 19, 1.0); createBush(-5, 0, 18, 0.9);
+        createBush(5, 0, 19, 1.1); createBush(15, 0, 18, 1.0); createBush(25, 0, 19, 1.3);
+        createBush(32, 0, 18, 0.8);
+        // Bushes near side
+        createBush(-25, 0, 7.5, 1.0); createBush(10, 0, 7, 0.9); createBush(25, 0, 7.5, 1.1);
 
         // ═══════════════════════════════════════════════
         //  INTERIOR APPLIANCES
@@ -1698,104 +1845,25 @@
         //  SIMPLE HOUSE APPLIANCE ON/OFF STATE
         // ═══════════════════════════════════════════════
         const simpleAppliances = [
-            { name: 'Light Bulb 1', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light1 },
-            { name: 'Ceiling Fan', watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh: fan1 },
-            { name: 'Refrigerator', watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh: fridge },
-            { name: 'Air Conditioner', watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: ac },
-            { name: 'Light Bulb 2', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light2 },
-            { name: 'Table Fan', watt: 55, emoji: '🌀', on: true, kind: 'tablefan', mesh: tableFan },
-            { name: 'Television', watt: 150, emoji: '📺', on: false, kind: 'tv', mesh: null } // Mesh added below
+            { name: 'Light Bulb 1', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light1, room: 'Hall' },
+            { name: 'Ceiling Fan', watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh: fan1, room: 'Hall' },
+            { name: 'Refrigerator', watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh: fridge, room: 'Kitchen' },
+            { name: 'Air Conditioner', watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: ac, room: 'Hall' },
+            { name: 'Light Bulb 2', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light2, room: 'Bedroom' },
+            { name: 'Table Fan', watt: 55, emoji: '🌀', on: true, kind: 'tablefan', mesh: tableFan, room: 'Bedroom' },
+            { name: 'Television', watt: 150, emoji: '📺', on: false, kind: 'tv', mesh: null, room: 'Hall' }
         ];
 
-        // Create simple house TV
-        const simpleTvGroup = new THREE.Group();
+        // Create simple house TV (on partition wall in Hall)
         const simpleTvFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-        simpleTvFrame.position.set(-13, 3.5, -4.3); simpleTvGroup.add(simpleTvFrame);
-        const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000 }));
-        simpleTvScreen.position.set(-13, 3.5, -4.24); simpleTvGroup.add(simpleTvScreen);
-        scene.add(simpleTvGroup);
+        simpleTvFrame.position.set(3, 4, -0.8); houseGroup.add(simpleTvFrame);
+        const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x000000 }));
+        simpleTvScreen.position.set(3, 4, -0.73); houseGroup.add(simpleTvScreen);
         simpleAppliances[6].mesh = { frame: simpleTvFrame, screen: simpleTvScreen };
 
         // === Appliance ON/OFF Toggle System ===
-        let currentFocusedHouse = null; // 'simple' or '2bhk'
-        let currentRoom = null; // null = full view, or room name for 2BHK
-
-        function addDynamicAppliance(type) {
-            const isSimple = (currentFocusedHouse === 'simple');
-            const room = isSimple ? null : (currentRoom || 'Hall');
-            const list = isSimple ? simpleAppliances : bhk2Appliances;
-            const count = list.filter(a => a.type === type && (isSimple || a.room === room)).length;
-
-            let obj = null;
-            let mesh = null;
-            const name = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + (count + 1);
-
-            // Placement logic
-            let x = 0, y = 3, z = 0;
-            if (isSimple) {
-                x = -11 + (count % 3 - 1) * 2;
-                z = (Math.floor(count / 3)) * 2 - 2;
-            } else {
-                const center = roomCenters[room] || { x: 0, z: 0 };
-                x = center.x + (count % 3 - 1) * 2;
-                z = center.z + (Math.floor(count / 3)) * 2 - 2;
-            }
-
-            if (type === 'light') {
-                mesh = createLight(x, H - 0.5, z);
-                obj = { type, name, watt: 60, emoji: '💡', on: true, kind: 'light', mesh };
-            } else if (type === 'fan') {
-                mesh = createFan(x, H - 0.3, z);
-                obj = { type, name, watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh };
-                (isSimple ? simpleAnimData : bhk2AnimData).fans.push(obj);
-            } else if (type === 'ac') {
-                mesh = createAC(isSimple ? -11 + 4 : x, 5, isSimple ? -4.3 : z);
-                obj = { type, name, watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh };
-                (isSimple ? simpleAnimData : bhk2AnimData).acs.push(obj);
-            } else if (type === 'tv') {
-                const w = isSimple ? 2.5 : 4;
-                const h = isSimple ? 1.4 : 2.2;
-                const tvGroup = new THREE.Group();
-                const frame = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-                const screen = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.9, h * 0.85), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000 }));
-                screen.position.z = 0.051; tvGroup.add(frame, screen);
-                tvGroup.position.set(x, 4, isSimple ? -4.2 : z - 1);
-                mesh = { group: tvGroup, screen };
-                obj = { type, name, watt: 150, emoji: '📺', on: true, kind: 'tv', mesh };
-                // Set initial image
-                const tex = tvTextures[Math.floor(Math.random() * tvTextures.length)];
-                screen.material.map = tex; screen.material.emissiveMap = tex;
-                screen.material.emissiveIntensity = 1.0;
-            } else if (type === 'fridge') {
-                mesh = createFridge(x, 0.3, z);
-                obj = { type, name, watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh };
-            } else if (type === 'tablefan') {
-                mesh = createTableFan(x, 1.8, z);
-                // Table
-                const t = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.0), tableMat);
-                t.position.set(x, 0.6, z);
-                mesh.group.add(t); // add table to group
-                obj = { type, name, watt: 55, emoji: '🎐', on: true, kind: 'tablefan', mesh };
-                (isSimple ? simpleAnimData : bhk2AnimData).tableFans.push(obj);
-            }
-
-            if (obj && mesh) {
-                if (isSimple) {
-                    houseGroup.add(mesh.group || mesh);
-                    simpleAppliances.push(obj);
-                } else {
-                    roomGroups[room].add(mesh.group || mesh);
-                    if (applianceGroup.children.includes(mesh.group || mesh)) applianceGroup.remove(mesh.group || mesh);
-                    obj.room = room;
-                    bhk2Appliances.push(obj);
-                }
-                buildAppliancePanel(currentRoom);
-                recalcWattage();
-            }
-        }
-
         function toggleAppliance(idx, isOn) {
-            const a = bhk2Appliances[idx];
+            const a = is2BHK ? bhk2Appliances[idx] : null;
             if (!a) return;
             a.on = isOn;
             if (a.kind === 'light') {
@@ -1810,8 +1878,11 @@
                 if (isOn) {
                     const tex = tvTextures[Math.floor(Math.random() * tvTextures.length)];
                     screen.material.map = tex; screen.material.emissiveMap = tex;
+                    screen.material.color.set(0xffffff);
                 } else {
                     screen.material.map = null; screen.material.emissiveMap = null;
+                    screen.material.color.set(0x111111);
+                    screen.material.emissive.set(0x000000);
                 }
                 screen.material.needsUpdate = true;
             } else if (a.kind === 'tap') {
@@ -1836,44 +1907,20 @@
                 if (isOn) {
                     const tex = tvTextures[Math.floor(Math.random() * tvTextures.length)];
                     screen.material.map = tex; screen.material.emissiveMap = tex;
+                    screen.material.color.set(0xffffff);
                 } else {
                     screen.material.map = null; screen.material.emissiveMap = null;
+                    screen.material.color.set(0x111111);
+                    screen.material.emissive.set(0x000000);
                 }
                 screen.material.needsUpdate = true;
             }
             recalcWattage();
         }
 
-        function addDynamicAC() {
-            if (currentFocusedHouse === 'simple') {
-                const count = simpleAppliances.filter(a => a.name.includes('New AC')).length;
-                const newACMesh = createAC(-11 + 2 + count * 0.5, 5, -4.3);
-                const a = { name: 'New AC ' + (count + 1), watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: newACMesh };
-                simpleAppliances.push(a);
-            } else {
-                const room = currentRoom || 'Hall';
-                const count = bhk2Appliances.filter(a => a.name.includes('New AC') && a.room === room).length;
-                let x = 0, y = 5, z = 0;
-                if (room === 'Hall') { x = W2 / 2 - 1.5; z = -2.3 + count * 0.5; }
-                else if (room === 'Bedroom 1') { x = -W2 / 4 + 2; z = -D2 / 2 + 0.7 + count * 0.5; }
-                else if (room === 'Bedroom 2') { x = W2 / 4 - 2; z = -D2 / 2 + 0.7 + count * 0.5; }
-                else { x = 0; z = 0; }
-
-                const acMesh = createAC(x, y, z);
-                roomGroups[room].add(acMesh.group);
-                applianceGroup.remove(acMesh.group);
-
-                const obj = { type: 'ac', name: 'New AC ' + (count + 1), watt: 1500, x, y, z, mesh: acMesh, on: true, kind: 'ac', room: room };
-                bhk2Appliances.push(obj);
-                bhk2AnimData.acs.push(obj);
-            }
-            buildAppliancePanel(currentRoom);
-            recalcWattage();
-        }
-
         function recalcWattage() {
             let total = 0;
-            if (currentFocusedHouse === '2bhk') {
+            if (is2BHK) {
                 bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
             } else {
                 simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
@@ -1886,58 +1933,88 @@
             const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
+            updateBarChart(total, coverageRatio);
         }
 
-        // Load TV Textures
-        const textureLoader = new THREE.TextureLoader();
-        const tvTextures = [
-            textureLoader.load('tv_screen_nature.png'),
-            textureLoader.load('tv_screen_city.png')
-        ];
+        function updateBarChart(totalW, coverageRatio) {
+            const solarPct = Math.round(coverageRatio * 100);
+            const gridPct = 100 - solarPct;
+            document.getElementById('grid-bar').style.width = Math.max(gridPct, 5) + '%';
+            document.getElementById('grid-bar').textContent = gridPct + '%';
+            document.getElementById('solar-bar').style.width = Math.max(solarPct, 5) + '%';
+            document.getElementById('solar-bar').textContent = solarPct + '%';
+            const dailyKwh = totalW * 8 / 1000;
+            const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
+            const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
+            const monthlyBill = Math.round(gridCostDaily * 30);
+            document.getElementById('calc-grid').textContent = '₹' + gridCostDaily;
+            document.getElementById('calc-solar').textContent = '₹' + solarSavingsDaily;
+            document.getElementById('calc-monthly').textContent = '₹' + monthlyBill;
+        }
 
-        // Build the appliance control panel HTML
-        function buildAppliancePanel(filterRoom) {
-            const panel = document.getElementById('appliance-panel');
-            let html = '<div class="add-section"><div class="room-header">➕ Add Appliances</div>';
-            html += '<div class="app-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">';
-            const appTypes = [
-                { type: 'light', emoji: '💡', label: 'Light' },
-                { type: 'fan', emoji: '🌀', label: 'Fan' },
-                { type: 'ac', emoji: '❄️', label: 'AC' },
-                { type: 'tv', emoji: '📺', label: 'TV' },
-                { type: 'fridge', emoji: '🧊', label: 'Fridge' },
-                { type: 'tablefan', emoji: '🎐', label: 'TFan' }
-            ];
-            appTypes.forEach(app => {
-                html += `<button class="add-tile-btn" onclick="addDynamicAppliance('${app.type}')" 
-                           style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:8px; border-radius:8px; color:#fff; cursor:pointer; font-size:0.75rem;">
-                           <div style="font-size:1.2rem; margin-bottom:4px;">${app.emoji}</div>${app.label}</button>`;
-            });
-            html += '</div></div>';
-
-            if (currentFocusedHouse === 'simple') {
-                html += '<div class="room-section"><div class="room-header">🏠 Simple House</div>';
-                simpleAppliances.forEach((a, i) => {
-                    html += `<div class="appliance-row">
-                        <div><span class="app-name">${a.emoji} ${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
-                        <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleSimpleAppliance(${i},this.checked)"><span class="slider"></span></label>
-                    </div>`;
-                });
-                html += '</div>';
+        // Canvas-generated TV Textures (no external files needed)
+        function createTvTexture(type) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 144;
+            const ctx = canvas.getContext('2d');
+            if (type === 'nature') {
+                const grad = ctx.createLinearGradient(0, 0, 0, 144);
+                grad.addColorStop(0, '#87CEEB'); grad.addColorStop(0.55, '#87CEEB');
+                grad.addColorStop(0.55, '#228B22'); grad.addColorStop(1, '#006400');
+                ctx.fillStyle = grad; ctx.fillRect(0, 0, 256, 144);
+                ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(200, 30, 18, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath(); ctx.arc(60, 35, 14, 0, Math.PI * 2); ctx.arc(78, 30, 17, 0, Math.PI * 2); ctx.arc(92, 35, 13, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#1a5e1a';
+                [40, 90, 150].forEach(tx => { ctx.beginPath(); ctx.moveTo(tx, 80); ctx.lineTo(tx - 15, 144); ctx.lineTo(tx + 15, 144); ctx.fill(); });
             } else {
+                ctx.fillStyle = '#1a1a3e'; ctx.fillRect(0, 0, 256, 144);
+                for (let i = 0; i < 8; i++) {
+                    const bh = 40 + Math.random() * 60;
+                    ctx.fillStyle = 'hsl(' + (220 + i * 5) + ', 30%, ' + (20 + i * 3) + '%)';
+                    ctx.fillRect(10 + i * 30, 144 - bh, 25, bh);
+                    ctx.fillStyle = '#FFD700';
+                    for (let wy = 144 - bh + 5; wy < 140; wy += 10) {
+                        for (let wx = 0; wx < 3; wx++) ctx.fillRect(14 + i * 30 + wx * 7, wy, 4, 5);
+                    }
+                }
+                ctx.fillStyle = '#cc0000'; ctx.fillRect(0, 130, 256, 14);
+                ctx.fillStyle = '#ffffff'; ctx.font = '10px sans-serif';
+                ctx.fillText('SOLAR ENERGY NEWS \u25cf Solar power saves \u20b95000/month!', 5, 141);
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
+        const tvTextures = [createTvTexture('nature'), createTvTexture('city')];
+
+        // Build the appliance control panel HTML (supports both houses)
+        function buildAppliancePanel() {
+            const panel = document.getElementById('appliance-panel');
+            let html = '';
+            if (is2BHK) {
                 const grouped = {};
                 bhk2Appliances.forEach((a, i) => {
-                    if (filterRoom && a.room !== filterRoom) return;
                     if (!grouped[a.room]) grouped[a.room] = [];
                     grouped[a.room].push({ ...a, idx: i });
                 });
                 for (const room in grouped) {
-                    html += `<div class="room-section"><div class="room-header">${room}</div>`;
+                    html += '<div class="room-section"><div class="room-header">' + room + '</div>';
                     grouped[room].forEach(a => {
-                        html += `<div class="appliance-row">
-                            <div><span class="app-name">${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
-                            <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleAppliance(${a.idx},this.checked)"><span class="slider"></span></label>
-                        </div>`;
+                        html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                    });
+                    html += '</div>';
+                }
+            } else {
+                const rooms = { 'Hall': [], 'Kitchen': [], 'Bedroom': [] };
+                simpleAppliances.forEach((a, i) => {
+                    const room = a.room || 'Hall';
+                    if (!rooms[room]) rooms[room] = [];
+                    rooms[room].push({ ...a, idx: i });
+                });
+                for (const room in rooms) {
+                    if (rooms[room].length === 0) continue;
+                    html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+                    rooms[room].forEach(a => {
+                        html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
                     });
                     html += '</div>';
                 }
@@ -1946,125 +2023,20 @@
         }
         buildAppliancePanel();
 
-        // ═══════════════════════════════════════════════
-        //  2BHK ROOM NAVIGATION SYSTEM
-        // ═══════════════════════════════════════════════
-        // Room center positions (relative to bhk2Group at x=13)
-        // Room center positions (relative to bhk2Group at x=16)
-        const roomCenters = {
-            'Hall': { x: 2.5, z: 2.75 },
-            'Bedroom 1': { x: -5, z: -5.25 },
-            'Bedroom 2': { x: 5, z: -5.25 },
-            'Kitchen': { x: -7.5, z: 0.75 },
-            'Bathroom': { x: -7.5, z: 6 }
-        };
-
-        function buildRoomNavPanel() {
-            const navPanel = document.getElementById('room-nav-panel');
-            const rooms = ['Hall', 'Bedroom 1', 'Bedroom 2', 'Kitchen', 'Bathroom'];
-            const emojis = { 'Hall': '🏠', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Kitchen': '🍳', 'Bathroom': '🚿' };
-            let html = '<button id="back-to-full-btn" onclick="exitRoomView()">🔙 Back to Full View</button>';
-            rooms.forEach(room => {
-                html += `<button class="room-nav-btn" id="room-btn-${room.replace(' ', '-')}" onclick="enterRoom('${room}')">${emojis[room]} ${room}</button>`;
-            });
-            navPanel.innerHTML = html;
-        }
-        buildRoomNavPanel();
-
-        function enterRoom(roomName) {
-            currentRoom = roomName;
-            const center = roomCenters[roomName];
-            if (!center) return;
-            // Animate camera to the room (world coords: bhk2Group.position.x + room center)
-            const worldX = 16 + center.x;
-            const worldZ = center.z;
-            controls.target.set(worldX, 3, worldZ);
-            camera.position.set(worldX + 2.5, 9, worldZ + 7.5);
-            controls.update();
-
-            // Room Isolation Visibility
-            Object.keys(roomGroups).forEach(name => {
-                if (name === 'Structure') roomGroups[name].visible = true;
-                else roomGroups[name].visible = (name === roomName);
-            });
-
-            // Show back button and highlight room nav
-            document.getElementById('back-to-full-btn').style.display = 'inline-block';
-            document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
-            const activeBtn = document.getElementById('room-btn-' + roomName.replace(' ', '-'));
-            if (activeBtn) activeBtn.classList.add('active');
-            // Update appliance panel to show only this room
-            buildAppliancePanel(roomName);
-        }
-
-        function exitRoomView() {
-            currentRoom = null;
-            // Return to full 2BHK view
-            controls.target.set(16, 4, 0);
-            camera.position.set(16, 12, 20);
-            controls.update();
-
-            // Restore all visibility
-            Object.values(roomGroups).forEach(g => g.visible = true);
-
-            document.getElementById('back-to-full-btn').style.display = 'none';
-            document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
-            buildAppliancePanel();
-        }
-
         // Focus camera on a house
         function focusHouse(which) {
-            currentFocusedHouse = which;
-            currentRoom = null;
-            document.getElementById('back-to-full-btn').style.display = 'none';
             if (which === 'simple') {
-                controls.target.set(-11, 4, 0);
-                camera.position.set(-11, 12, 20);
-                document.getElementById('room-nav-panel').classList.remove('visible');
-                document.getElementById('solar-mount-point').style.display = 'flex';
-                document.getElementById('panel-counter').classList.add('visible');
+                is2BHK = false;
+                controls.target.set(-14, 4, 0);
+                camera.position.set(-14, 14, 22);
             } else {
+                is2BHK = true;
                 controls.target.set(16, 4, 0);
-                camera.position.set(16, 12, 20);
-                document.getElementById('room-nav-panel').classList.add('visible');
-                document.getElementById('solar-mount-point').style.display = 'flex';
-                document.getElementById('panel-counter').classList.add('visible');
+                camera.position.set(16, 14, 22);
             }
             controls.update();
             buildAppliancePanel();
             recalcWattage();
-            // Update solar panel instances if needed
-            updateSolarInstance();
-        }
-
-        let currentSolarTarget = 'simple';
-        function updateSolarInstance() {
-            const is2BHK = (currentFocusedHouse === '2bhk');
-            const targetW = is2BHK ? 20 : 15;
-            const targetH = 5.5;
-            const targetRoofH = 3.5;
-            const slopeAngle = Math.atan2(targetRoofH, targetW / 2 + 0.8);
-
-            solarPanels.forEach((p, index) => {
-                if (is2BHK) roomGroups['Structure'].add(p.group);
-                else houseGroup.add(p.group);
-
-                // Recalculate position on roof
-                const col = index % 5;
-                const row = Math.floor(index / 5);
-                const xPos = (is2BHK ? -4.5 : -3.6) + col * (is2BHK ? 2.3 : 2.0);
-                const zPos = -2.0 + row * 2.5;
-                const roofY = targetH + 0.3 + targetRoofH - Math.abs(xPos) * (targetRoofH / (targetW / 2 + 0.8));
-
-                p.targetY = roofY + 0.15;
-                p.group.position.x = xPos;
-                p.group.position.z = zPos;
-                if (!p.animating && p.group.visible) {
-                    p.group.position.y = p.targetY;
-                }
-                p.group.rotation.x = -slopeAngle * (xPos >= 0 ? 1 : -1) * 0.5;
-                p.group.rotation.z = xPos >= 0 ? -slopeAngle * 0.3 : slopeAngle * 0.3;
-            });
         }
         // Keep toggleUpgrade for backward compat
         function toggleUpgrade() { focusHouse('2bhk'); }
@@ -2150,18 +2122,22 @@
         ];
 
         function updateStats() {
-            const panelsNeeded = Math.ceil(totalWatt / 350);
-            document.getElementById('stat-consumption').textContent = totalWatt.toLocaleString() + ' W';
+            let total = 0;
+            const list = is2BHK ? bhk2Appliances : simpleAppliances;
+            list.forEach(a => { if (a.on) total += a.watt; });
+            const panelsNeeded = Math.max(1, Math.ceil(total / 350));
+            document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
             document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
 
             const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
-            const monthlySaving = Math.round(coverageRatio * totalWatt * 0.72 * 30 / 1000 * 8); // approx INR
-            const co2Saved = Math.round(coverageRatio * totalWatt * 0.0007 * 365);
+            const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8); // approx INR
+            const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
 
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
             document.getElementById('stat-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
             document.getElementById('panel-num').textContent = currentPanelCount;
+            updateBarChart(total, coverageRatio);
         }
 
         function toggleSolar() {
@@ -2268,7 +2244,7 @@
         function updateWallTransparency() {
             const camPos = camera.position.clone();
             // Simple house center in world: (-11, 4, 0)
-            const distSimple = camPos.distanceTo(new THREE.Vector3(-11, 4, 0));
+            const distSimple = camPos.distanceTo(new THREE.Vector3(-14, 4, 0));
             const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
 
             // Simple house walls/roof/door
@@ -2338,41 +2314,37 @@
             sunGlow.position.copy(sunMesh.position);
             sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
-            // Animate birds
-            birds.forEach(bird => {
-                const t = elapsed * bird.speed + bird.phase;
-                bird.group.position.x = bird.cx + Math.sin(t) * bird.radiusX;
-                bird.group.position.z = bird.cz + Math.cos(t) * bird.radiusZ;
-                bird.group.position.y = bird.cy + Math.sin(t * 1.5) * 1.5;
-                // Face direction of travel
-                bird.group.rotation.y = t + Math.PI / 2;
-                // Wing flapping
-                const flapAngle = Math.sin(elapsed * bird.flapSpeed) * 0.6;
-                bird.leftWing.rotation.x = flapAngle;
-                bird.rightWing.rotation.x = -flapAngle;
-            });
-
-            // Animate simple house appliances (respecting ON/OFF)
-            simpleAppliances.forEach(a => {
-                if (a.kind === 'fan' && a.on) a.mesh.blades.rotation.y += delta * 5;
-                if (a.kind === 'tablefan' && a.on) a.mesh.blades.rotation.z += delta * 8;
-                if (a.kind === 'ac' && a.on && a.mesh.particlePositions) {
-                    const positions = a.mesh.particlePositions;
+            // Animate 1BHK appliances (respecting ON/OFF)
+            if (!is2BHK) {
+                const sa = simpleAppliances;
+                if (sa[1].on) fan1.blades.rotation.y += delta * 5;
+                if (sa[5].on) tableFan.blades.rotation.z += delta * 8;
+                if (sa[3].on) {
+                    const positions = ac.particlePositions;
                     for (let i = 0; i < positions.length / 3; i++) {
                         positions[i * 3 + 1] -= delta * 0.5;
-                        if (positions[i * 3 + 1] < a.mesh.baseY - 3) {
-                            positions[i * 3 + 1] = a.mesh.baseY - 0.3;
-                            positions[i * 3] = a.mesh.group.position.x + (Math.random() - 0.5) * 2;
-                            positions[i * 3 + 2] = a.mesh.group.position.z + 0.5 + Math.random() * 1.5;
+                        if (positions[i * 3 + 1] < ac.baseY - 3) {
+                            positions[i * 3 + 1] = ac.baseY - 0.3;
+                            positions[i * 3] = ac.group.position.x + (Math.random() - 0.5) * 2;
+                            positions[i * 3 + 2] = ac.group.position.z + 0.5 + Math.random() * 1.5;
                         }
                     }
-                    a.mesh.particles.geometry.attributes.position.needsUpdate = true;
+                    ac.particles.geometry.attributes.position.needsUpdate = true;
                 }
-                if (a.kind === 'light' && a.on) {
-                    a.mesh.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
-                    a.mesh.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                ac.particles.visible = sa[3].on;
+                if (sa[0].on) {
+                    light1.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                    light1.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                } else {
+                    light1.bulbMat.emissiveIntensity = 0; light1.pointLight.intensity = 0;
                 }
-            });
+                if (sa[4].on) {
+                    light2.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                    light2.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                } else {
+                    light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0;
+                }
+            }
 
             // Animate 2BHK appliances (respecting ON/OFF)
             if (is2BHK) {
