@@ -175,14 +175,107 @@ function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
         controls.target.set(-14, 4, 0);
-        camera.position.set(-14, 14, 22);
+        camera.position.set(-14, 16, 28);
     } else {
         is2BHK = true;
         controls.target.set(16, 4, 0);
-        camera.position.set(16, 14, 22);
+        camera.position.set(16, 16, 28);
     }
     controls.update();
     buildAppliancePanel();
+    buildRoomNavPanel();
     recalcWattage();
+    // Hide back button when switching houses
+    document.getElementById('back-btn').classList.remove('visible');
 }
 function toggleUpgrade() { focusHouse('2bhk'); }
+
+// ═══════════════════════════════════════════════
+//  ROOM NAVIGATION PANEL
+// ═══════════════════════════════════════════════
+// 2BHK room zoom positions
+const bhk2RoomPositions = {
+    'Hall': { target: new THREE.Vector3(22, 3.5, 3), camera: new THREE.Vector3(22, 10, 16) },
+    'Bedroom 1': { target: new THREE.Vector3(11, 3.5, -6), camera: new THREE.Vector3(11, 10, 6) },
+    'Bedroom 2': { target: new THREE.Vector3(21, 3.5, -6), camera: new THREE.Vector3(21, 10, 6) },
+    'Kitchen': { target: new THREE.Vector3(8.5, 3.5, 0.75), camera: new THREE.Vector3(8.5, 10, 12) },
+    'Bathroom': { target: new THREE.Vector3(8.5, 3.5, 6), camera: new THREE.Vector3(8.5, 10, 16) }
+};
+
+function buildRoomNavPanel() {
+    const panel = document.getElementById('room-nav-panel');
+    let rooms;
+    let roomIcons;
+
+    if (is2BHK) {
+        rooms = ['Hall', 'Bedroom 1', 'Bedroom 2', 'Kitchen', 'Bathroom'];
+        roomIcons = { 'Hall': '🏠', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Kitchen': '🍳', 'Bathroom': '🚿' };
+    } else {
+        rooms = ['Hall', 'Kitchen', 'Bedroom'];
+        roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️' };
+    }
+
+    let html = '<div class="room-nav-title">🏡 Navigate Rooms</div><div class="room-nav-grid">';
+    rooms.forEach(room => {
+        html += '<button class="room-nav-btn" onclick="zoomToRoom(\'' + room + '\')">' +
+            '<span class="room-nav-icon">' + roomIcons[room] + '</span>' +
+            '<span class="room-nav-label">' + room + '</span>' +
+            '</button>';
+    });
+    html += '</div>';
+    panel.innerHTML = html;
+}
+
+function zoomToRoom(roomName) {
+    const positions = is2BHK ? bhk2RoomPositions : bhk1RoomPositions;
+    const pos = positions[roomName];
+    if (!pos) return;
+
+    // Smooth camera animation
+    const startPos = camera.position.clone();
+    const startTarget = controls.target.clone();
+    const endPos = pos.camera;
+    const endTarget = pos.target;
+
+    let progress = 0;
+    const duration = 60; // frames
+
+    function animateZoom() {
+        progress++;
+        const t = Math.min(progress / duration, 1);
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // ease in-out
+
+        camera.position.lerpVectors(startPos, endPos, ease);
+        controls.target.lerpVectors(startTarget, endTarget, ease);
+        controls.update();
+
+        if (t < 1) {
+            requestAnimationFrame(animateZoom);
+        }
+    }
+    animateZoom();
+
+    // Show back button
+    document.getElementById('back-btn').classList.add('visible');
+
+    // Highlight active room button
+    document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.room-nav-btn').classList.add('active');
+}
+
+function zoomOutToHouse() {
+    if (is2BHK) {
+        focusHouse('2bhk');
+    } else {
+        focusHouse('simple');
+    }
+    document.getElementById('back-btn').classList.remove('visible');
+}
+
+// ═══════════════════════════════════════════════
+//  ENERGY CHART TOGGLE
+// ═══════════════════════════════════════════════
+function toggleEnergyChart() {
+    const chart = document.getElementById('energy-chart');
+    chart.classList.toggle('visible');
+}

@@ -70,6 +70,25 @@ function animate() {
     sunGlow.position.copy(sunMesh.position);
     sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
+    // ─── BIRDS ANIMATION ───
+    birds.forEach(bird => {
+        const angle = bird.startAngle + elapsed * bird.circleSpeed;
+        bird.group.position.x = bird.circleRadius * Math.cos(angle);
+        bird.group.position.z = -10 + bird.circleRadius * Math.sin(angle) * 0.5;
+        bird.group.position.y = bird.baseY + Math.sin(elapsed * 0.5 + bird.flapPhase) * bird.bobAmount;
+
+        // Wing flapping
+        const flapAngle = Math.sin(elapsed * bird.flapSpeed + bird.flapPhase) * 0.5;
+        bird.leftWing.rotation.z = flapAngle;
+        bird.rightWing.rotation.z = -flapAngle;
+
+        // Face movement direction
+        const nextAngle = angle + 0.01;
+        const dx = Math.cos(nextAngle) - Math.cos(angle);
+        const dz = Math.sin(nextAngle) - Math.sin(angle);
+        bird.group.rotation.y = Math.atan2(dx, dz);
+    });
+
     // 1BHK appliances
     if (!is2BHK) {
         const sa = simpleAppliances;
@@ -166,6 +185,7 @@ function animate() {
 //  INITIALIZATION
 // ═══════════════════════════════════════════════
 buildAppliancePanel();
+buildRoomNavPanel();
 updateStats();
 animate();
 

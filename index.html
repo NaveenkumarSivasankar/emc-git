@@ -22,14 +22,10 @@
             <div class="logo-icon">☀️</div>
             <span>SolarHome</span>
         </div>
-        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 1BHK House</button>
-        <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
-            style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
-            2BHK House</button>
-        <button id="solar-btn" class="grid-mode" onclick="toggleSolar()">
-            <span id="solar-btn-icon">☀️</span>
-            <span id="solar-btn-text">Switch to Solar Energy</span>
-        </button>
+        <div class="house-btns">
+            <button id="upgrade-btn" onclick="focusHouse('simple')">🏠 1BHK House</button>
+            <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')">🏢 2BHK House</button>
+        </div>
     </div>
 
     <!-- Appliance Control Panel -->
@@ -66,9 +62,13 @@
     <!-- Room Navigation Panel -->
     <div id="room-nav-panel"></div>
 
-    <!-- Panel Counter Controls -->
-    <div id="solar-mount-point"
-        style="display:none; position:fixed; bottom:20px; left:20px; z-index:100; align-items:center; gap:10px;">
+    <!-- Bottom Control Bar -->
+    <div id="bottom-controls">
+        <button id="solar-btn" class="grid-mode bottom-action-btn" onclick="toggleSolar()">
+            <span id="solar-btn-icon">☀️</span>
+            <span id="solar-btn-text">Add Solar Panels</span>
+        </button>
+
         <div id="panel-counter">
             <button class="panel-control-btn" onclick="changePanelCount(-1)">−</button>
             <div id="panel-count-display">
@@ -77,10 +77,11 @@
             </div>
             <button class="panel-control-btn" onclick="changePanelCount(1)">+</button>
         </div>
-    </div>
 
-    <!-- Room Navigation Panel -->
-    <div id="room-nav-panel"></div>
+        <button id="energy-chart-btn" class="bottom-action-btn" onclick="toggleEnergyChart()">
+            📊 Energy Comparison
+        </button>
+    </div>
 
     <!-- Zoom Hint -->
     <div id="zoom-hint">
