@@ -1,630 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Solar Energy Awareness – Explore a Solar Home!</title>
-    <meta name="description"
-        content="An interactive 3D web application for school students to learn about solar energy by exploring a virtual house and switching to solar power.">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Outfit', sans-serif;
-            overflow: hidden;
-            background: #0a0a1a;
-            color: #fff;
-        }
-
-        #canvas-container {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-        }
-
-        canvas {
-            display: block;
-        }
-
-        /* ── Top Bar ────────────────────────── */
-        #top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            padding: 16px 28px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            z-index: 100;
-            background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
-            pointer-events: none;
-        }
-
-        #top-bar>* {
-            pointer-events: auto;
-        }
-
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 1.3rem;
-            letter-spacing: -0.02em;
-        }
-
-        .logo-icon {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #FFD700, #FF8C00);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-
-        /* ── Solar Button ────────────────────────── */
-        #solar-btn {
-            padding: 12px 28px;
-            border: none;
-            border-radius: 50px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        #solar-btn.grid-mode {
-            background: linear-gradient(135deg, #FFD700, #FF8C00);
-            color: #1a1a2e;
-            box-shadow: 0 4px 25px rgba(255, 215, 0, 0.4);
-        }
-
-        #solar-btn.solar-mode {
-            background: linear-gradient(135deg, #ff4757, #ff6b81);
-            color: #fff;
-            box-shadow: 0 4px 25px rgba(255, 71, 87, 0.4);
-        }
-
-        #solar-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        /* ── Stats Panel ────────────────────────── */
-        #stats-panel {
-            position: fixed;
-            right: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-width: 240px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 16px 18px;
-            transition: all 0.4s ease;
-        }
-
-        .stat-card:hover {
-            background: rgba(255, 255, 255, 0.14);
-            transform: translateX(-4px);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            opacity: 0.6;
-            margin-bottom: 4px;
-        }
-
-        .stat-value {
-            font-size: 1.35rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFD700, #FF8C00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .stat-card.green .stat-value {
-            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
-            -webkit-background-clip: text;
-            background-clip: text;
-        }
-
-        /* ── Zoom Hint ────────────────────────── */
-        #zoom-hint {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 50px;
-            padding: 12px 28px;
-            font-size: 0.85rem;
-            font-weight: 400;
-            opacity: 0.8;
-            transition: opacity 0.5s ease;
-            text-align: center;
-        }
-
-        #zoom-hint.hidden {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        /* ── Info Tooltip ────────────────────────── */
-        .appliance-label {
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-            padding: 8px 14px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.8rem;
-            pointer-events: none;
-            white-space: nowrap;
-            line-height: 1.4;
-        }
-
-        .appliance-label .name {
-            font-weight: 600;
-            color: #FFD700;
-        }
-
-        .appliance-label .watt {
-            font-weight: 300;
-            opacity: 0.8;
-        }
-
-        /* ── Solar panel counter ────────────────────────── */
-        #panel-counter {
-            position: fixed;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            z-index: 100;
-            display: none;
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(12px);
-            padding: 8px 16px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            margin-left: 20px;
-        }
-
-        #panel-counter.visible {
-            display: flex;
-        }
-
-        .panel-control-btn {
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(12px);
-            color: #fff;
-            font-size: 1.3rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .panel-control-btn:hover {
-            background: rgba(255, 215, 0, 0.3);
-            transform: scale(1.1);
-        }
-
-        #panel-count-display {
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            padding: 12px 16px;
-            text-align: center;
-            min-width: 80px;
-        }
-
-        #panel-count-display .count {
-            font-size: 2rem;
-            font-weight: 800;
-            color: #FFD700;
-        }
-
-        #panel-count-display .label-text {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            opacity: 0.6;
-        }
-
-        /* ── Back Button (room zoom) ────────────────────────── */
-        #back-btn {
-            position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 101;
-            padding: 10px 24px;
-            border: none;
-            border-radius: 50px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #e74c3c, #c0392b);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
-            transition: all 0.3s ease;
-            display: none;
-        }
-
-        #back-btn:hover {
-            transform: translateX(-50%) translateY(-2px) scale(1.05);
-        }
-
-        #back-btn.visible {
-            display: block;
-        }
-
-        /* ── Energy Bar Chart ────────────────────────── */
-        #energy-chart {
-            position: fixed;
-            right: 20px;
-            bottom: 20px;
-            z-index: 100;
-            background: rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 16px;
-            padding: 16px;
-            width: 220px;
-        }
-
-        #energy-chart h3 {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.08em;
-            opacity: 0.6;
-            margin-bottom: 10px;
-        }
-
-        .bar-row {
-            margin-bottom: 8px;
-        }
-
-        .bar-label {
-            font-size: 0.65rem;
-            margin-bottom: 3px;
-            opacity: 0.8;
-        }
-
-        .bar-track {
-            height: 18px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 9px;
-            overflow: hidden;
-            position: relative;
-        }
-
-        .bar-fill {
-            height: 100%;
-            border-radius: 9px;
-            transition: width 0.6s ease;
-            display: flex;
-            align-items: center;
-            padding-left: 6px;
-            font-size: 0.6rem;
-            font-weight: 600;
-            min-width: 30px;
-        }
-
-        .bar-fill.grid {
-            background: linear-gradient(90deg, #e74c3c, #ff6b81);
-        }
-
-        .bar-fill.solar {
-            background: linear-gradient(90deg, #FFD700, #FF8C00);
-            color: #1a1a2e;
-        }
-
-        .calc-summary {
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            font-size: 0.65rem;
-            line-height: 1.6;
-            opacity: 0.8;
-        }
-
-        .calc-summary .highlight {
-            color: #FFD700;
-            font-weight: 600;
-        }
-
-        /* ── Upgrade Button ────────────────────────── */
-        #upgrade-btn {
-            padding: 10px 22px;
-            border: none;
-            border-radius: 50px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        #upgrade-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-        }
-
-        #upgrade-btn.active {
-            background: linear-gradient(135deg, #00b894, #55efc4);
-            color: #1a1a2e;
-        }
-
-        /* ── Appliance Control Panel ────────────────────────── */
-        #appliance-panel {
-            position: fixed;
-            left: 20px;
-            top: 80px;
-            z-index: 100;
-            max-height: calc(100vh - 160px);
-            overflow-y: auto;
-            width: 210px;
-            display: block;
-        }
-
-        #appliance-panel.visible {
-            display: block;
-        }
-
-        .room-section {
-            margin-bottom: 8px;
-        }
-
-        .room-header {
-            font-size: 0.7rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            padding: 6px 12px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 10px 10px 0 0;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-bottom: none;
-        }
-
-        .appliance-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 5px 12px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-top: none;
-            font-size: 0.72rem;
-        }
-
-        .appliance-row:last-child {
-            border-radius: 0 0 10px 10px;
-        }
-
-        .appliance-row .app-name {
-            opacity: 0.85;
-        }
-
-        .appliance-row .app-watt {
-            opacity: 0.5;
-            font-size: 0.6rem;
-        }
-
-        /* Toggle switch */
-        .toggle {
-            position: relative;
-            width: 36px;
-            height: 20px;
-            flex-shrink: 0;
-        }
-
-        .toggle input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-
-        .toggle .slider {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: #444;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .toggle .slider:before {
-            content: '';
-            position: absolute;
-            height: 14px;
-            width: 14px;
-            border-radius: 50%;
-            left: 3px;
-            bottom: 3px;
-            background: #fff;
-            transition: 0.3s;
-        }
-
-        .toggle input:checked+.slider {
-            background: #00b894;
-        }
-
-        .toggle input:checked+.slider:before {
-            transform: translateX(16px);
-        }
-
-        #appliance-panel::-webkit-scrollbar {
-            width: 4px;
-        }
-
-        #appliance-panel::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-        }
-    </style>
-</head>
-
-<body>
-
-    <div id="canvas-container"></div>
-
-    <!-- Top Bar -->
-    <div id="top-bar">
-        <div class="logo">
-            <div class="logo-icon">☀️</div>
-            <span>SolarHome</span>
-        </div>
-        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 Simple House</button>
-        <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
-            style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
-            2BHK House</button>
-        <button id="solar-btn" class="grid-mode" onclick="toggleSolar()">
-            <span id="solar-btn-icon">☀️</span>
-            <span id="solar-btn-text">Switch to Solar Energy</span>
-        </button>
-    </div>
-
-    <!-- Appliance Control Panel -->
-    <div id="appliance-panel"></div>
-
-    <!-- Stats Panel -->
-    <div id="stats-panel">
-        <div class="stat-card">
-            <div class="stat-label">Total Consumption</div>
-            <div class="stat-value" id="stat-consumption">3,750 W</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Solar Panels</div>
-            <div class="stat-value" id="stat-panels">0</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-label">Monthly Savings</div>
-            <div class="stat-value" id="stat-savings">₹0</div>
-        </div>
-        <div class="stat-card green">
-            <div class="stat-label">CO₂ Prevented</div>
-            <div class="stat-value" id="stat-co2">0 kg</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Fun Fact</div>
-            <div class="stat-value"
-                style="font-size:0.78rem;-webkit-text-fill-color:#fff;color:#fff;font-weight:400;line-height:1.4;"
-                id="stat-fact">
-                The sun produces enough energy in 1 hour to power the entire Earth for a year!
-            </div>
-        </div>
-    </div>
-
-    <!-- Room Navigation Panel -->
-    <div id="room-nav-panel"></div>
-
-    <!-- Panel Counter Controls (Repositioned to bottom-left) -->
-    <div id="solar-mount-point"
-        style="display:none; position:fixed; bottom:20px; left:20px; z-index:100; align-items:center; gap:10px;">
-        <div id="panel-counter">
-            <button class="panel-control-btn" onclick="changePanelCount(-1)">−</button>
-            <div id="panel-count-display">
-                <div class="count" id="panel-num">0</div>
-                <div class="label-text">Panels</div>
-            </div>
-            <button class="panel-control-btn" onclick="changePanelCount(1)">+</button>
-        </div>
-    </div>
-
-    <!-- Room Navigation Panel -->
-    <div id="room-nav-panel"></div>
-
-    <!-- Zoom Hint -->
-    <div id="zoom-hint">
-        🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
-    </div>
-
-    <!-- Back Button for Room Zoom -->
-    <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
-
-    <!-- Energy Bar Chart -->
-    <div id="energy-chart">
-        <h3>⚡ Energy Comparison</h3>
-        <div class="bar-row">
-            <div class="bar-label">Grid Energy</div>
-            <div class="bar-track">
-                <div class="bar-fill grid" id="grid-bar" style="width:100%">100%</div>
-            </div>
-        </div>
-        <div class="bar-row">
-            <div class="bar-label">Solar Energy</div>
-            <div class="bar-track">
-                <div class="bar-fill solar" id="solar-bar" style="width:0%">0%</div>
-            </div>
-        </div>
-        <div class="calc-summary" id="calc-summary">
-            Daily Grid Cost: <span class="highlight" id="calc-grid">₹0</span><br>
-            Daily Solar Savings: <span class="highlight" id="calc-solar">₹0</span><br>
-            Monthly Bill: <span class="highlight" id="calc-monthly">₹0</span>
-        </div>
-    </div>
-
-    <!-- Three.js -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
-
-    <script>
-        // ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════
         //  SCENE SETUP
         // ═══════════════════════════════════════════════
         const container = document.getElementById('canvas-container');
@@ -1080,7 +454,95 @@
         }
         scene.add(poleGroup);
 
-        // (Trees removed for clearer view)
+        // ═══════════════════════════════════════════════
+        //  TREES AROUND HOUSES
+        // ═══════════════════════════════════════════════
+        function createTree(x, y, z, scale) {
+            const treeGroup = new THREE.Group();
+            // Trunk
+            const trunkGeo = new THREE.CylinderGeometry(0.15 * scale, 0.25 * scale, 2.5 * scale, 8);
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.9 });
+            const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+            trunk.position.y = 1.25 * scale;
+            trunk.castShadow = true;
+            treeGroup.add(trunk);
+            // Foliage layers (multiple spheres for natural look)
+            const foliageColors = [0x2d7d2d, 0x3a9d3a, 0x228B22, 0x2e8b2e];
+            const foliagePositions = [
+                { y: 3.0, r: 1.4 }, { y: 3.8, r: 1.1 }, { y: 4.4, r: 0.75 },
+                { y: 3.2, r: 0.9, x: 0.5, z: 0.3 }, { y: 3.2, r: 0.9, x: -0.4, z: -0.3 }
+            ];
+            foliagePositions.forEach((fp, i) => {
+                const fGeo = new THREE.SphereGeometry(fp.r * scale, 10, 10);
+                const fMat = new THREE.MeshStandardMaterial({ color: foliageColors[i % foliageColors.length], roughness: 0.85 });
+                const foliage = new THREE.Mesh(fGeo, fMat);
+                foliage.position.set((fp.x || 0) * scale, fp.y * scale, (fp.z || 0) * scale);
+                foliage.castShadow = true;
+                treeGroup.add(foliage);
+            });
+            treeGroup.position.set(x, y, z);
+            scene.add(treeGroup);
+            return treeGroup;
+        }
+
+        // Trees around simple house (centered at -11, 0, 0)
+        // Create trees around simple house
+        createTree(-14, 0, 8, 1.2); createTree(-8, 0, 8, 1.0);
+        createTree(-16, 0, -6, 1.3); createTree(-6, 0, -6, 1.1);
+        createTree(-11, 0, -9, 0.9);
+        // Create trees around 2BHK (shifted further away to avoid interior)
+        createTree(4, 0, -10, 1.2); createTree(28, 0, -10, 1.4);
+        createTree(16, 0, -12, 1.0);
+        // Scattered background trees
+        createTree(-30, 0, -15, 1.5); createTree(30, 0, -15, 1.6);
+        createTree(-25, 0, 20, 1.4); createTree(25, 0, 20, 1.3);
+        createTree(30, 0, 10, 1.2);
+
+        // ═══════════════════════════════════════════════
+        //  ANIMATED BIRDS
+        // ═══════════════════════════════════════════════
+        const birds = [];
+        function createBird(cx, cy, cz, radiusX, radiusZ, speed, phase) {
+            const birdGroup = new THREE.Group();
+            // Body
+            const bodyGeo = new THREE.ConeGeometry(0.12, 0.5, 6);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.7 });
+            const body = new THREE.Mesh(bodyGeo, bodyMat);
+            body.rotation.z = -Math.PI / 2;
+            birdGroup.add(body);
+            // Left wing
+            const wingGeo = new THREE.PlaneGeometry(0.5, 0.15);
+            const wingMat = new THREE.MeshStandardMaterial({ color: 0x444444, side: THREE.DoubleSide, roughness: 0.8 });
+            const leftWing = new THREE.Mesh(wingGeo, wingMat);
+            leftWing.position.set(0, 0.08, -0.15);
+            leftWing.rotation.x = 0;
+            birdGroup.add(leftWing);
+            // Right wing
+            const rightWing = new THREE.Mesh(wingGeo, wingMat);
+            rightWing.position.set(0, 0.08, 0.15);
+            rightWing.rotation.x = 0;
+            birdGroup.add(rightWing);
+            // Tail
+            const tailGeo = new THREE.PlaneGeometry(0.2, 0.08);
+            const tail = new THREE.Mesh(tailGeo, wingMat);
+            tail.position.set(-0.3, 0.05, 0);
+            birdGroup.add(tail);
+            birdGroup.position.set(cx, cy, cz);
+            scene.add(birdGroup);
+            birds.push({
+                group: birdGroup, leftWing, rightWing,
+                cx, cy, cz, radiusX, radiusZ, speed, phase,
+                flapSpeed: 5 + Math.random() * 3
+            });
+            return birdGroup;
+        }
+
+        createBird(0, 22, -5, 18, 12, 0.3, 0);
+        createBird(-5, 24, -8, 15, 10, 0.25, 1.2);
+        createBird(8, 20, -3, 20, 14, 0.35, 2.5);
+        createBird(-10, 26, -10, 12, 8, 0.2, 3.8);
+        createBird(15, 23, -6, 16, 11, 0.28, 5.0);
+        createBird(-3, 21, -4, 14, 9, 0.32, 0.7);
 
         // ═══════════════════════════════════════════════
         //  INTERIOR APPLIANCES
@@ -1691,8 +1153,85 @@
         simpleAppliances[6].mesh = { frame: simpleTvFrame, screen: simpleTvScreen };
 
         // === Appliance ON/OFF Toggle System ===
+        let currentFocusedHouse = null; // 'simple' or '2bhk'
+        let currentRoom = null; // null = full view, or room name for 2BHK
+
+        function addDynamicAppliance(type) {
+            const isSimple = (currentFocusedHouse === 'simple');
+            const room = isSimple ? null : (currentRoom || 'Hall');
+            const list = isSimple ? simpleAppliances : bhk2Appliances;
+            const count = list.filter(a => a.type === type && (isSimple || a.room === room)).length;
+
+            let obj = null;
+            let mesh = null;
+            const name = type.charAt(0).toUpperCase() + type.slice(1) + ' ' + (count + 1);
+
+            // Placement logic
+            let x = 0, y = 3, z = 0;
+            if (isSimple) {
+                x = -11 + (count % 3 - 1) * 2;
+                z = (Math.floor(count / 3)) * 2 - 2;
+            } else {
+                const center = roomCenters[room] || { x: 0, z: 0 };
+                x = center.x + (count % 3 - 1) * 2;
+                z = center.z + (Math.floor(count / 3)) * 2 - 2;
+            }
+
+            if (type === 'light') {
+                mesh = createLight(x, H - 0.5, z);
+                obj = { type, name, watt: 60, emoji: '💡', on: true, kind: 'light', mesh };
+            } else if (type === 'fan') {
+                mesh = createFan(x, H - 0.3, z);
+                obj = { type, name, watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh };
+                (isSimple ? simpleAnimData : bhk2AnimData).fans.push(obj);
+            } else if (type === 'ac') {
+                mesh = createAC(isSimple ? -11 + 4 : x, 5, isSimple ? -4.3 : z);
+                obj = { type, name, watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh };
+                (isSimple ? simpleAnimData : bhk2AnimData).acs.push(obj);
+            } else if (type === 'tv') {
+                const w = isSimple ? 2.5 : 4;
+                const h = isSimple ? 1.4 : 2.2;
+                const tvGroup = new THREE.Group();
+                const frame = new THREE.Mesh(new THREE.BoxGeometry(w, h, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+                const screen = new THREE.Mesh(new THREE.PlaneGeometry(w * 0.9, h * 0.85), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000 }));
+                screen.position.z = 0.051; tvGroup.add(frame, screen);
+                tvGroup.position.set(x, 4, isSimple ? -4.2 : z - 1);
+                mesh = { group: tvGroup, screen };
+                obj = { type, name, watt: 150, emoji: '📺', on: true, kind: 'tv', mesh };
+                // Set initial image
+                const tex = tvTextures[Math.floor(Math.random() * tvTextures.length)];
+                screen.material.map = tex; screen.material.emissiveMap = tex;
+                screen.material.emissiveIntensity = 1.0;
+            } else if (type === 'fridge') {
+                mesh = createFridge(x, 0.3, z);
+                obj = { type, name, watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh };
+            } else if (type === 'tablefan') {
+                mesh = createTableFan(x, 1.8, z);
+                // Table
+                const t = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.2, 1.0), tableMat);
+                t.position.set(x, 0.6, z);
+                mesh.group.add(t); // add table to group
+                obj = { type, name, watt: 55, emoji: '🎐', on: true, kind: 'tablefan', mesh };
+                (isSimple ? simpleAnimData : bhk2AnimData).tableFans.push(obj);
+            }
+
+            if (obj && mesh) {
+                if (isSimple) {
+                    houseGroup.add(mesh.group || mesh);
+                    simpleAppliances.push(obj);
+                } else {
+                    roomGroups[room].add(mesh.group || mesh);
+                    if (applianceGroup.children.includes(mesh.group || mesh)) applianceGroup.remove(mesh.group || mesh);
+                    obj.room = room;
+                    bhk2Appliances.push(obj);
+                }
+                buildAppliancePanel(currentRoom);
+                recalcWattage();
+            }
+        }
+
         function toggleAppliance(idx, isOn) {
-            const a = is2BHK ? bhk2Appliances[idx] : null;
+            const a = bhk2Appliances[idx];
             if (!a) return;
             a.on = isOn;
             if (a.kind === 'light') {
@@ -1770,10 +1309,10 @@
 
         function recalcWattage() {
             let total = 0;
-            if (is2BHK) {
+            if (currentFocusedHouse === '2bhk') {
                 bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
             } else {
-                total = totalWatt;
+                simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
             }
             document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
             const panelsNeeded = Math.max(1, Math.ceil(total / 350));
@@ -1783,7 +1322,6 @@
             const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
-            updateBarChart(total, coverageRatio);
         }
 
         // Load TV Textures
@@ -1794,38 +1332,175 @@
         ];
 
         // Build the appliance control panel HTML
-        function buildAppliancePanel() {
+        function buildAppliancePanel(filterRoom) {
             const panel = document.getElementById('appliance-panel');
-            let html = '';
-            const grouped = {};
-            bhk2Appliances.forEach((a, i) => {
-                if (!grouped[a.room]) grouped[a.room] = [];
-                grouped[a.room].push({ ...a, idx: i });
+            let html = '<div class="add-section"><div class="room-header">➕ Add Appliances</div>';
+            html += '<div class="app-grid" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; padding:10px; border-bottom:1px solid rgba(255,255,255,0.1);">';
+            const appTypes = [
+                { type: 'light', emoji: '💡', label: 'Light' },
+                { type: 'fan', emoji: '🌀', label: 'Fan' },
+                { type: 'ac', emoji: '❄️', label: 'AC' },
+                { type: 'tv', emoji: '📺', label: 'TV' },
+                { type: 'fridge', emoji: '🧊', label: 'Fridge' },
+                { type: 'tablefan', emoji: '🎐', label: 'TFan' }
+            ];
+            appTypes.forEach(app => {
+                html += `<button class="add-tile-btn" onclick="addDynamicAppliance('${app.type}')" 
+                           style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); padding:8px; border-radius:8px; color:#fff; cursor:pointer; font-size:0.75rem;">
+                           <div style="font-size:1.2rem; margin-bottom:4px;">${app.emoji}</div>${app.label}</button>`;
             });
-            for (const room in grouped) {
-                html += `<div class="room-section"><div class="room-header">${room}</div>`;
-                grouped[room].forEach(a => {
+            html += '</div></div>';
+
+            if (currentFocusedHouse === 'simple') {
+                html += '<div class="room-section"><div class="room-header">🏠 Simple House</div>';
+                simpleAppliances.forEach((a, i) => {
                     html += `<div class="appliance-row">
-                        <div><span class="app-name">${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
-                        <label class="toggle"><input type="checkbox" checked onchange="toggleAppliance(${a.idx},this.checked)"><span class="slider"></span></label>
+                        <div><span class="app-name">${a.emoji} ${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
+                        <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleSimpleAppliance(${i},this.checked)"><span class="slider"></span></label>
                     </div>`;
                 });
                 html += '</div>';
+            } else {
+                const grouped = {};
+                bhk2Appliances.forEach((a, i) => {
+                    if (filterRoom && a.room !== filterRoom) return;
+                    if (!grouped[a.room]) grouped[a.room] = [];
+                    grouped[a.room].push({ ...a, idx: i });
+                });
+                for (const room in grouped) {
+                    html += `<div class="room-section"><div class="room-header">${room}</div>`;
+                    grouped[room].forEach(a => {
+                        html += `<div class="appliance-row">
+                            <div><span class="app-name">${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
+                            <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleAppliance(${a.idx},this.checked)"><span class="slider"></span></label>
+                        </div>`;
+                    });
+                    html += '</div>';
+                }
             }
             panel.innerHTML = html;
         }
         buildAppliancePanel();
 
+        // ═══════════════════════════════════════════════
+        //  2BHK ROOM NAVIGATION SYSTEM
+        // ═══════════════════════════════════════════════
+        // Room center positions (relative to bhk2Group at x=13)
+        // Room center positions (relative to bhk2Group at x=16)
+        const roomCenters = {
+            'Hall': { x: 2.5, z: 2.75 },
+            'Bedroom 1': { x: -5, z: -5.25 },
+            'Bedroom 2': { x: 5, z: -5.25 },
+            'Kitchen': { x: -7.5, z: 0.75 },
+            'Bathroom': { x: -7.5, z: 6 }
+        };
+
+        function buildRoomNavPanel() {
+            const navPanel = document.getElementById('room-nav-panel');
+            const rooms = ['Hall', 'Bedroom 1', 'Bedroom 2', 'Kitchen', 'Bathroom'];
+            const emojis = { 'Hall': '🏠', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Kitchen': '🍳', 'Bathroom': '🚿' };
+            let html = '<button id="back-to-full-btn" onclick="exitRoomView()">🔙 Back to Full View</button>';
+            rooms.forEach(room => {
+                html += `<button class="room-nav-btn" id="room-btn-${room.replace(' ', '-')}" onclick="enterRoom('${room}')">${emojis[room]} ${room}</button>`;
+            });
+            navPanel.innerHTML = html;
+        }
+        buildRoomNavPanel();
+
+        function enterRoom(roomName) {
+            currentRoom = roomName;
+            const center = roomCenters[roomName];
+            if (!center) return;
+            // Animate camera to the room (world coords: bhk2Group.position.x + room center)
+            const worldX = 16 + center.x;
+            const worldZ = center.z;
+            controls.target.set(worldX, 3, worldZ);
+            camera.position.set(worldX + 2.5, 9, worldZ + 7.5);
+            controls.update();
+
+            // Room Isolation Visibility
+            Object.keys(roomGroups).forEach(name => {
+                if (name === 'Structure') roomGroups[name].visible = true;
+                else roomGroups[name].visible = (name === roomName);
+            });
+
+            // Show back button and highlight room nav
+            document.getElementById('back-to-full-btn').style.display = 'inline-block';
+            document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
+            const activeBtn = document.getElementById('room-btn-' + roomName.replace(' ', '-'));
+            if (activeBtn) activeBtn.classList.add('active');
+            // Update appliance panel to show only this room
+            buildAppliancePanel(roomName);
+        }
+
+        function exitRoomView() {
+            currentRoom = null;
+            // Return to full 2BHK view
+            controls.target.set(16, 4, 0);
+            camera.position.set(16, 12, 20);
+            controls.update();
+
+            // Restore all visibility
+            Object.values(roomGroups).forEach(g => g.visible = true);
+
+            document.getElementById('back-to-full-btn').style.display = 'none';
+            document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
+            buildAppliancePanel();
+        }
+
         // Focus camera on a house
         function focusHouse(which) {
+            currentFocusedHouse = which;
+            currentRoom = null;
+            document.getElementById('back-to-full-btn').style.display = 'none';
             if (which === 'simple') {
                 controls.target.set(-11, 4, 0);
                 camera.position.set(-11, 12, 20);
+                document.getElementById('room-nav-panel').classList.remove('visible');
+                document.getElementById('solar-mount-point').style.display = 'flex';
+                document.getElementById('panel-counter').classList.add('visible');
             } else {
-                controls.target.set(13, 4, 0);
-                camera.position.set(13, 12, 20);
+                controls.target.set(16, 4, 0);
+                camera.position.set(16, 12, 20);
+                document.getElementById('room-nav-panel').classList.add('visible');
+                document.getElementById('solar-mount-point').style.display = 'flex';
+                document.getElementById('panel-counter').classList.add('visible');
             }
             controls.update();
+            buildAppliancePanel();
+            recalcWattage();
+            // Update solar panel instances if needed
+            updateSolarInstance();
+        }
+
+        let currentSolarTarget = 'simple';
+        function updateSolarInstance() {
+            const is2BHK = (currentFocusedHouse === '2bhk');
+            const targetW = is2BHK ? 20 : 15;
+            const targetH = 5.5;
+            const targetRoofH = 3.5;
+            const slopeAngle = Math.atan2(targetRoofH, targetW / 2 + 0.8);
+
+            solarPanels.forEach((p, index) => {
+                if (is2BHK) roomGroups['Structure'].add(p.group);
+                else houseGroup.add(p.group);
+
+                // Recalculate position on roof
+                const col = index % 5;
+                const row = Math.floor(index / 5);
+                const xPos = (is2BHK ? -4.5 : -3.6) + col * (is2BHK ? 2.3 : 2.0);
+                const zPos = -2.0 + row * 2.5;
+                const roofY = targetH + 0.3 + targetRoofH - Math.abs(xPos) * (targetRoofH / (targetW / 2 + 0.8));
+
+                p.targetY = roofY + 0.15;
+                p.group.position.x = xPos;
+                p.group.position.z = zPos;
+                if (!p.animating && p.group.visible) {
+                    p.group.position.y = p.targetY;
+                }
+                p.group.rotation.x = -slopeAngle * (xPos >= 0 ? 1 : -1) * 0.5;
+                p.group.rotation.z = xPos >= 0 ? -slopeAngle * 0.3 : slopeAngle * 0.3;
+            });
         }
         // Keep toggleUpgrade for backward compat
         function toggleUpgrade() { focusHouse('2bhk'); }
@@ -1911,22 +1586,18 @@
         ];
 
         function updateStats() {
-            let total = 0;
-            const list = is2BHK ? bhk2Appliances : simpleAppliances;
-            list.forEach(a => { if (a.on) total += a.watt; });
-            const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-            document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
+            const panelsNeeded = Math.ceil(totalWatt / 350);
+            document.getElementById('stat-consumption').textContent = totalWatt.toLocaleString() + ' W';
             document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
 
             const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
-            const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8); // approx INR
-            const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+            const monthlySaving = Math.round(coverageRatio * totalWatt * 0.72 * 30 / 1000 * 8); // approx INR
+            const co2Saved = Math.round(coverageRatio * totalWatt * 0.0007 * 365);
 
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
             document.getElementById('stat-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
             document.getElementById('panel-num').textContent = currentPanelCount;
-            updateBarChart(total, coverageRatio);
         }
 
         function toggleSolar() {
@@ -2103,23 +1774,41 @@
             sunGlow.position.copy(sunMesh.position);
             sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
-            // Animate ceiling fan (simple house)
-            if (!is2BHK) {
-                fan1.blades.rotation.y += delta * 5;
-                tableFan.blades.rotation.z += delta * 8;
-                const positions = ac.particlePositions;
-                for (let i = 0; i < positions.length / 3; i++) {
-                    positions[i * 3 + 1] -= delta * 0.5;
-                    if (positions[i * 3 + 1] < ac.baseY - 3) {
-                        positions[i * 3 + 1] = ac.baseY - 0.3;
-                        positions[i * 3] = ac.group.position.x + (Math.random() - 0.5) * 2;
-                        positions[i * 3 + 2] = ac.group.position.z + 0.5 + Math.random() * 1.5;
+            // Animate birds
+            birds.forEach(bird => {
+                const t = elapsed * bird.speed + bird.phase;
+                bird.group.position.x = bird.cx + Math.sin(t) * bird.radiusX;
+                bird.group.position.z = bird.cz + Math.cos(t) * bird.radiusZ;
+                bird.group.position.y = bird.cy + Math.sin(t * 1.5) * 1.5;
+                // Face direction of travel
+                bird.group.rotation.y = t + Math.PI / 2;
+                // Wing flapping
+                const flapAngle = Math.sin(elapsed * bird.flapSpeed) * 0.6;
+                bird.leftWing.rotation.x = flapAngle;
+                bird.rightWing.rotation.x = -flapAngle;
+            });
+
+            // Animate simple house appliances (respecting ON/OFF)
+            simpleAppliances.forEach(a => {
+                if (a.kind === 'fan' && a.on) a.mesh.blades.rotation.y += delta * 5;
+                if (a.kind === 'tablefan' && a.on) a.mesh.blades.rotation.z += delta * 8;
+                if (a.kind === 'ac' && a.on && a.mesh.particlePositions) {
+                    const positions = a.mesh.particlePositions;
+                    for (let i = 0; i < positions.length / 3; i++) {
+                        positions[i * 3 + 1] -= delta * 0.5;
+                        if (positions[i * 3 + 1] < a.mesh.baseY - 3) {
+                            positions[i * 3 + 1] = a.mesh.baseY - 0.3;
+                            positions[i * 3] = a.mesh.group.position.x + (Math.random() - 0.5) * 2;
+                            positions[i * 3 + 2] = a.mesh.group.position.z + 0.5 + Math.random() * 1.5;
+                        }
                     }
+                    a.mesh.particles.geometry.attributes.position.needsUpdate = true;
                 }
-                ac.particles.geometry.attributes.position.needsUpdate = true;
-                light1.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
-                light1.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
-            }
+                if (a.kind === 'light' && a.on) {
+                    a.mesh.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                    a.mesh.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                }
+            });
 
             // Animate 2BHK appliances (respecting ON/OFF)
             if (is2BHK) {
@@ -2203,8 +1892,3 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             labelRenderer.setSize(window.innerWidth, window.innerHeight);
         });
-    </script>
-
-</body>
-
-</html>
