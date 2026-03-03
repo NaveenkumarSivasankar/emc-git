@@ -205,15 +205,15 @@
             opacity: 0.8;
         }
 
-        /* ── Solar panel counter ────────────────────────── */
+        /* ── Solar panel counter (bottom/south) ────────────────────────── */
         #panel-counter {
             position: fixed;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 100;
             display: none;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             gap: 10px;
         }
@@ -266,6 +266,110 @@
             text-transform: uppercase;
             letter-spacing: 0.06em;
             opacity: 0.6;
+        }
+
+        /* ── Back Button (room zoom) ────────────────────────── */
+        #back-btn {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 101;
+            padding: 10px 24px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(231, 76, 60, 0.4);
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        #back-btn:hover {
+            transform: translateX(-50%) translateY(-2px) scale(1.05);
+        }
+
+        #back-btn.visible {
+            display: block;
+        }
+
+        /* ── Energy Bar Chart ────────────────────────── */
+        #energy-chart {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px;
+            width: 220px;
+        }
+
+        #energy-chart h3 {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.6;
+            margin-bottom: 10px;
+        }
+
+        .bar-row {
+            margin-bottom: 8px;
+        }
+
+        .bar-label {
+            font-size: 0.65rem;
+            margin-bottom: 3px;
+            opacity: 0.8;
+        }
+
+        .bar-track {
+            height: 18px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 9px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .bar-fill {
+            height: 100%;
+            border-radius: 9px;
+            transition: width 0.6s ease;
+            display: flex;
+            align-items: center;
+            padding-left: 6px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            min-width: 30px;
+        }
+
+        .bar-fill.grid {
+            background: linear-gradient(90deg, #e74c3c, #ff6b81);
+        }
+
+        .bar-fill.solar {
+            background: linear-gradient(90deg, #FFD700, #FF8C00);
+            color: #1a1a2e;
+        }
+
+        .calc-summary {
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.65rem;
+            line-height: 1.6;
+            opacity: 0.8;
+        }
+
+        .calc-summary .highlight {
+            color: #FFD700;
+            font-weight: 600;
         }
 
         /* ── Upgrade Button ────────────────────────── */
@@ -405,6 +509,16 @@
             background: rgba(255, 255, 255, 0.2);
             border-radius: 2px;
         }
+
+        /* ── Room clickable labels ────────────────────────── */
+        .room-click-label {
+            cursor: pointer !important;
+            pointer-events: auto !important;
+        }
+
+        .room-click-label:hover {
+            transform: scale(1.08);
+        }
     </style>
 </head>
 
@@ -472,6 +586,31 @@
     <!-- Zoom Hint -->
     <div id="zoom-hint">
         🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
+    </div>
+
+    <!-- Back Button for Room Zoom -->
+    <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
+
+    <!-- Energy Bar Chart -->
+    <div id="energy-chart">
+        <h3>⚡ Energy Comparison</h3>
+        <div class="bar-row">
+            <div class="bar-label">Grid Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill grid" id="grid-bar" style="width:100%">100%</div>
+            </div>
+        </div>
+        <div class="bar-row">
+            <div class="bar-label">Solar Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill solar" id="solar-bar" style="width:0%">0%</div>
+            </div>
+        </div>
+        <div class="calc-summary" id="calc-summary">
+            Daily Grid Cost: <span class="highlight" id="calc-grid">₹0</span><br>
+            Daily Solar Savings: <span class="highlight" id="calc-solar">₹0</span><br>
+            Monthly Bill: <span class="highlight" id="calc-monthly">₹0</span>
+        </div>
     </div>
 
     <!-- Three.js -->
@@ -936,7 +1075,108 @@
         }
         scene.add(poleGroup);
 
-        // (Trees removed for clearer view)
+        // ═══════════════════════════════════════════════
+        //  TREES BEHIND HOUSES
+        // ═══════════════════════════════════════════════
+        function createTree(x, y, z, scale) {
+            const g = new THREE.Group();
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.9 });
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3 * scale, 0.4 * scale, 3 * scale, 8), trunkMat);
+            trunk.position.y = 1.5 * scale; trunk.castShadow = true; g.add(trunk);
+            const leafMat = new THREE.MeshStandardMaterial({ color: 0x2d8a4e, roughness: 0.85 });
+            const leaves = [
+                { r: 1.8 * scale, py: 3.5 * scale },
+                { r: 1.4 * scale, py: 4.8 * scale },
+                { r: 0.9 * scale, py: 5.8 * scale }
+            ];
+            leaves.forEach(l => {
+                const sphere = new THREE.Mesh(new THREE.SphereGeometry(l.r, 10, 10), leafMat);
+                sphere.position.y = l.py; sphere.castShadow = true; g.add(sphere);
+            });
+            g.position.set(x, y, z); scene.add(g); return g;
+        }
+        // Trees behind simple house
+        createTree(-16, 0, -8, 1.2);
+        createTree(-13, 0, -10, 1.0);
+        createTree(-8, 0, -9, 1.4);
+        // Trees behind 2BHK house
+        createTree(8, 0, -10, 1.3);
+        createTree(13, 0, -11, 1.1);
+        createTree(18, 0, -9, 1.5);
+        createTree(22, 0, -10, 0.9);
+
+        // ═══════════════════════════════════════════════
+        //  BIRDS
+        // ═══════════════════════════════════════════════
+        const birds = [];
+        function createBird(x, y, z) {
+            const g = new THREE.Group();
+            const birdMat = new THREE.MeshBasicMaterial({ color: 0x222222 });
+            // Left wing
+            const lw = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.15), birdMat);
+            lw.position.set(-0.3, 0, 0); lw.rotation.z = 0.3; g.add(lw);
+            // Right wing
+            const rw = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.04, 0.15), birdMat);
+            rw.position.set(0.3, 0, 0); rw.rotation.z = -0.3; g.add(rw);
+            // Body
+            const body = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), birdMat);
+            g.add(body);
+            g.position.set(x, y, z);
+            scene.add(g);
+            birds.push({ group: g, speed: 1.5 + Math.random() * 2, wingPhase: Math.random() * Math.PI * 2, leftWing: lw, rightWing: rw });
+            return g;
+        }
+        for (let i = 0; i < 8; i++) {
+            createBird(-30 + Math.random() * 60, 16 + Math.random() * 8, -15 + Math.random() * 10);
+        }
+
+        // ═══════════════════════════════════════════════
+        //  SIMPLE HOUSE ROOM PARTITIONS & DOORS
+        // ═══════════════════════════════════════════════
+        // Divide simple house into 3 areas: Living (front-right), Kitchen (front-left), Bedroom (back)
+        const simplePartWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85 });
+        // Horizontal partition at z=-1 (separates bedroom from living/kitchen)
+        const sp1 = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, H, 0.2), simplePartWallMat);
+        sp1.position.set(0, H / 2 + 0.3, -1); sp1.castShadow = true; houseGroup.add(sp1);
+        // Vertical partition at x=0 (separates kitchen from living, front half only)
+        const sp2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, D / 2 - 1 - 0.2), simplePartWallMat);
+        sp2.position.set(0, H / 2 + 0.3, (D / 2 - 1) / 2 + 0.5); sp2.castShadow = true; houseGroup.add(sp2);
+
+        // Simple house room doors
+        const simpleRoomDoorMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
+        function addSimpleDoor(x, y, z, ry) {
+            const d = new THREE.Mesh(new THREE.BoxGeometry(1.5, 3.5, 0.12), simpleRoomDoorMat);
+            d.position.set(x, y, z); d.rotation.y = ry || 0; houseGroup.add(d);
+            const h = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), handleMat);
+            h.position.set(x + (ry ? 0 : 0.5), y, z + (ry ? 0.5 : 0)); houseGroup.add(h);
+        }
+        // Door from bedroom to living (horizontal wall at z=-1)
+        addSimpleDoor(2, 2.05, -1, 0);
+        // Door from kitchen to living (vertical wall at x=0)
+        addSimpleDoor(0, 2.05, 2.5, Math.PI / 2);
+
+        // Simple room labels (clickable)
+        function addSimpleRoomLabel(name, x, y, z) {
+            const div = document.createElement('div');
+            div.className = 'appliance-label room-click-label';
+            div.innerHTML = `<span class="name" style="font-size:0.9rem">${name}</span>`;
+            div.style.pointerEvents = 'auto';
+            div.style.cursor = 'pointer';
+            const l = new THREE.CSS2DObject(div);
+            l.position.set(x, y, z);
+            houseGroup.add(l);
+            return { label: l, div };
+        }
+        const simpleRoomDefs = [
+            { name: '🛋️ Living Room', cx: 3, cz: 2, label: null },
+            { name: '🍳 Kitchen', cx: -3, cz: 2, label: null },
+            { name: '🛏️ Bedroom', cx: 0, cz: -3.5, label: null }
+        ];
+        simpleRoomDefs.forEach(r => {
+            const { label, div } = addSimpleRoomLabel(r.name, r.cx, 4, r.cz);
+            r.label = label;
+            div.addEventListener('click', () => zoomToRoom('simple', r));
+        });
 
         // ═══════════════════════════════════════════════
         //  INTERIOR APPLIANCES
@@ -1446,9 +1686,22 @@
             });
         });
 
-        // === Appliance ON/OFF Toggle System ===
+        // ═══════════════════════════════════════════════
+        //  SIMPLE HOUSE APPLIANCE STATE
+        // ═══════════════════════════════════════════════
+        const simpleAppliances = [
+            { name: 'Light Bulb 1', watt: 60, on: true, kind: 'light', mesh: light1, room: 'Living Room' },
+            { name: 'Ceiling Fan', watt: 75, on: true, kind: 'fan', mesh: fan1, room: 'Living Room' },
+            { name: 'Refrigerator', watt: 350, on: true, kind: 'fridge', mesh: fridge, room: 'Kitchen' },
+            { name: 'Air Conditioner', watt: 1500, on: true, kind: 'ac', mesh: ac, room: 'Living Room' },
+            { name: 'Light Bulb 2', watt: 60, on: true, kind: 'light', mesh: light2, room: 'Bedroom' },
+            { name: 'Table Fan', watt: 55, on: true, kind: 'tablefan', mesh: tableFan, room: 'Bedroom' }
+        ];
+
+        // === Appliance ON/OFF Toggle System (both houses) ===
         function toggleAppliance(idx, isOn) {
-            const a = is2BHK ? bhk2Appliances[idx] : null;
+            const list = is2BHK ? bhk2Appliances : simpleAppliances;
+            const a = list[idx];
             if (!a) return;
             a.on = isOn;
             if (a.kind === 'light') {
@@ -1463,11 +1716,8 @@
 
         function recalcWattage() {
             let total = 0;
-            if (is2BHK) {
-                bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
-            } else {
-                total = totalWatt;
-            }
+            const list = is2BHK ? bhk2Appliances : simpleAppliances;
+            list.forEach(a => { if (a.on) total += a.watt; });
             document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
             const panelsNeeded = Math.max(1, Math.ceil(total / 350));
             document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
@@ -1476,14 +1726,16 @@
             const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
+            updateBarChart(total, coverageRatio);
         }
 
-        // Build the appliance control panel HTML
+        // Build the appliance control panel HTML (supports both houses)
         function buildAppliancePanel() {
             const panel = document.getElementById('appliance-panel');
+            const list = is2BHK ? bhk2Appliances : simpleAppliances;
             let html = '';
             const grouped = {};
-            bhk2Appliances.forEach((a, i) => {
+            list.forEach((a, i) => {
                 if (!grouped[a.room]) grouped[a.room] = [];
                 grouped[a.room].push({ ...a, idx: i });
             });
@@ -1492,7 +1744,7 @@
                 grouped[room].forEach(a => {
                     html += `<div class="appliance-row">
                         <div><span class="app-name">${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
-                        <label class="toggle"><input type="checkbox" checked onchange="toggleAppliance(${a.idx},this.checked)"><span class="slider"></span></label>
+                        <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleAppliance(${a.idx},this.checked)"><span class="slider"></span></label>
                     </div>`;
                 });
                 html += '</div>';
@@ -1501,16 +1753,100 @@
         }
         buildAppliancePanel();
 
+        // ═══════════════════════════════════════════════
+        //  ROOM ZOOM SYSTEM
+        // ═══════════════════════════════════════════════
+        let zoomedRoom = null;
+        let zoomAnimating = false;
+
+        function zoomToRoom(house, roomDef) {
+            if (zoomAnimating) return;
+            zoomedRoom = { house, roomDef };
+            document.getElementById('back-btn').classList.add('visible');
+            zoomAnimating = true;
+            const offset = house === 'simple' ? new THREE.Vector3(-11, 0, 0) : new THREE.Vector3(13, 0, 0);
+            const targetPos = new THREE.Vector3(roomDef.cx + offset.x, 3, roomDef.cz + offset.z);
+            const camTarget = new THREE.Vector3(roomDef.cx + offset.x, 5, roomDef.cz + offset.z + 5);
+            animateCamera(camTarget, targetPos, () => { zoomAnimating = false; });
+        }
+
+        function zoomOutToHouse() {
+            if (zoomAnimating) return;
+            document.getElementById('back-btn').classList.remove('visible');
+            zoomAnimating = true;
+            if (zoomedRoom && zoomedRoom.house === '2bhk') {
+                animateCamera(new THREE.Vector3(13, 12, 20), new THREE.Vector3(13, 4, 0), () => { zoomAnimating = false; zoomedRoom = null; });
+            } else {
+                animateCamera(new THREE.Vector3(-11, 12, 20), new THREE.Vector3(-11, 4, 0), () => { zoomAnimating = false; zoomedRoom = null; });
+            }
+        }
+
+        function animateCamera(targetCamPos, targetLookAt, onDone) {
+            const startPos = camera.position.clone();
+            const startTarget = controls.target.clone();
+            let t = 0;
+            function step() {
+                t += 0.02;
+                if (t >= 1) { t = 1; }
+                const ease = t * t * (3 - 2 * t); // smoothstep
+                camera.position.lerpVectors(startPos, targetCamPos, ease);
+                controls.target.lerpVectors(startTarget, targetLookAt, ease);
+                controls.update();
+                if (t < 1) { requestAnimationFrame(step); } else { if (onDone) onDone(); }
+            }
+            step();
+        }
+
+        // Make 2BHK room labels clickable for zoom
+        const bhk2RoomZoomDefs = [
+            { name: 'Hall', cx: (W2 / 2 - 4) / 2, cz: (D2 / 2 - 2) / 2 },
+            { name: 'Bedroom 1', cx: -W2 / 4, cz: -(D2 / 2 + 2) / 2 },
+            { name: 'Bedroom 2', cx: W2 / 4, cz: -(D2 / 2 + 2) / 2 },
+            { name: 'Kitchen', cx: -(4 + W2 / 2) / 2, cz: 0.5 },
+            { name: 'Bathroom', cx: -(4 + W2 / 2) / 2, cz: (D2 / 2 + 3) / 2 }
+        ];
+        roomLabels.forEach((label, i) => {
+            label.element.classList.add('room-click-label');
+            label.element.style.pointerEvents = 'auto';
+            label.element.style.cursor = 'pointer';
+            label.element.addEventListener('click', () => zoomToRoom('2bhk', bhk2RoomZoomDefs[i]));
+        });
+
+        // ═══════════════════════════════════════════════
+        //  ENERGY BAR CHART UPDATE
+        // ═══════════════════════════════════════════════
+        function updateBarChart(totalW, coverageRatio) {
+            const solarPct = Math.round(coverageRatio * 100);
+            const gridPct = 100 - solarPct;
+            const gridBar = document.getElementById('grid-bar');
+            const solarBar = document.getElementById('solar-bar');
+            gridBar.style.width = Math.max(gridPct, 5) + '%';
+            gridBar.textContent = gridPct + '%';
+            solarBar.style.width = Math.max(solarPct, 5) + '%';
+            solarBar.textContent = solarPct + '%';
+            // Energy calculation (8 hrs usage, ₹8/kWh grid rate)
+            const dailyKwh = totalW * 8 / 1000;
+            const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
+            const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
+            const monthlyBill = Math.round(gridCostDaily * 30);
+            document.getElementById('calc-grid').textContent = '₹' + gridCostDaily;
+            document.getElementById('calc-solar').textContent = '₹' + solarSavingsDaily;
+            document.getElementById('calc-monthly').textContent = '₹' + monthlyBill;
+        }
+
         // Focus camera on a house
         function focusHouse(which) {
+            document.getElementById('back-btn').classList.remove('visible');
+            zoomedRoom = null;
             if (which === 'simple') {
-                controls.target.set(-11, 4, 0);
-                camera.position.set(-11, 12, 20);
+                is2BHK = false;
+                animateCamera(new THREE.Vector3(-11, 12, 20), new THREE.Vector3(-11, 4, 0), null);
             } else {
-                controls.target.set(13, 4, 0);
-                camera.position.set(13, 12, 20);
+                is2BHK = true;
+                animateCamera(new THREE.Vector3(13, 12, 20), new THREE.Vector3(13, 4, 0), null);
             }
-            controls.update();
+            buildAppliancePanel();
+            recalcWattage();
         }
         // Keep toggleUpgrade for backward compat
         function toggleUpgrade() { focusHouse('2bhk'); }
@@ -1596,18 +1932,22 @@
         ];
 
         function updateStats() {
-            const panelsNeeded = Math.ceil(totalWatt / 350);
-            document.getElementById('stat-consumption').textContent = totalWatt.toLocaleString() + ' W';
+            let total = 0;
+            const list = is2BHK ? bhk2Appliances : simpleAppliances;
+            list.forEach(a => { if (a.on) total += a.watt; });
+            const panelsNeeded = Math.max(1, Math.ceil(total / 350));
+            document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
             document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
 
             const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
-            const monthlySaving = Math.round(coverageRatio * totalWatt * 0.72 * 30 / 1000 * 8); // approx INR
-            const co2Saved = Math.round(coverageRatio * totalWatt * 0.0007 * 365);
+            const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8); // approx INR
+            const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
 
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
             document.getElementById('stat-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
             document.getElementById('panel-num').textContent = currentPanelCount;
+            updateBarChart(total, coverageRatio);
         }
 
         function toggleSolar() {
@@ -1784,10 +2124,20 @@
             sunGlow.position.copy(sunMesh.position);
             sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
-            // Animate ceiling fan (simple house)
-            if (!is2BHK) {
-                fan1.blades.rotation.y += delta * 5;
-                tableFan.blades.rotation.z += delta * 8;
+            // Animate birds
+            birds.forEach(b => {
+                b.group.position.x += delta * b.speed;
+                if (b.group.position.x > 40) b.group.position.x = -40;
+                const wing = Math.sin(elapsed * 6 + b.wingPhase) * 0.5;
+                b.leftWing.rotation.z = 0.3 + wing;
+                b.rightWing.rotation.z = -0.3 - wing;
+            });
+
+            // Animate ceiling fan (simple house) — respect ON/OFF
+            const sa = simpleAppliances;
+            if (sa[1].on) fan1.blades.rotation.y += delta * 5; // Ceiling Fan
+            if (sa[5].on) tableFan.blades.rotation.z += delta * 8; // Table Fan
+            if (sa[3].on) { // AC
                 const positions = ac.particlePositions;
                 for (let i = 0; i < positions.length / 3; i++) {
                     positions[i * 3 + 1] -= delta * 0.5;
@@ -1798,8 +2148,19 @@
                     }
                 }
                 ac.particles.geometry.attributes.position.needsUpdate = true;
+            }
+            ac.particles.visible = sa[3].on;
+            if (sa[0].on) { // Light 1
                 light1.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
                 light1.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+            } else {
+                light1.bulbMat.emissiveIntensity = 0; light1.pointLight.intensity = 0; light1.bulbMat.opacity = 0.3;
+            }
+            if (sa[4].on) { // Light 2
+                light2.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+                light2.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
+            } else {
+                light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0; light2.bulbMat.opacity = 0.3;
             }
 
             // Animate 2BHK appliances (respecting ON/OFF)
