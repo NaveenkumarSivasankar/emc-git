@@ -60,6 +60,54 @@ const drive2 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
 drive2.rotation.x = -Math.PI / 2; drive2.position.set(16, 0.02, 11); scene.add(drive2);
 
 // ═══════════════════════════════════════════════
+//  FRONT WALL BETWEEN HOUSES
+// ═══════════════════════════════════════════════
+// 1BHK front at world z = 0 + 7.5 = 7.5 (x from -4 to x=6 is the gap)
+// 2BHK front at world z = 0 + 8 = 8
+// Wall connects from 1BHK right edge (x=-4) to 2BHK left edge (x=6)
+const frontWallMat = new THREE.MeshStandardMaterial({ color: 0xd4c4a8, roughness: 0.85, metalness: 0.05 });
+const frontWallPillarMat = new THREE.MeshStandardMaterial({ color: 0xc0a882, roughness: 0.7, metalness: 0.1 });
+const frontWallTopMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+
+// Main wall section (fills the gap between houses)
+const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.4), frontWallMat);
+frontWall.position.set(1, 2.3, 7.75); frontWall.castShadow = true; frontWall.receiveShadow = true;
+scene.add(frontWall);
+
+// Wall top cap
+const frontWallTop = new THREE.Mesh(new THREE.BoxGeometry(10.4, 0.25, 0.6), frontWallTopMat);
+frontWallTop.position.set(1, 4.42, 7.75); frontWallTop.castShadow = true;
+scene.add(frontWallTop);
+
+// Pillars on the wall
+for (let pi = 0; pi < 4; pi++) {
+    const px = -3.5 + pi * 3;
+    const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.8, 0.55), frontWallPillarMat);
+    pillar.position.set(px, 2.7, 7.75); pillar.castShadow = true;
+    scene.add(pillar);
+    // Pillar cap
+    const pillarCap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.75), frontWallTopMat);
+    pillarCap.position.set(px, 5.2, 7.75);
+    scene.add(pillarCap);
+}
+
+// Decorative arch gate in the center of the wall
+const gatePostMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6, metalness: 0.2 });
+const gatePostL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
+gatePostL.position.set(-0.1, 3, 7.75); gatePostL.castShadow = true; scene.add(gatePostL);
+const gatePostR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
+gatePostR.position.set(2.1, 3, 7.75); gatePostR.castShadow = true; scene.add(gatePostR);
+// Gate arch top
+const gateArch = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.35, 0.5), gatePostMat);
+gateArch.position.set(1, 5.75, 7.75); scene.add(gateArch);
+// Gate bars (iron gate look)
+const gateBarMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
+for (let gi = 0; gi < 5; gi++) {
+    const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 6), gateBarMat);
+    bar.position.set(0.2 + gi * 0.4, 2.3, 7.75); scene.add(bar);
+}
+
+// ═══════════════════════════════════════════════
 //  SUN SPHERE
 // ═══════════════════════════════════════════════
 const sunGeo = new THREE.SphereGeometry(3, 32, 32);
@@ -183,9 +231,7 @@ createTree(28, 0, 19, 1.3); createTree(35, 0, 20, 1.1);
 
 // NOTE: Near-side trees REMOVED to clear view of both houses
 
-// Trees behind houses (kept)
-createTree(-22, 0, -8, 1.2); createTree(-8, 0, -9, 1.0);
-createTree(10, 0, -10, 1.3); createTree(24, 0, -11, 1.1);
+// NOTE: Trees behind houses REMOVED for clearer view
 
 // Side trees (far from houses)
 createTree(-35, 0, 5, 1.1); createTree(38, 0, 6, 1.2);

@@ -279,3 +279,8 @@ function toggleEnergyChart() {
     const chart = document.getElementById('energy-chart');
     chart.classList.toggle('visible');
 }
+
+function toggleRoomNav() {
+    const panel = document.getElementById('room-nav-panel');
+    panel.classList.toggle('visible');
+}

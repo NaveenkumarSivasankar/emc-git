@@ -432,6 +432,17 @@ canvas {
     font-weight: 700;
 }
 
+/* ── Navigate Rooms Button ────────────────────────── */
+#nav-rooms-btn {
+    background: linear-gradient(135deg, #00b894, #55efc4);
+    color: #1a1a2e;
+    box-shadow: 0 4px 25px rgba(0, 184, 148, 0.4);
+}
+
+#nav-rooms-btn:hover {
+    box-shadow: 0 6px 30px rgba(0, 184, 148, 0.5);
+}
+
 /* ── Room Navigation Panel ────────────────────────── */
 #room-nav-panel {
     position: fixed;
@@ -445,6 +456,11 @@ canvas {
     border-radius: 20px;
     padding: 14px;
     min-width: 180px;
+    display: none;
+}
+
+#room-nav-panel.visible {
+    display: block;
 }
 
 .room-nav-title {

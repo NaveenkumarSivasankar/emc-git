@@ -158,6 +158,9 @@ function animate() {
         }
     });
 
+    // Boy character animation
+    updateBoy(delta);
+
     updateWallTransparency();
 
     // TV flicker
