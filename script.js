@@ -114,14 +114,24 @@
         pathway.receiveShadow = true;
         scene.add(pathway);
 
+<<<<<<< HEAD
 
+=======
+        // ═══════════════════════════════════════════════
+        //  SUN SPHERE
+        // ═══════════════════════════════════════════════
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         const sunGeo = new THREE.SphereGeometry(3, 32, 32);
         const sunMat = new THREE.MeshBasicMaterial({ color: 0xffdd44 });
         const sunMesh = new THREE.Mesh(sunGeo, sunMat);
         sunMesh.position.set(30, 35, -20);
         scene.add(sunMesh);
 
+<<<<<<< HEAD
 
+=======
+        // Sun glow
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         const sunGlowGeo = new THREE.SphereGeometry(5, 32, 32);
         const sunGlowMat = new THREE.MeshBasicMaterial({ color: 0xffee88, transparent: true, opacity: 0.15 });
         const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
@@ -303,6 +313,7 @@
         houseGroup.add(chimneyTop);
 
         // ═══════════════════════════════════════════════
+<<<<<<< HEAD
         //  INTERIOR ROOM DETAILS (Simple House Room System)
         // ═══════════════════════════════════════════════
         const simpleRoomGroups = {
@@ -315,10 +326,17 @@
 
         // Alias for backward compat
         const interiorGroup = simpleRoomGroups['Living Room'];
+=======
+        //  INTERIOR ROOM DETAILS
+        // ═══════════════════════════════════════════════
+        const interiorGroup = new THREE.Group();
+        houseGroup.add(interiorGroup);
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
 
         // Interior wall color (painted)
         const intWallMat = new THREE.MeshStandardMaterial({ color: 0xf5efe6, roughness: 0.9, side: THREE.BackSide });
 
+<<<<<<< HEAD
         // ── Simple House Partition Walls ──
         const simplePartWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, transparent: true, opacity: 0.35 });
 
@@ -491,6 +509,8 @@
         bathIntLight.position.set(W / 4, 5.5, -(D / 2 + 1.5) / 2);
         simpleRoomGroups['Bathroom'].add(bathIntLight);
 
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         // Carpet / Rug
         const rugGeo = new THREE.PlaneGeometry(6, 5);
         const rugMat = new THREE.MeshStandardMaterial({ color: 0x8B2252, roughness: 0.95 });
@@ -1154,7 +1174,11 @@
             leg.position.set((W2 / 2 - 5) / 2 + (li < 2 ? -1 : 1), 0.62, 1 + (li % 2 === 0 ? -0.45 : 0.45));
             roomGroups['Hall'].add(leg);
         }
+<<<<<<< HEAD
 
+=======
+        // TV on wall in hall
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         const hallTvFrame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 0.15), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.5 }));
         hallTvFrame.position.set((W2 / 2 - 5) / 2, 4.2, -2.3); roomGroups['Hall'].add(hallTvFrame);
         const tvMat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000, roughness: 0.1 });
@@ -1311,6 +1335,7 @@
         // ═══════════════════════════════════════════════
         //  SIMPLE HOUSE APPLIANCE ON/OFF STATE
         // ═══════════════════════════════════════════════
+<<<<<<< HEAD
         // Create bedroom appliances
         const bedroomFan = createFan(-W / 4, H - 0.3, -(D / 2 + 1.5) / 2);
         simpleRoomGroups['Bedroom'].add(bedroomFan.group);
@@ -1361,6 +1386,18 @@
         simpleAnimData.acs.push(simpleAppliances[9]); // bedroom AC
         simpleAnimData.lights.push(simpleAppliances[10]); // bathroom light
 
+=======
+        const simpleAppliances = [
+            { name: 'Light Bulb 1', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light1 },
+            { name: 'Ceiling Fan', watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh: fan1 },
+            { name: 'Refrigerator', watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh: fridge },
+            { name: 'Air Conditioner', watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: ac },
+            { name: 'Light Bulb 2', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light2 },
+            { name: 'Table Fan', watt: 55, emoji: '🌀', on: true, kind: 'tablefan', mesh: tableFan },
+            { name: 'Television', watt: 150, emoji: '📺', on: false, kind: 'tv', mesh: null } // Mesh added below
+        ];
+
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         // Create simple house TV
         const simpleTvGroup = new THREE.Group();
         const simpleTvFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
@@ -1540,7 +1577,10 @@
             const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
             document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
             document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
+<<<<<<< HEAD
             updateEnergyGraphs();
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         }
 
         // Load TV Textures
@@ -1571,6 +1611,7 @@
             html += '</div></div>';
 
             if (currentFocusedHouse === 'simple') {
+<<<<<<< HEAD
                 // Group simple house appliances by room
                 const simpleGrouped = {};
                 simpleAppliances.forEach((a, i) => {
@@ -1590,6 +1631,16 @@
                     });
                     html += '</div>';
                 }
+=======
+                html += '<div class="room-section"><div class="room-header">🏠 Simple House</div>';
+                simpleAppliances.forEach((a, i) => {
+                    html += `<div class="appliance-row">
+                        <div><span class="app-name">${a.emoji} ${a.name}</span><br><span class="app-watt">${a.watt}W</span></div>
+                        <label class="toggle"><input type="checkbox" ${a.on ? 'checked' : ''} onchange="toggleSimpleAppliance(${i},this.checked)"><span class="slider"></span></label>
+                    </div>`;
+                });
+                html += '</div>';
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
             } else {
                 const grouped = {};
                 bhk2Appliances.forEach((a, i) => {
@@ -1678,6 +1729,7 @@
             buildAppliancePanel();
         }
 
+<<<<<<< HEAD
         // ═══════════════════════════════════════════════
         //  SIMPLE HOUSE ROOM NAVIGATION SYSTEM
         // ═══════════════════════════════════════════════
@@ -1882,26 +1934,37 @@
             });
         }
 
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         // Focus camera on a house
         function focusHouse(which) {
             currentFocusedHouse = which;
             currentRoom = null;
             document.getElementById('back-to-full-btn').style.display = 'none';
+<<<<<<< HEAD
             // Restore all room visibility for both houses
             Object.values(simpleRoomGroups).forEach(g => g.visible = true);
             Object.values(roomGroups).forEach(g => g.visible = true);
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
             if (which === 'simple') {
                 controls.target.set(-11, 4, 0);
                 camera.position.set(-11, 12, 20);
                 document.getElementById('room-nav-panel').classList.remove('visible');
+<<<<<<< HEAD
                 document.getElementById('simple-room-nav-panel').classList.add('visible');
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
                 document.getElementById('solar-mount-point').style.display = 'flex';
                 document.getElementById('panel-counter').classList.add('visible');
             } else {
                 controls.target.set(16, 4, 0);
                 camera.position.set(16, 12, 20);
                 document.getElementById('room-nav-panel').classList.add('visible');
+<<<<<<< HEAD
                 document.getElementById('simple-room-nav-panel').classList.remove('visible');
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
                 document.getElementById('solar-mount-point').style.display = 'flex';
                 document.getElementById('panel-counter').classList.add('visible');
             }
@@ -2158,11 +2221,14 @@
                 label.element.style.opacity = 1 - tSimple;
                 label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
             });
+<<<<<<< HEAD
             // Simple house room labels
             simpleRoomLabels.forEach(label => {
                 label.element.style.opacity = 1 - tSimple;
                 label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
             });
+=======
+>>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
 
             // 2BHK house center in world: (16, 4, 0)
             const dist2BHK = camPos.distanceTo(new THREE.Vector3(16, 4, 0));
