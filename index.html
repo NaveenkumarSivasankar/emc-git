@@ -9,7 +9,7 @@
         content="An interactive 3D web application for school students to learn about solar energy by exploring a virtual house and switching to solar power.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-        <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -22,7 +22,7 @@
             <div class="logo-icon">☀️</div>
             <span>SolarHome</span>
         </div>
-        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 Simple House</button>
+        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 1BHK House</button>
         <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
             style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
             2BHK House</button>
@@ -87,12 +87,37 @@
         🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
     </div>
 
+    <!-- Back Button for Room Zoom -->
+    <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
+
+    <!-- Energy Bar Chart -->
+    <div id="energy-chart">
+        <h3>⚡ Energy Comparison</h3>
+        <div class="bar-row">
+            <div class="bar-label">Grid Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill grid" id="grid-bar" style="width:100%">100%</div>
+            </div>
+        </div>
+        <div class="bar-row">
+            <div class="bar-label">Solar Energy</div>
+            <div class="bar-track">
+                <div class="bar-fill solar" id="solar-bar" style="width:0%">0%</div>
+            </div>
+        </div>
+        <div class="calc-summary" id="calc-summary">
+            Daily Grid Cost: <span class="highlight" id="calc-grid">₹0</span><br>
+            Daily Solar Savings: <span class="highlight" id="calc-solar">₹0</span><br>
+            Monthly Bill: <span class="highlight" id="calc-monthly">₹0</span>
+        </div>
+    </div>
+
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
 
-        <script src="script.js"></script>
+    <script src="script.js"></script>
 
 </body>
 
