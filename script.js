@@ -22,11 +22,11 @@
         scene.background = skyTexture;
 
         // Fog
-        scene.fog = new THREE.FogExp2(0x7ec8e3, 0.012);
+        scene.fog = new THREE.FogExp2(0x7ec8e3, 0.008);
 
         // Camera
         const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-        camera.position.set(0, 20, 40);
+        camera.position.set(0, 25, 55);
 
         // Renderer
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -51,7 +51,7 @@
         controls.enableDamping = true;
         controls.dampingFactor = 0.08;
         controls.minDistance = 1.5;
-        controls.maxDistance = 70;
+        controls.maxDistance = 100;
         controls.maxPolarAngle = Math.PI / 2.05;
         controls.target.set(0, 4, 0);
         controls.update();
@@ -63,16 +63,16 @@
         scene.add(ambientLight);
 
         const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
-        sunLight.position.set(15, 25, 10);
+        sunLight.position.set(20, 35, 15);
         sunLight.castShadow = true;
         sunLight.shadow.mapSize.width = 2048;
         sunLight.shadow.mapSize.height = 2048;
-        sunLight.shadow.camera.left = -25;
-        sunLight.shadow.camera.right = 25;
-        sunLight.shadow.camera.top = 25;
-        sunLight.shadow.camera.bottom = -25;
+        sunLight.shadow.camera.left = -40;
+        sunLight.shadow.camera.right = 40;
+        sunLight.shadow.camera.top = 40;
+        sunLight.shadow.camera.bottom = -40;
         sunLight.shadow.camera.near = 0.5;
-        sunLight.shadow.camera.far = 60;
+        sunLight.shadow.camera.far = 100;
         sunLight.shadow.bias = -0.001;
         scene.add(sunLight);
 
@@ -94,7 +94,7 @@
         // ═══════════════════════════════════════════════
         //  GROUND
         // ═══════════════════════════════════════════════
-        const groundGeo = new THREE.PlaneGeometry(120, 120);
+        const groundGeo = new THREE.PlaneGeometry(160, 160);
         const groundMat = new THREE.MeshStandardMaterial({
             color: 0x4a8c3f,
             roughness: 0.9,
@@ -167,11 +167,11 @@
         //  HOUSE STRUCTURE
         // ═══════════════════════════════════════════════
         const houseGroup = new THREE.Group();
-        houseGroup.position.set(-11, 0, 0);
+        houseGroup.position.set(-20, 0, 0);
         scene.add(houseGroup);
 
         // Dimensions (declared early so labels can use them)
-        const W = 12, D = 10, H = 6, roofH = 4;
+        const W = 18, D = 14, H = 7, roofH = 5;
 
         // Simple house ground label
         const simpleLabelDiv = document.createElement('div');
@@ -340,40 +340,40 @@
         const sofaMat = new THREE.MeshStandardMaterial({ color: 0x4a6fa5, roughness: 0.8 });
         // Sofa seat
         const sofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4, 0.6, 1.8), sofaMat);
-        sofaSeat.position.set(-2.5, 0.9, -3.5);
+        sofaSeat.position.set(-4, 0.9, -5.5);
         sofaSeat.castShadow = true;
         interiorGroup.add(sofaSeat);
         // Sofa back
         const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 0.4), sofaMat);
-        sofaBack.position.set(-2.5, 1.5, -4.3);
+        sofaBack.position.set(-4, 1.5, -6.3);
         sofaBack.castShadow = true;
         interiorGroup.add(sofaBack);
         // Sofa cushions
         const cushionMat = new THREE.MeshStandardMaterial({ color: 0x6b8fc4, roughness: 0.85 });
         for (let ci = 0; ci < 2; ci++) {
             const cushion = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.25, 1.4), cushionMat);
-            cushion.position.set(-2.5 + ci * 2 - 1, 1.3, -3.5);
+            cushion.position.set(-4 + ci * 2 - 1, 1.3, -5.5);
             interiorGroup.add(cushion);
         }
         // Sofa arm rests
         const armMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80, roughness: 0.75 });
         const armL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 1.8), armMat);
-        armL.position.set(-4.3, 1.1, -3.5);
+        armL.position.set(-5.8, 1.1, -5.5);
         interiorGroup.add(armL);
         const armR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 1.8), armMat);
-        armR.position.set(-0.7, 1.1, -3.5);
+        armR.position.set(-2.2, 1.1, -5.5);
         interiorGroup.add(armR);
 
         // Bookshelf
         const shelfMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.8 });
         const shelfBody = new THREE.Mesh(new THREE.BoxGeometry(2, 4, 0.8), shelfMat);
-        shelfBody.position.set(5, 2.3, -3.8);
+        shelfBody.position.set(7.5, 2.3, -5.5);
         shelfBody.castShadow = true;
         interiorGroup.add(shelfBody);
         // Shelf dividers
         for (let si = 0; si < 3; si++) {
             const shelf = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.08, 0.75), shelfMat);
-            shelf.position.set(5, 1.0 + si * 1.3, -3.8);
+            shelf.position.set(7.5, 1.0 + si * 1.3, -3.8);
             interiorGroup.add(shelf);
         }
         // Books (colorful)
@@ -384,7 +384,7 @@
                 new THREE.BoxGeometry(0.2, bookH, 0.6),
                 new THREE.MeshStandardMaterial({ color: bookColors[bi], roughness: 0.7 })
             );
-            book.position.set(4.3 + bi * 0.22, 1.3 + bookH / 2, -3.8);
+            book.position.set(6.8 + bi * 0.22, 1.3 + bookH / 2, -3.8);
             interiorGroup.add(book);
         }
 
@@ -393,14 +393,14 @@
             new THREE.BoxGeometry(3.5, 2, 0.15),
             new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.5 })
         );
-        tvFrame.position.set(-2.5, 4.2, -D / 2 + 0.25);
+        tvFrame.position.set(-3, 4.8, -D / 2 + 0.25);
         interiorGroup.add(tvFrame);
         // TV screen (emissive — looks "on")
         const tvScreen = new THREE.Mesh(
             new THREE.PlaneGeometry(3.1, 1.7),
             new THREE.MeshStandardMaterial({ color: 0x225588, emissive: 0x112244, emissiveIntensity: 0.6, roughness: 0.1 })
         );
-        tvScreen.position.set(-2.5, 4.2, -D / 2 + 0.34);
+        tvScreen.position.set(-3, 4.8, -D / 2 + 0.34);
         interiorGroup.add(tvScreen);
 
         // Wall clock
@@ -409,13 +409,13 @@
             new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 })
         );
         clockFace.rotation.x = Math.PI / 2;
-        clockFace.position.set(2, 5, -D / 2 + 0.2);
+        clockFace.position.set(3, 5.8, -D / 2 + 0.2);
         interiorGroup.add(clockFace);
         const clockRim = new THREE.Mesh(
             new THREE.TorusGeometry(0.6, 0.05, 8, 24),
             new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.3 })
         );
-        clockRim.position.set(2, 5, -D / 2 + 0.22);
+        clockRim.position.set(3, 5.8, -D / 2 + 0.22);
         interiorGroup.add(clockRim);
 
         // ═══════════════════════════════════════════════
@@ -426,26 +426,26 @@
         const poleMat = new THREE.MeshStandardMaterial({ color: 0x5c4033, roughness: 0.9 });
         const poleGeo = new THREE.CylinderGeometry(0.2, 0.25, 14, 8);
         const pole = new THREE.Mesh(poleGeo, poleMat);
-        pole.position.set(16, 7, 8);
+        pole.position.set(22, 7, 10);
         pole.castShadow = true;
         poleGroup.add(pole);
 
         // Cross beam
         const crossGeo = new THREE.BoxGeometry(4, 0.2, 0.2);
         const crossBeam = new THREE.Mesh(crossGeo, poleMat);
-        crossBeam.position.set(16, 13.5, 8);
+        crossBeam.position.set(22, 13.5, 10);
         poleGroup.add(crossBeam);
 
         // Wires
         const wireMat = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 });
         for (let i = -1; i <= 1; i++) {
             const points = [];
-            const startX = 16 + i * 1.5;
+            const startX = 22 + i * 1.5;
             for (let t = 0; t <= 20; t++) {
                 const frac = t / 20;
                 const x = startX + (W / 2 - startX) * frac;
                 const y = 13.5 - Math.sin(frac * Math.PI) * 2.5 + (H + 1 - 13.5) * frac;
-                const z = 8 + (0 - 8) * frac;
+                const z = 10 + (0 - 10) * frac;
                 points.push(new THREE.Vector3(x, y, z));
             }
             const wireGeo = new THREE.BufferGeometry().setFromPoints(points);
@@ -487,16 +487,16 @@
 
         // Trees around simple house (centered at -11, 0, 0)
         // Create trees around simple house
-        createTree(-14, 0, 8, 1.2); createTree(-8, 0, 8, 1.0);
-        createTree(-16, 0, -6, 1.3); createTree(-6, 0, -6, 1.1);
-        createTree(-11, 0, -9, 0.9);
+        createTree(-26, 0, 10, 1.2); createTree(-14, 0, 10, 1.0);
+        createTree(-28, 0, -10, 1.3); createTree(-12, 0, -10, 1.1);
+        createTree(-20, 0, -14, 0.9);
         // Create trees around 2BHK (shifted further away to avoid interior)
-        createTree(4, 0, -10, 1.2); createTree(28, 0, -10, 1.4);
-        createTree(16, 0, -12, 1.0);
+        createTree(6, 0, -16, 1.2); createTree(40, 0, -16, 1.4);
+        createTree(24, 0, -18, 1.0);
         // Scattered background trees
-        createTree(-30, 0, -15, 1.5); createTree(30, 0, -15, 1.6);
-        createTree(-25, 0, 20, 1.4); createTree(25, 0, 20, 1.3);
-        createTree(30, 0, 10, 1.2);
+        createTree(-38, 0, -20, 1.5); createTree(42, 0, -20, 1.6);
+        createTree(-35, 0, 25, 1.4); createTree(35, 0, 25, 1.3);
+        createTree(42, 0, 14, 1.2);
 
         // ═══════════════════════════════════════════════
         //  ANIMATED BIRDS
@@ -590,8 +590,8 @@
             return { group: g, bulbMat, pointLight: pl };
         }
 
-        const light1 = createLightBulb(-3, H - 0.5, 0);
-        const light2 = createLightBulb(3, H - 0.5, -1);
+        const light1 = createLightBulb(-5, H - 0.5, 0);
+        const light2 = createLightBulb(5, H - 0.5, -2);
 
         // ── Ceiling Fan ──
         function createFan(x, y, z) {
@@ -657,7 +657,7 @@
             return { group: g };
         }
 
-        const fridge = createFridge(-5, 0.3, -3.5);
+        const fridge = createFridge(-7.5, 0.3, -5.5);
 
         // ── Air Conditioner (wall-mounted) ──
         function createAC(x, y, z) {
@@ -700,7 +700,7 @@
             return { group: g, particles, particlePositions: positions, baseY: y };
         }
 
-        const ac = createAC(3, 5, -D / 2 + 0.7);
+        const ac = createAC(5, 5.5, -D / 2 + 0.7);
 
         // ── Table Fan ──
         function createTableFan(x, y, z) {
@@ -740,13 +740,13 @@
             return { group: g, blades: bladesGroup };
         }
 
-        const tableFan = createTableFan(4, 0.3, 2);
+        const tableFan = createTableFan(6, 0.3, 3);
 
         // ── Simple table for fan ──
         const tableGeo = new THREE.BoxGeometry(2, 1.5, 1.5);
         const tableMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.8 });
         const table = new THREE.Mesh(tableGeo, tableMat);
-        table.position.set(4, 1.05, 2);
+        table.position.set(6, 1.05, 3);
         table.castShadow = true;
         applianceGroup.add(table);
         // Adjust fan position on table
@@ -766,12 +766,12 @@
         }
 
         const labels = [
-            createLabel('💡 Light Bulb', 60, new THREE.Vector3(-3, H + 0.8, 0)),
+            createLabel('💡 Light Bulb', 60, new THREE.Vector3(-5, H + 0.8, 0)),
             createLabel('🌀 Ceiling Fan', 75, new THREE.Vector3(0, H + 1, 1)),
-            createLabel('🧊 Refrigerator', 350, new THREE.Vector3(-5, 4, -3.5)),
-            createLabel('❄️ AC Unit', 1500, new THREE.Vector3(3, 6.2, -D / 2 + 0.7)),
-            createLabel('💡 Light Bulb', 60, new THREE.Vector3(3, H + 0.8, -1)),
-            createLabel('🌀 Table Fan', 55, new THREE.Vector3(4, 3.5, 2))
+            createLabel('🧊 Refrigerator', 350, new THREE.Vector3(-7.5, 4, -5.5)),
+            createLabel('❄️ AC Unit', 1500, new THREE.Vector3(5, 6.8, -D / 2 + 0.7)),
+            createLabel('💡 Light Bulb', 60, new THREE.Vector3(5, H + 0.8, -2)),
+            createLabel('🌀 Table Fan', 55, new THREE.Vector3(6, 3.5, 3))
         ];
 
         // ═══════════════════════════════════════════════
@@ -784,7 +784,7 @@
         //  2BHK ROOM SYSTEM
         // ═══════════════════════════════════════════════
         const bhk2Group = new THREE.Group();
-        bhk2Group.position.set(16, 0, 0);
+        bhk2Group.position.set(24, 0, 0);
         scene.add(bhk2Group);
         let is2BHK = true;
 
@@ -800,7 +800,7 @@
         Object.values(roomGroups).forEach(g => bhk2Group.add(g));
 
         // 2BHK house exterior shell (enlarged: W2=20, D2=16)
-        const W2 = 20, D2 = 16;
+        const W2 = 28, D2 = 22;
         const bhk2WallMat = new THREE.MeshStandardMaterial({ color: 0xe0d0b8, roughness: 0.8, transparent: true, opacity: 1 });
         const bhk2RoofMat = new THREE.MeshStandardMaterial({ color: 0x6B3410, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 1 });
         const bhk2DoorMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7, transparent: true, opacity: 1 });
@@ -818,9 +818,9 @@
         addBhk2Wall(W2, H, 0.3, 0, H / 2 + 0.3, -D2 / 2, false); // back
         addBhk2Wall(0.3, H, D2, -W2 / 2, H / 2 + 0.3, 0, true); // left
         addBhk2Wall(0.3, H, D2, W2 / 2, H / 2 + 0.3, 0, true); // right
-        addBhk2Wall(5, H, 0.3, -5.5, H / 2 + 0.3, D2 / 2, true); // front left
-        addBhk2Wall(5, H, 0.3, 5.5, H / 2 + 0.3, D2 / 2, true); // front right
-        addBhk2Wall(6, 2, 0.3, 0, H - 0.7, D2 / 2, true); // front top
+        addBhk2Wall(7, H, 0.3, -7.5, H / 2 + 0.3, D2 / 2, true); // front left
+        addBhk2Wall(7, H, 0.3, 7.5, H / 2 + 0.3, D2 / 2, true); // front right
+        addBhk2Wall(10, 2, 0.3, 0, H - 0.7, D2 / 2, true); // front top
         // Door
         const bhk2Door = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4, 0.35), bhk2DoorMat);
         bhk2Door.position.set(0, 2.3, D2 / 2); roomGroups['Structure'].add(bhk2Door);
@@ -857,13 +857,13 @@
             bhk2PartWalls.push(m); return m;
         }
         // Horizontal wall: separates bedrooms (back) from hall/kitchen at z=-2.5
-        addPartWall(W2 - 0.4, H, 0.2, 0, H / 2 + 0.3, -2.5);
+        addPartWall(W2 - 0.4, H, 0.2, 0, H / 2 + 0.3, -4);
         // Vertical wall between bedroom1 and bedroom2 at x=0
-        addPartWall(0.2, H, D2 / 2 - 2.5 - 0.2, 0, H / 2 + 0.3, -(D2 / 2 + 2.5) / 2);
+        addPartWall(0.2, H, D2 / 2 - 4 - 0.2, 0, H / 2 + 0.3, -(D2 / 2 + 4) / 2);
         // Vertical wall separating kitchen/bath from hall at x=-5
-        addPartWall(0.2, H, D2 / 2 + 2.5 - 0.2, -5, H / 2 + 0.3, (D2 / 2 - 2.5) / 2 + 0.1);
+        addPartWall(0.2, H, D2 / 2 + 4 - 0.2, -7, H / 2 + 0.3, (D2 / 2 - 4) / 2 + 0.1);
         // Horizontal wall separating kitchen from bathroom at z=4
-        addPartWall(W2 / 2 - 5 - 0.2, H, 0.2, -(5 + W2 / 2) / 2, H / 2 + 0.3, 4);
+        addPartWall(W2 / 2 - 7 - 0.2, H, 0.2, -(7 + W2 / 2) / 2, H / 2 + 0.3, 5);
 
         // Room doors in partition walls
         const roomDoorMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
@@ -881,10 +881,10 @@
             h.position.set(x + (ry ? 0 : 0.5), y, z + (ry ? 0.5 : 0));
             (room ? roomGroups[room] : roomGroups['Structure']).add(h);
         }
-        addRoomDoor(-3, 2.05, -2.5, 0, 'Bedroom 1');  // Bedroom1 door
-        addRoomDoor(3, 2.05, -2.5, 0, 'Bedroom 2');   // Bedroom2 door
-        addRoomDoor(-5, 2.05, 0.5, Math.PI / 2, 'Kitchen');  // Kitchen door
-        addRoomDoor(-5, 2.05, 5.5, Math.PI / 2, 'Bathroom');  // Bathroom door
+        addRoomDoor(-4, 2.05, -4, 0, 'Bedroom 1');  // Bedroom1 door
+        addRoomDoor(4, 2.05, -4, 0, 'Bedroom 2');   // Bedroom2 door
+        addRoomDoor(-7, 2.05, 0, Math.PI / 2, 'Kitchen');  // Kitchen door
+        addRoomDoor(-7, 2.05, 7, Math.PI / 2, 'Bathroom');  // Bathroom door
 
         // Room colored floor tiles (using W2/D2)
         const tileColors = { hall: 0xd4b896, bed1: 0xa8c8e8, bed2: 0xc8b4d8, kitchen: 0xf5f5f5, bath: 0x88ccbb };
@@ -894,17 +894,17 @@
             (room ? roomGroups[room] : roomGroups['Structure']).add(m);
         }
         // Hall (right side, z=-2.5 to D2/2)
-        addFloorTile(tileColors.hall, W2 / 2 - 5 - 0.2, D2 / 2 + 2.5 - 0.3, (W2 / 2 - 5) / 2 + 0.1, (D2 / 2 - 2.5) / 2, 'Hall');
+        addFloorTile(tileColors.hall, W2 / 2 - 7 - 0.2, D2 / 2 + 4 - 0.3, (W2 / 2 - 7) / 2 + 0.1, (D2 / 2 - 4) / 2, 'Hall');
         // Bedroom 1 (left back)
-        addFloorTile(tileColors.bed1, W2 / 2 - 0.3, D2 / 2 - 2.5 - 0.3, -W2 / 4, -(D2 / 2 + 2.5) / 2, 'Bedroom 1');
+        addFloorTile(tileColors.bed1, W2 / 2 - 0.3, D2 / 2 - 4 - 0.3, -W2 / 4, -(D2 / 2 + 4) / 2, 'Bedroom 1');
         // Bedroom 2 (right back)
-        addFloorTile(tileColors.bed2, W2 / 2 - 0.3, D2 / 2 - 2.5 - 0.3, W2 / 4, -(D2 / 2 + 2.5) / 2, 'Bedroom 2');
+        addFloorTile(tileColors.bed2, W2 / 2 - 0.3, D2 / 2 - 4 - 0.3, W2 / 4, -(D2 / 2 + 4) / 2, 'Bedroom 2');
         // Kitchen checkerboard (left, z=-2.5 to 4)
         for (let ki = 0; ki < 6; ki++) for (let kj = 0; kj < 6; kj++) {
             addFloorTile((ki + kj) % 2 === 0 ? 0xf5f5f5 : 0x333333, 0.8, 0.8, -W2 / 2 + 0.7 + ki * 0.85, -2.1 + kj * 0.95, 'Kitchen');
         }
         // Bathroom (left, z=4 to D2/2)
-        addFloorTile(tileColors.bath, W2 / 2 - 5 - 0.2, D2 / 2 - 4 - 0.2, -(5 + W2 / 2) / 2, (D2 / 2 + 4) / 2, 'Bathroom');
+        addFloorTile(tileColors.bath, W2 / 2 - 7 - 0.2, D2 / 2 - 5 - 0.2, -(7 + W2 / 2) / 2, (D2 / 2 + 5) / 2, 'Bathroom');
 
         // Room labels
         function addRoomLabel(name, x, y, z, room) {
@@ -917,11 +917,11 @@
             return l;
         }
         const roomLabels = [
-            addRoomLabel('🏠 Hall', (W2 / 2 - 5) / 2, 4, (D2 / 2 - 2.5) / 2, 'Hall'),
-            addRoomLabel('🛏️ Bedroom 1', -W2 / 4, 4, -(D2 / 2 + 2.5) / 2, 'Bedroom 1'),
-            addRoomLabel('🛏️ Bedroom 2', W2 / 4, 4, -(D2 / 2 + 2.5) / 2, 'Bedroom 2'),
-            addRoomLabel('🍳 Kitchen', -(5 + W2 / 2) / 2, 4, 0.75, 'Kitchen'),
-            addRoomLabel('🚿 Bathroom', -(5 + W2 / 2) / 2, 4, (D2 / 2 + 4) / 2, 'Bathroom')
+            addRoomLabel('🏠 Hall', (W2 / 2 - 7) / 2, 4.5, (D2 / 2 - 4) / 2, 'Hall'),
+            addRoomLabel('🛏️ Bedroom 1', -W2 / 4, 4.5, -(D2 / 2 + 4) / 2, 'Bedroom 1'),
+            addRoomLabel('🛏️ Bedroom 2', W2 / 4, 4.5, -(D2 / 2 + 4) / 2, 'Bedroom 2'),
+            addRoomLabel('🍳 Kitchen', -(7 + W2 / 2) / 2, 4.5, 0.5, 'Kitchen'),
+            addRoomLabel('🚿 Bathroom', -(7 + W2 / 2) / 2, 4.5, (D2 / 2 + 5) / 2, 'Bathroom')
         ];
 
         // === 2BHK Appliances (room-specific) ===
@@ -947,30 +947,30 @@
             g.position.set(x, y, z);
             roomGroups[room].add(g);
         }
-        createBed(-W2 / 4, 0.3, -(D2 / 2 + 2.5) / 2, 0x6495ED, 'Bedroom 1');
-        createBed(W2 / 4, 0.3, -(D2 / 2 + 2.5) / 2, 0xDDA0DD, 'Bedroom 2');
+        createBed(-W2 / 4, 0.3, -(D2 / 2 + 4) / 2, 0x6495ED, 'Bedroom 1');
+        createBed(W2 / 4, 0.3, -(D2 / 2 + 4) / 2, 0xDDA0DD, 'Bedroom 2');
 
         // ── Hall Furniture ──
         // Sofa in hall
         const hallSofaMat = new THREE.MeshStandardMaterial({ color: 0x4a6fa5, roughness: 0.8 });
         const hallSofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.6, 2), hallSofaMat);
-        hallSofaSeat.position.set(W2 / 2 - 2.8, 0.9, 1); hallSofaSeat.castShadow = true; roomGroups['Hall'].add(hallSofaSeat);
+        hallSofaSeat.position.set(W2 / 2 - 3.5, 0.9, 2); hallSofaSeat.castShadow = true; roomGroups['Hall'].add(hallSofaSeat);
         const hallSofaBack = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.2, 0.4), hallSofaMat);
-        hallSofaBack.position.set(W2 / 2 - 2.8, 1.5, 2); hallSofaBack.castShadow = true; roomGroups['Hall'].add(hallSofaBack);
+        hallSofaBack.position.set(W2 / 2 - 3.5, 1.5, 3); hallSofaBack.castShadow = true; roomGroups['Hall'].add(hallSofaBack);
         const hallArmMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80, roughness: 0.75 });
         const hallArmL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
-        hallArmL.position.set(W2 / 2 - 4.85, 1.1, 1); roomGroups['Hall'].add(hallArmL);
+        hallArmL.position.set(W2 / 2 - 5.55, 1.1, 2); roomGroups['Hall'].add(hallArmL);
         const hallArmR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
-        hallArmR.position.set(W2 / 2 - 0.75, 1.1, 1); roomGroups['Hall'].add(hallArmR);
+        hallArmR.position.set(W2 / 2 - 1.45, 1.1, 2); roomGroups['Hall'].add(hallArmR);
         // Sofa cushions
         for (let ci = 0; ci < 2; ci++) {
             const cush = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 1.6), new THREE.MeshStandardMaterial({ color: 0x6b8fc4, roughness: 0.85 }));
-            cush.position.set(W2 / 2 - 2.8 + ci * 2.2 - 1.1, 1.3, 1); roomGroups['Hall'].add(cush);
+            cush.position.set(W2 / 2 - 3.5 + ci * 2.2 - 1.1, 1.3, 2); roomGroups['Hall'].add(cush);
         }
         // Coffee Table
         const coffeeTableMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.7 });
         const coffeeTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 1.2), coffeeTableMat);
-        coffeeTop.position.set((W2 / 2 - 5) / 2, 0.95, 1); coffeeTop.castShadow = true; roomGroups['Hall'].add(coffeeTop);
+        coffeeTop.position.set((W2 / 2 - 7) / 2, 0.95, 2); coffeeTop.castShadow = true; roomGroups['Hall'].add(coffeeTop);
         for (let li = 0; li < 4; li++) {
             const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.6, 6), coffeeTableMat);
             leg.position.set((W2 / 2 - 5) / 2 + (li < 2 ? -1 : 1), 0.62, 1 + (li % 2 === 0 ? -0.45 : 0.45));
@@ -978,35 +978,35 @@
         }
         // TV on wall in hall
         const hallTvFrame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 0.15), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.5 }));
-        hallTvFrame.position.set((W2 / 2 - 5) / 2, 4.2, -2.3); roomGroups['Hall'].add(hallTvFrame);
+        hallTvFrame.position.set((W2 / 2 - 7) / 2, 4.8, -3.8); roomGroups['Hall'].add(hallTvFrame);
         const tvMat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000, roughness: 0.1 });
         const hallTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.9), tvMat);
-        hallTvScreen.position.set((W2 / 2 - 5) / 2, 4.2, -2.22); roomGroups['Hall'].add(hallTvScreen);
+        hallTvScreen.position.set((W2 / 2 - 7) / 2, 4.8, -3.72); roomGroups['Hall'].add(hallTvScreen);
         // Decorative plant in hall corner
         const potMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
         const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.6, 8), potMat);
-        pot.position.set(-4.5, 0.6, D2 / 2 - 1); roomGroups['Hall'].add(pot);
+        pot.position.set(-6, 0.6, D2 / 2 - 1); roomGroups['Hall'].add(pot);
         const plant = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.9 }));
-        plant.position.set(-4.5, 1.3, D2 / 2 - 1); roomGroups['Hall'].add(plant);
+        plant.position.set(-6, 1.3, D2 / 2 - 1); roomGroups['Hall'].add(plant);
 
         // Kitchen counter & stove (repositioned for larger kitchen)
         const counterMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.3 });
         const counter = new THREE.Mesh(new THREE.BoxGeometry(3, 1.8, 0.8), counterMat);
-        counter.position.set(-W2 / 2 + 1.8, 1.2, -1.5); counter.castShadow = true;
+        counter.position.set(-W2 / 2 + 2, 1.2, -2.5); counter.castShadow = true;
         roomGroups['Kitchen'].add(counter);
         const stove = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.3 }));
-        stove.position.set(-W2 / 2 + 1.8, 2.15, -1.5); roomGroups['Kitchen'].add(stove);
+        stove.position.set(-W2 / 2 + 2, 2.15, -2.5); roomGroups['Kitchen'].add(stove);
         // Kitchen sink
         const kitchenSink = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 0.8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7, roughness: 0.2 }));
-        kitchenSink.position.set(-W2 / 2 + 1.8, 2.12, 1); roomGroups['Kitchen'].add(kitchenSink);
+        kitchenSink.position.set(-W2 / 2 + 2, 2.12, 1.5); roomGroups['Kitchen'].add(kitchenSink);
         // Kitchen wall cabinet
         const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
         const cabinet = new THREE.Mesh(new THREE.BoxGeometry(3, 1.2, 0.5), cabinetMat);
-        cabinet.position.set(-W2 / 2 + 1.5, 4.5, -2.3); roomGroups['Kitchen'].add(cabinet);
+        cabinet.position.set(-W2 / 2 + 1.8, 5, -3.8); roomGroups['Kitchen'].add(cabinet);
 
         // ── Bathroom fixtures (repositioned for larger bathroom) ──
-        const bathX = -(5 + W2 / 2) / 2;
-        const bathZ = (D2 / 2 + 4) / 2;
+        const bathX = -(7 + W2 / 2) / 2;
+        const bathZ = (D2 / 2 + 5) / 2;
         const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.3 });
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1 });
 
@@ -1054,35 +1054,35 @@
         const bhk2RoomDefs = [
             {
                 room: 'Hall', appliances: [
-                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: (W2 / 2 - 5) / 2, y: H - 0.3, z: (D2 / 2 - 2.5) / 2 },
-                    { type: 'light', name: 'Light', watt: 60, x: (W2 / 2 - 5) / 2 - 2, y: H - 0.5, z: 0 },
-                    { type: 'ac', name: 'AC', watt: 1500, x: W2 / 2 - 1.5, y: 5, z: -2.3 },
+                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: (W2 / 2 - 7) / 2, y: H - 0.3, z: (D2 / 2 - 4) / 2 },
+                    { type: 'light', name: 'Light', watt: 60, x: (W2 / 2 - 7) / 2 - 3, y: H - 0.5, z: 0 },
+                    { type: 'ac', name: 'AC', watt: 1500, x: W2 / 2 - 2, y: 5.5, z: -3.8 },
                     { type: 'tv', name: 'Television', watt: 180, x: 0, y: 0, z: 0 }, // Position handled by hall furniture logic
                 ]
             },
             {
                 room: 'Bedroom 1', appliances: [
-                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: -W2 / 4, y: H - 0.3, z: -(D2 / 2 + 2.5) / 2 },
-                    { type: 'light', name: 'Light', watt: 60, x: -W2 / 4 - 2, y: H - 0.5, z: -(D2 / 2 + 2.5) / 2 - 1 },
+                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: -W2 / 4, y: H - 0.3, z: -(D2 / 2 + 4) / 2 },
+                    { type: 'light', name: 'Light', watt: 60, x: -W2 / 4 - 3, y: H - 0.5, z: -(D2 / 2 + 4) / 2 - 1.5 },
                     { type: 'ac', name: 'AC', watt: 1500, x: -W2 / 4 + 2, y: 5, z: -D2 / 2 + 0.7 },
                 ]
             },
             {
                 room: 'Bedroom 2', appliances: [
-                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: W2 / 4, y: H - 0.3, z: -(D2 / 2 + 2.5) / 2 },
-                    { type: 'light', name: 'Light', watt: 60, x: W2 / 4 + 2, y: H - 0.5, z: -(D2 / 2 + 2.5) / 2 - 1 },
-                    { type: 'tablefan', name: 'Table Fan', watt: 55, x: W2 / 4 + 3, y: 1.8, z: -(D2 / 2 + 2.5) / 2 + 1 },
+                    { type: 'fan', name: 'Ceiling Fan', watt: 75, x: W2 / 4, y: H - 0.3, z: -(D2 / 2 + 4) / 2 },
+                    { type: 'light', name: 'Light', watt: 60, x: W2 / 4 + 3, y: H - 0.5, z: -(D2 / 2 + 4) / 2 - 1.5 },
+                    { type: 'tablefan', name: 'Table Fan', watt: 55, x: W2 / 4 + 4, y: 1.8, z: -(D2 / 2 + 4) / 2 + 2 },
                 ]
             },
             {
                 room: 'Kitchen', appliances: [
-                    { type: 'light', name: 'Light', watt: 60, x: -(5 + W2 / 2) / 2, y: H - 0.5, z: 0.75 },
-                    { type: 'fridge', name: 'Refrigerator', watt: 350, x: -W2 / 2 + 0.9, y: 0.3, z: 2 },
+                    { type: 'light', name: 'Light', watt: 60, x: -(7 + W2 / 2) / 2, y: H - 0.5, z: 0.5 },
+                    { type: 'fridge', name: 'Refrigerator', watt: 350, x: -W2 / 2 + 1.2, y: 0.3, z: 3 },
                 ]
             },
             {
                 room: 'Bathroom', appliances: [
-                    { type: 'light', name: 'Light', watt: 40, x: -(5 + W2 / 2) / 2, y: H - 0.5, z: (D2 / 2 + 4) / 2 },
+                    { type: 'light', name: 'Light', watt: 40, x: -(7 + W2 / 2) / 2, y: H - 0.5, z: (D2 / 2 + 5) / 2 },
                     { type: 'tap', name: 'Wash Basin Tap', watt: 5, x: 0, y: 0, z: 0 }, // Animation logic
                 ]
             }
@@ -1146,9 +1146,9 @@
         // Create simple house TV
         const simpleTvGroup = new THREE.Group();
         const simpleTvFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-        simpleTvFrame.position.set(-13, 3.5, -4.3); simpleTvGroup.add(simpleTvFrame);
+        simpleTvFrame.position.set(-23, 4.2, -6); simpleTvGroup.add(simpleTvFrame);
         const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000 }));
-        simpleTvScreen.position.set(-13, 3.5, -4.24); simpleTvGroup.add(simpleTvScreen);
+        simpleTvScreen.position.set(-23, 4.2, -5.94); simpleTvGroup.add(simpleTvScreen);
         scene.add(simpleTvGroup);
         simpleAppliances[6].mesh = { frame: simpleTvFrame, screen: simpleTvScreen };
 
@@ -1169,8 +1169,8 @@
             // Placement logic
             let x = 0, y = 3, z = 0;
             if (isSimple) {
-                x = -11 + (count % 3 - 1) * 2;
-                z = (Math.floor(count / 3)) * 2 - 2;
+                x = -7 + (count % 4) * 3;
+                z = -3 + Math.floor(count / 4) * 3;
             } else {
                 const center = roomCenters[room] || { x: 0, z: 0 };
                 x = center.x + (count % 3 - 1) * 2;
@@ -1178,7 +1178,7 @@
             }
 
             if (type === 'light') {
-                mesh = createLight(x, H - 0.5, z);
+                mesh = createLightBulb(x, H - 0.5, z);
                 obj = { type, name, watt: 60, emoji: '💡', on: true, kind: 'light', mesh };
             } else if (type === 'fan') {
                 mesh = createFan(x, H - 0.3, z);
@@ -1283,7 +1283,7 @@
         function addDynamicAC() {
             if (currentFocusedHouse === 'simple') {
                 const count = simpleAppliances.filter(a => a.name.includes('New AC')).length;
-                const newACMesh = createAC(-11 + 2 + count * 0.5, 5, -4.3);
+                const newACMesh = createAC(-20 + 4 + count * 3, 5.5, -D / 2 + 0.7);
                 const a = { name: 'New AC ' + (count + 1), watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: newACMesh };
                 simpleAppliances.push(a);
             } else {
@@ -1388,11 +1388,11 @@
         // Room center positions (relative to bhk2Group at x=13)
         // Room center positions (relative to bhk2Group at x=16)
         const roomCenters = {
-            'Hall': { x: 2.5, z: 2.75 },
-            'Bedroom 1': { x: -5, z: -5.25 },
-            'Bedroom 2': { x: 5, z: -5.25 },
-            'Kitchen': { x: -7.5, z: 0.75 },
-            'Bathroom': { x: -7.5, z: 6 }
+            'Hall': { x: 3.5, z: 4.5 },
+            'Bedroom 1': { x: -7, z: -8 },
+            'Bedroom 2': { x: 7, z: -8 },
+            'Kitchen': { x: -10.5, z: 0.5 },
+            'Bathroom': { x: -10.5, z: 8 }
         };
 
         function buildRoomNavPanel() {
@@ -1412,7 +1412,7 @@
             const center = roomCenters[roomName];
             if (!center) return;
             // Animate camera to the room (world coords: bhk2Group.position.x + room center)
-            const worldX = 16 + center.x;
+            const worldX = 24 + center.x;
             const worldZ = center.z;
             controls.target.set(worldX, 3, worldZ);
             camera.position.set(worldX + 2.5, 9, worldZ + 7.5);
@@ -1436,8 +1436,8 @@
         function exitRoomView() {
             currentRoom = null;
             // Return to full 2BHK view
-            controls.target.set(16, 4, 0);
-            camera.position.set(16, 12, 20);
+            controls.target.set(24, 4, 0);
+            camera.position.set(24, 15, 28);
             controls.update();
 
             // Restore all visibility
@@ -1454,14 +1454,14 @@
             currentRoom = null;
             document.getElementById('back-to-full-btn').style.display = 'none';
             if (which === 'simple') {
-                controls.target.set(-11, 4, 0);
-                camera.position.set(-11, 12, 20);
+                controls.target.set(-20, 4, 0);
+                camera.position.set(-20, 15, 28);
                 document.getElementById('room-nav-panel').classList.remove('visible');
                 document.getElementById('solar-mount-point').style.display = 'flex';
                 document.getElementById('panel-counter').classList.add('visible');
             } else {
-                controls.target.set(16, 4, 0);
-                camera.position.set(16, 12, 20);
+                controls.target.set(24, 4, 0);
+                camera.position.set(24, 15, 28);
                 document.getElementById('room-nav-panel').classList.add('visible');
                 document.getElementById('solar-mount-point').style.display = 'flex';
                 document.getElementById('panel-counter').classList.add('visible');
@@ -1704,7 +1704,7 @@
         function updateWallTransparency() {
             const camPos = camera.position.clone();
             // Simple house center in world: (-11, 4, 0)
-            const distSimple = camPos.distanceTo(new THREE.Vector3(-11, 4, 0));
+            const distSimple = camPos.distanceTo(new THREE.Vector3(-20, 4, 0));
             const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
 
             // Simple house walls/roof/door
@@ -1721,7 +1721,7 @@
             });
 
             // 2BHK house center in world: (16, 4, 0)
-            const dist2BHK = camPos.distanceTo(new THREE.Vector3(16, 4, 0));
+            const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, 0));
             const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
 
             bhk2TransWalls.forEach(wall => {
