@@ -36,8 +36,9 @@ function createLightBulb(x, y, z) {
     return { group: g, bulbMat, pointLight: pl };
 }
 
-const light1 = createLightBulb(-3, H - 0.5, 0);
-const light2 = createLightBulb(3, H - 0.5, -1);
+// Adjusted positions for enlarged 1BHK (W=20, D=15, H=7)
+const light1 = createLightBulb(-4, H - 0.5, 1);
+const light2 = createLightBulb(4, H - 0.5, -2);
 
 // ── Ceiling Fan ──
 function createFan(x, y, z) {
@@ -63,7 +64,7 @@ function createFan(x, y, z) {
     return { group: g, blades: bladesGroup };
 }
 
-const fan1 = createFan(0, H - 0.3, 1);
+const fan1 = createFan(0, H - 0.3, 2);
 
 // ── Refrigerator ──
 function createFridge(x, y, z) {
@@ -84,7 +85,7 @@ function createFridge(x, y, z) {
     return { group: g };
 }
 
-const fridge = createFridge(-5, 0.3, -3.5);
+const fridge = createFridge(-6, 0.3, -4.5);
 
 // ── Air Conditioner ──
 function createAC(x, y, z) {
@@ -117,7 +118,7 @@ function createAC(x, y, z) {
     return { group: g, particles, particlePositions: positions, baseY: y };
 }
 
-const ac = createAC(3, 5, -D / 2 + 0.7);
+const ac = createAC(4, 5.5, -D / 2 + 0.7);
 
 // ── Table Fan ──
 function createTableFan(x, y, z) {
@@ -147,12 +148,12 @@ function createTableFan(x, y, z) {
     return { group: g, blades: bladesGroup };
 }
 
-const tableFan = createTableFan(4, 0.3, 2);
+const tableFan = createTableFan(5, 0.3, 3);
 
-// Table for fan
+// Table for fan (adjusted)
 const tableMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.8 });
 const table = new THREE.Mesh(new THREE.BoxGeometry(2, 1.5, 1.5), tableMat);
-table.position.set(4, 1.05, 2); table.castShadow = true; applianceGroup.add(table);
+table.position.set(5, 1.05, 3); table.castShadow = true; applianceGroup.add(table);
 tableFan.group.position.y = 1.8;
 
 // ═══════════════════════════════════════════════
@@ -169,12 +170,12 @@ function createLabel(text, watt, position) {
 }
 
 const labels = [
-    createLabel('💡 Light Bulb', 60, new THREE.Vector3(-3, H + 0.8, 0)),
-    createLabel('🌀 Ceiling Fan', 75, new THREE.Vector3(0, H + 1, 1)),
-    createLabel('🧊 Refrigerator', 350, new THREE.Vector3(-5, 4, -3.5)),
-    createLabel('❄️ AC Unit', 1500, new THREE.Vector3(3, 6.2, -D / 2 + 0.7)),
-    createLabel('💡 Light Bulb', 60, new THREE.Vector3(3, H + 0.8, -1)),
-    createLabel('🌀 Table Fan', 55, new THREE.Vector3(4, 3.5, 2))
+    createLabel('💡 Light Bulb', 60, new THREE.Vector3(-4, H + 0.8, 1)),
+    createLabel('🌀 Ceiling Fan', 75, new THREE.Vector3(0, H + 1, 2)),
+    createLabel('🧊 Refrigerator', 350, new THREE.Vector3(-6, 4, -4.5)),
+    createLabel('❄️ AC Unit', 1500, new THREE.Vector3(4, 6.8, -D / 2 + 0.7)),
+    createLabel('💡 Light Bulb', 60, new THREE.Vector3(4, H + 0.8, -2)),
+    createLabel('🌀 Table Fan', 55, new THREE.Vector3(5, 4, 3))
 ];
 
 // ═══════════════════════════════════════════════
