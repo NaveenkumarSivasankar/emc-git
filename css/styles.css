@@ -669,3 +669,212 @@ canvas {
         box-shadow: 0 4px 40px rgba(0, 255, 68, 0.5), 0 0 80px rgba(0, 255, 68, 0.2);
     }
 }
+
+/* ── Character Selector Panel ────────────────────────── */
+#character-selector {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    z-index: 200;
+    background: rgba(10, 10, 30, 0.80);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 22px;
+    padding: 14px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 90vw;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#character-selector.visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+}
+
+.char-selector-title {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.6;
+    text-align: center;
+}
+
+.char-selector-scroll {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 4px 2px 8px 2px;
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.char-selector-scroll::-webkit-scrollbar {
+    height: 4px;
+}
+
+.char-selector-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 2px;
+}
+
+.avatar-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 14px;
+    border: 2px solid rgba(255, 255, 255, 0.10);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 80px;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.avatar-card:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: translateY(-4px) scale(1.05);
+}
+
+.avatar-card.selected {
+    border-color: #FFD700;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.10));
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.25), 0 0 40px rgba(255, 215, 0, 0.08);
+}
+
+.avatar-card.switching {
+    animation: avatarSwitch 0.4s ease;
+}
+
+@keyframes avatarSwitch {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+.avatar-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.avatar-card:hover .avatar-icon {
+    transform: scale(1.1);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.avatar-card.selected .avatar-icon {
+    box-shadow: 0 0 12px rgba(255, 215, 0, 0.5), 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.avatar-name {
+    font-size: 0.68rem;
+    font-weight: 600;
+    text-align: center;
+    opacity: 0.8;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
+.avatar-card.selected .avatar-name {
+    opacity: 1;
+    color: #FFD700;
+}
+
+/* Character Selector Toggle Button */
+#char-selector-btn {
+    background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    color: #fff;
+    box-shadow: 0 4px 25px rgba(108, 92, 231, 0.4);
+}
+
+#char-selector-btn:hover {
+    box-shadow: 0 6px 30px rgba(108, 92, 231, 0.5);
+}
+
+/* ── Mobile Responsive — Character Selector ────────── */
+@media (max-width: 768px) {
+    #character-selector {
+        max-width: 95vw;
+        padding: 10px 12px;
+        bottom: 80px;
+    }
+
+    .avatar-card {
+        min-width: 65px;
+        padding: 8px 10px;
+    }
+
+    .avatar-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 1.2rem;
+    }
+
+    .avatar-name {
+        font-size: 0.60rem;
+    }
+
+    #bottom-controls {
+        padding: 8px 12px;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .bottom-action-btn {
+        padding: 10px 16px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar-card {
+        min-width: 55px;
+        padding: 6px 8px;
+        border-radius: 12px;
+    }
+
+    .avatar-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 1rem;
+    }
+
+    .avatar-name {
+        font-size: 0.55rem;
+    }
+
+    .char-selector-title {
+        font-size: 0.62rem;
+    }
+}
