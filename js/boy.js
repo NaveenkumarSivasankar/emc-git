@@ -171,10 +171,16 @@ const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
 
 // ── KEY LISTENERS ──
 document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp') { boyState.keys.up = true; e.preventDefault(); }
-    if (e.key === 'ArrowDown') { boyState.keys.down = true; e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { boyState.keys.left = true; e.preventDefault(); }
-    if (e.key === 'ArrowRight') { boyState.keys.right = true; e.preventDefault(); }
+    let moved = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { boyState.keys.up = true; moved = true; }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { boyState.keys.down = true; moved = true; }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { boyState.keys.left = true; moved = true; }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { boyState.keys.right = true; moved = true; }
+
+    if (moved) {
+        if (boyState.mode === 'indoor') boyState.cameraFollow = true;
+        if (e.key.startsWith('Arrow')) e.preventDefault();
+    }
 
     // ENTER — enter house if near entry circle
     if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
@@ -190,10 +196,10 @@ document.addEventListener('keydown', (e) => {
 });
 
 document.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp') boyState.keys.up = false;
-    if (e.key === 'ArrowDown') boyState.keys.down = false;
-    if (e.key === 'ArrowLeft') boyState.keys.left = false;
-    if (e.key === 'ArrowRight') boyState.keys.right = false;
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') boyState.keys.up = false;
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') boyState.keys.down = false;
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') boyState.keys.left = false;
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') boyState.keys.right = false;
 });
 
 // ═══════════════════════════════════════════════
@@ -203,14 +209,15 @@ function enterHouse(houseId) {
     boyState.mode = 'indoor';
     boyState.insideHouse = houseId;
     boyState.nearEntry = null;
+    boyState.cameraFollow = true; // reset camera follow
 
     // Move boy inside
     const spawn = indoorSpawn[houseId];
     boyGroup.position.copy(spawn.pos);
     boyGroup.rotation.y = spawn.rot;
 
-    // Disable orbit controls, enable camera follow
-    controls.enabled = false;
+    // We now let OrbitControls remain enabled so the user can freely look around!
+    // controls.enabled = false; 
 
     // Focus on the right house
     if (houseId === '1bhk') {
@@ -339,7 +346,7 @@ function updateBoy(delta) {
     }
 
     // ── Camera follow (indoor mode) ──
-    if (boyState.mode === 'indoor') {
+    if (boyState.mode === 'indoor' && boyState.cameraFollow) {
         const targetCamPos = new THREE.Vector3(
             boyGroup.position.x,
             boyGroup.position.y + indoorCameraOffset.y,

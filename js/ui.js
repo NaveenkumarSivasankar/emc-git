@@ -189,6 +189,10 @@ function focusHouse(which) {
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
+    // Move solar panels to the newly focused house
+    if (typeof refreshSolarPanelsPlacement === 'function') {
+        refreshSolarPanelsPlacement();
+    }
     // Hide back button when switching houses
     document.getElementById('back-btn').classList.remove('visible');
 }
@@ -231,6 +235,8 @@ function buildRoomNavPanel() {
 }
 
 function zoomToRoom(roomName) {
+    if (typeof boyState !== 'undefined') boyState.cameraFollow = false;
+
     const positions = is2BHK ? bhk2RoomPositions : bhk1RoomPositions;
     const pos = positions[roomName];
     if (!pos) return;
