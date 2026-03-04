@@ -134,6 +134,42 @@ entry2BHK.position.set(16, 0, 10);
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
+//  EXIT BUTTONS ABOVE DOORS
+// ═══════════════════════════════════════════════
+function createExitButton(houseId) {
+    const btn = document.createElement('button');
+    btn.className = 'exit-scene-btn';
+    btn.textContent = 'Exit House';
+    btn.onclick = (e) => {
+        e.stopPropagation();
+        exitHouse();
+    };
+
+    const obj = new THREE.CSS2DObject(btn);
+    // Position above the door (Door height is ~4-5, so 6 is good)
+    obj.position.set(0, 6, -1); // Slightly retracted to avoid clipping with front door frame
+    return obj;
+}
+
+// Add Exit button to 1BHK
+if (typeof houseGroup !== 'undefined') {
+    const exitBtn1 = createExitButton('1bhk');
+    // Align with 1BHK door at x=0 in its local space
+    exitBtn1.position.set(0, 6.5, 7.8);
+    houseGroup.add(exitBtn1);
+    window.exitBtn1 = exitBtn1; // expose for visibility control if needed
+}
+
+// Add Exit button to 2BHK
+if (typeof bhk2Group !== 'undefined') {
+    const exitBtn2 = createExitButton('2bhk');
+    // Align with 2BHK door at x=0 in its local space
+    exitBtn2.position.set(0, 6.5, 8.3);
+    bhk2Group.add(exitBtn2);
+    window.exitBtn2 = exitBtn2;
+}
+
+// ═══════════════════════════════════════════════
 //  COLLISION SYSTEM — SOLID OBJECTS
 // ═══════════════════════════════════════════════
 const BOY_RADIUS = 0.35;
@@ -269,26 +305,33 @@ const indoorBounds = {
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
 
 // ── KEY LISTENERS ──
-document.addEventListener('keydown', (e) => {
+window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowUp') { boyState.keys.up = true; e.preventDefault(); }
     if (e.key === 'ArrowDown') { boyState.keys.down = true; e.preventDefault(); }
     if (e.key === 'ArrowLeft') { boyState.keys.left = true; e.preventDefault(); }
     if (e.key === 'ArrowRight') { boyState.keys.right = true; e.preventDefault(); }
 
     // ENTER — enter house if near entry circle
-    if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
-        enterHouse(boyState.nearEntry);
-        e.preventDefault();
+    if (e.key === 'Enter') {
+        if (boyState.mode === 'outdoor' && boyState.nearEntry) {
+            enterHouse(boyState.nearEntry);
+            e.preventDefault();
+        }
     }
 
-    // ESCAPE — exit house back to road
-    if (e.key === 'Escape' && boyState.mode === 'indoor') {
-        exitHouse();
-        e.preventDefault();
+    // ESCAPE — exit current house view (character-based or focus-based)
+    if (e.key === 'Escape') {
+        if (boyState.mode === 'indoor' || boyState.mode === 'transition') {
+            exitHouse(); // boy walks out (or force reset if stuck)
+            e.preventDefault();
+        } else {
+            resetToStreetOverview(); // UI zoom reset
+            e.preventDefault();
+        }
     }
 });
 
-document.addEventListener('keyup', (e) => {
+window.addEventListener('keyup', (e) => {
     if (e.key === 'ArrowUp') boyState.keys.up = false;
     if (e.key === 'ArrowDown') boyState.keys.down = false;
     if (e.key === 'ArrowLeft') boyState.keys.left = false;
@@ -342,6 +385,13 @@ function exitHouse() {
     if (boyState.mode === 'transition' || mainDoorTransition) return;
     const houseId = boyState.insideHouse;
 
+    if (!houseId) {
+        // Fallback: just reset mode and camera if we don't know which house we're in
+        boyState.mode = 'outdoor';
+        if (typeof resetToStreetOverview === 'function') resetToStreetOverview();
+        return;
+    }
+
     boyState.mode = 'transition';
     boyState.insideHouse = null;
 
@@ -350,10 +400,14 @@ function exitHouse() {
     boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 0.5);
     boyGroup.rotation.y = 0;
 
-    // Reset camera to overview
-    camera.position.set(0, 20, 40);
-    controls.target.set(0, 4, 0);
-    controls.update();
+    // Reset camera to overview via shared helper
+    if (typeof resetToStreetOverview === 'function') {
+        resetToStreetOverview();
+    } else {
+        camera.position.set(0, 20, 40);
+        controls.target.set(0, 4, 0);
+        controls.update();
+    }
 
     boyState.currentRoom = null;
 

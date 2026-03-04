@@ -67,15 +67,16 @@ function updateStats() {
     const list = is2BHK ? bhk2Appliances : simpleAppliances;
     list.forEach(a => { if (a.on) total += a.watt; });
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
-    document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    setText('stat-consumption', total.toLocaleString() + ' W');
+    setText('stat-panels', currentPanelCount + ' / ' + panelsNeeded + ' needed');
     const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
-    document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
-    document.getElementById('stat-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
-    document.getElementById('panel-num').textContent = currentPanelCount;
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved + ' kg/yr');
+    setText('stat-fact', funFacts[Math.floor(Math.random() * funFacts.length)]);
+    setText('panel-num', currentPanelCount);
     updateBarChart(total, coverageRatio);
 }
 
@@ -87,17 +88,17 @@ function toggleSolar() {
     const panelCounter = document.getElementById('panel-counter');
 
     if (isSolarMode) {
-        btn.className = 'solar-mode bottom-action-btn';
-        btnText.textContent = 'Remove Solar';
-        btnIcon.textContent = '⚡';
-        panelCounter.classList.add('visible');
+        if (btn) btn.className = 'solar-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Remove Solar';
+        if (btnIcon) btnIcon.textContent = '⚡';
+        if (panelCounter) panelCounter.classList.add('visible');
         currentPanelCount = 0;
         solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
     } else {
-        btn.className = 'grid-mode bottom-action-btn';
-        btnText.textContent = 'Add Solar Panels';
-        btnIcon.textContent = '☀️';
-        panelCounter.classList.remove('visible');
+        if (btn) btn.className = 'grid-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Add Solar Panels';
+        if (btnIcon) btnIcon.textContent = '☀️';
+        if (panelCounter) panelCounter.classList.remove('visible');
         currentPanelCount = 0;
         solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
         poleGroup.children.forEach(child => { if (child.material) child.material.opacity = 1; });

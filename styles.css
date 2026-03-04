@@ -463,7 +463,6 @@ canvas {
     transition: all 0.3s ease;
 }
 
-<<<<<<< HEAD
 #back-to-full-btn:hover {
     transform: translateX(-50%) translateY(-2px) scale(1.05);
 }
@@ -574,9 +573,12 @@ canvas {
 }
 
 @keyframes roomPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 4px 30px rgba(68, 170, 255, 0.3), 0 0 60px rgba(68, 170, 255, 0.1);
     }
+
     50% {
         box-shadow: 0 4px 40px rgba(68, 170, 255, 0.5), 0 0 80px rgba(68, 170, 255, 0.2);
     }
@@ -679,6 +681,40 @@ canvas {
 
 #focus-2bhk-btn:hover {
     transform: translateY(-2px) scale(1.05);
+}
+
+/* ── 3D Exit Button (Scene) ────────────────────────── */
+.exit-scene-btn {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.exit-scene-btn:hover {
+    transform: scale(1.15) translateY(-2px);
+    background: linear-gradient(135deg, #ff6b81, #ff4757);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.6);
+    border-color: #fff;
+}
+
+.exit-scene-btn::before {
+    content: '🚪';
+    font-size: 1.1rem;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1416,152 +1452,149 @@ canvas {
     .summary-cards {
         grid-template-columns: 1fr;
     }
-=======
-        #back-to-full-btn:hover {
-            transform: translateX(-50%) translateY(-2px) scale(1.05);
-<<<<<<< HEAD
-        }
 
-        /* ── Simple House Room Navigation ────────────────────────── */
-        #simple-room-nav-panel {
-            position: fixed;
-            bottom: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 100;
-            display: none;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 4px;
-            max-width: 500px;
-            padding: 8px 14px;
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 18px;
-        }
+    #back-to-full-btn:hover {
+        transform: translateX(-50%) translateY(-2px) scale(1.05);
+    }
 
-        #simple-room-nav-panel.visible {
-            display: flex;
-        }
+    /* ── Simple House Room Navigation ────────────────────────── */
+    #simple-room-nav-panel {
+        position: fixed;
+        bottom: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: none;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+        max-width: 500px;
+        padding: 8px 14px;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 18px;
+    }
 
-        /* ── Energy Graphs Panel ────────────────────────── */
-        #energy-graphs-btn {
-            padding: 10px 22px;
-            border: none;
-            border-radius: 50px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: linear-gradient(135deg, #e17055, #fdcb6e);
-            color: #1a1a2e;
-            box-shadow: 0 4px 20px rgba(225, 112, 85, 0.4);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
+    #simple-room-nav-panel.visible {
+        display: flex;
+    }
 
-        #energy-graphs-btn:hover {
-            transform: translateY(-2px) scale(1.05);
-        }
+    /* ── Energy Graphs Panel ────────────────────────── */
+    #energy-graphs-btn {
+        padding: 10px 22px;
+        border: none;
+        border-radius: 50px;
+        font-family: 'Outfit', sans-serif;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: linear-gradient(135deg, #e17055, #fdcb6e);
+        color: #1a1a2e;
+        box-shadow: 0 4px 20px rgba(225, 112, 85, 0.4);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-        #energy-graphs-panel {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 200;
-            display: none;
-            width: 700px;
-            max-width: 90vw;
-            max-height: 85vh;
-            overflow-y: auto;
-            background: rgba(15, 15, 35, 0.92);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px;
-            padding: 28px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-        }
+    #energy-graphs-btn:hover {
+        transform: translateY(-2px) scale(1.05);
+    }
 
-        #energy-graphs-panel.visible {
-            display: block;
-        }
+    #energy-graphs-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 200;
+        display: none;
+        width: 700px;
+        max-width: 90vw;
+        max-height: 85vh;
+        overflow-y: auto;
+        background: rgba(15, 15, 35, 0.92);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        padding: 28px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+    }
 
-        #energy-graphs-panel .graph-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
+    #energy-graphs-panel.visible {
+        display: block;
+    }
 
-        #energy-graphs-panel .graph-header h2 {
-            font-size: 1.3rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, #FFD700, #FF8C00);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
+    #energy-graphs-panel .graph-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
 
-        #energy-graphs-panel .close-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+    #energy-graphs-panel .graph-header h2 {
+        font-size: 1.3rem;
+        font-weight: 700;
+        background: linear-gradient(135deg, #FFD700, #FF8C00);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
 
-        #energy-graphs-panel .close-btn:hover {
-            background: rgba(255, 71, 87, 0.4);
-            transform: scale(1.1);
-        }
+    #energy-graphs-panel .close-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 
-        .chart-container {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 16px;
-        }
+    #energy-graphs-panel .close-btn:hover {
+        background: rgba(255, 71, 87, 0.4);
+        transform: scale(1.1);
+    }
 
-        .chart-container h3 {
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
-            opacity: 0.7;
-            margin-bottom: 12px;
-        }
+    .chart-container {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
 
-        .chart-container canvas {
-            max-height: 250px;
-        }
+    .chart-container h3 {
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        opacity: 0.7;
+        margin-bottom: 12px;
+    }
 
-        #graph-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 199;
-            display: none;
-        }
+    .chart-container canvas {
+        max-height: 250px;
+    }
 
-        #graph-overlay.visible {
-            display: block;
-=======
->>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
-        }
->>>>>>> 49d09b884f544216a9f0cbfe31002b1c6fd56c77
+    #graph-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 199;
+        display: none;
+    }
+
+    #graph-overlay.visible {
+        display: block;
+    }
+}
