@@ -9,11 +9,7 @@
         content="An interactive 3D web application for school students to learn about solar energy by exploring a virtual house and switching to solar power.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-<<<<<<< HEAD
     <link rel="stylesheet" href="styles.css">
-=======
-    <link rel="stylesheet" href="css/styles.css">
->>>>>>> 8de90e1044992c2e2f5fdb277d5a6e38cf14de35
 </head>
 
 <body>
@@ -99,7 +95,7 @@
     <!-- Back Button for Room Zoom -->
     <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
 
-    <!-- Energy Bar Chart -->
+    <!-- Energy Bar Chart (legacy - kept for grid/solar comparison) -->
     <div id="energy-chart">
         <h3>⚡ Energy Comparison</h3>
         <div class="bar-row">
@@ -121,14 +117,30 @@
         </div>
     </div>
 
+    <!-- ═══ Energy Learning Dashboard Modal (ApexCharts) ═══ -->
+    <div id="energy-modal">
+        <div class="energy-modal-backdrop" onclick="closeEnergyModal()"></div>
+        <div class="energy-modal-content">
+            <button class="energy-modal-close" onclick="closeEnergyModal()">✕</button>
+            <h2 class="energy-modal-title">⚡ Energy Learning Dashboard</h2>
+            <p class="energy-modal-subtitle">🎓 Click any chart bar to learn how electricity bills are calculated!</p>
+            <div id="energy-modal-body" class="energy-modal-body"></div>
+        </div>
+    </div>
+
     <!-- Three.js Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
 
-<<<<<<< HEAD
-    <script src="script.js"></script>
-=======
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Energy Graph Modules -->
+    <script src="graphs/applianceDataset.js"></script>
+    <script src="graphs/energyCalculator.js"></script>
+    <script src="graphs/energyChart.js"></script>
+
     <!-- Application Scripts (order matters) -->
     <script src="js/scene.js"></script>
     <script src="js/environment.js"></script>
@@ -140,7 +152,6 @@
     <script src="js/ui.js"></script>
     <script src="js/boy.js"></script>
     <script src="js/main.js"></script>
->>>>>>> 8de90e1044992c2e2f5fdb277d5a6e38cf14de35
 
 </body>
 
