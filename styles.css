@@ -1,0 +1,468 @@
+* {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            overflow: hidden;
+            background: #0a0a1a;
+            color: #fff;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* ── Top Bar ────────────────────────── */
+        #top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 28px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.55) 0%, transparent 100%);
+            pointer-events: none;
+        }
+
+        #top-bar>* {
+            pointer-events: auto;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+
+        /* ── Solar Button ────────────────────────── */
+        #solar-btn {
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        #solar-btn.grid-mode {
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            color: #1a1a2e;
+            box-shadow: 0 4px 25px rgba(255, 215, 0, 0.4);
+        }
+
+        #solar-btn.solar-mode {
+            background: linear-gradient(135deg, #ff4757, #ff6b81);
+            color: #fff;
+            box-shadow: 0 4px 25px rgba(255, 71, 87, 0.4);
+        }
+
+        #solar-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        /* ── Stats Panel ────────────────────────── */
+        #stats-panel {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-width: 240px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 16px 18px;
+            transition: all 0.4s ease;
+        }
+
+        .stat-card:hover {
+            background: rgba(255, 255, 255, 0.14);
+            transform: translateX(-4px);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.35rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFD700, #FF8C00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-card.green .stat-value {
+            background: linear-gradient(135deg, #00d2ff, #3a7bd5);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        /* ── Zoom Hint ────────────────────────── */
+        #zoom-hint {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50px;
+            padding: 12px 28px;
+            font-size: 0.85rem;
+            font-weight: 400;
+            opacity: 0.8;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+
+        #zoom-hint.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* ── Info Tooltip ────────────────────────── */
+        .appliance-label {
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.8rem;
+            pointer-events: none;
+            white-space: nowrap;
+            line-height: 1.4;
+        }
+
+        .appliance-label .name {
+            font-weight: 600;
+            color: #FFD700;
+        }
+
+        .appliance-label .watt {
+            font-weight: 300;
+            opacity: 0.8;
+        }
+
+        /* ── Solar panel counter (Moved to bottom nav) ────────────────────────── */
+        #panel-counter {
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-left: 20px;
+        }
+
+        #panel-counter.visible {
+            display: flex;
+        }
+
+        .panel-control-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            color: #fff;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .panel-control-btn:hover {
+            background: rgba(255, 215, 0, 0.3);
+            transform: scale(1.1);
+        }
+
+        #panel-count-display {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 12px 16px;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        #panel-count-display .count {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #FFD700;
+        }
+
+        #panel-count-display .label-text {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            opacity: 0.6;
+        }
+
+        /* ── Upgrade Button ────────────────────────── */
+        #upgrade-btn {
+            padding: 10px 22px;
+            border: none;
+            border-radius: 50px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(108, 92, 231, 0.4);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        #upgrade-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+        }
+
+        #upgrade-btn.active {
+            background: linear-gradient(135deg, #00b894, #55efc4);
+            color: #1a1a2e;
+        }
+
+        /* ── Appliance Control Panel ────────────────────────── */
+        #appliance-panel {
+            position: fixed;
+            left: 20px;
+            top: 80px;
+            z-index: 100;
+            max-height: calc(100vh - 160px);
+            overflow-y: auto;
+            width: 210px;
+            display: block;
+        }
+
+        #appliance-panel.visible {
+            display: block;
+        }
+
+        .room-section {
+            margin-bottom: 8px;
+        }
+
+        .room-header {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 6px 12px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px 10px 0 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: none;
+        }
+
+        .appliance-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 5px 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-top: none;
+            font-size: 0.72rem;
+        }
+
+        .appliance-row:last-child {
+            border-radius: 0 0 10px 10px;
+        }
+
+        .appliance-row .app-name {
+            opacity: 0.85;
+        }
+
+        .appliance-row .app-watt {
+            opacity: 0.5;
+            font-size: 0.6rem;
+        }
+
+        /* Toggle switch */
+        .toggle {
+            position: relative;
+            width: 36px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle .slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #444;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .toggle .slider:before {
+            content: '';
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            border-radius: 50%;
+            left: 3px;
+            bottom: 3px;
+            background: #fff;
+            transition: 0.3s;
+        }
+
+        .toggle input:checked+.slider {
+            background: #00b894;
+        }
+
+        .toggle input:checked+.slider:before {
+            transform: translateX(16px);
+        }
+
+        #appliance-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        #appliance-panel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+        }
+
+        /* ── Room Navigation Buttons ────────────────────────── */
+        .room-nav-btn {
+            display: inline-block;
+            padding: 6px 14px;
+            margin: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(8px);
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room-nav-btn:hover {
+            background: rgba(255, 215, 0, 0.25);
+            border-color: rgba(255, 215, 0, 0.5);
+            transform: scale(1.05);
+        }
+
+        .room-nav-btn.active {
+            background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 140, 0, 0.3));
+            border-color: #FFD700;
+            color: #FFD700;
+            font-weight: 700;
+        }
+
+        #room-nav-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: none;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 4px;
+            max-width: 500px;
+            padding: 8px 14px;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 18px;
+        }
+
+        #room-nav-panel.visible {
+            display: flex;
+        }
+
+        #back-to-full-btn {
+            display: none;
+            padding: 6px 14px;
+            margin: 3px;
+            border: none;
+            border-radius: 20px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: #fff;
+            box-shadow: 0 2px 10px rgba(238, 90, 36, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        #back-to-full-btn:hover {
+            transform: translateX(-50%) translateY(-2px) scale(1.05);
+        }
