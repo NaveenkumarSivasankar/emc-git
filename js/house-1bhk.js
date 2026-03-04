@@ -47,16 +47,23 @@ function createWall(w, h, d, x, y, z, mat, isTransparent) {
 createWall(W, H, 0.3, 0, H / 2 + 0.3, -D / 2, wallMat, false);       // Back
 createWall(0.3, H, D, -W / 2, H / 2 + 0.3, 0, wallMat, true);         // Left
 createWall(0.3, H, D, W / 2, H / 2 + 0.3, 0, wallMat, true);          // Right
-createWall(5, H, 0.3, -5, H / 2 + 0.3, D / 2, wallMat, true);         // Front left
-createWall(5, H, 0.3, 5, H / 2 + 0.3, D / 2, wallMat, true);          // Front right
-createWall(5, 2.5, 0.3, 0, H - 0.95, D / 2, wallMat, true);           // Front above door
+// Front walls: extend past side walls (overlap by 0.15) to eliminate corner gaps
+createWall(8.9, H, 0.3, -5.7, H / 2 + 0.3, D / 2, wallMat, true);   // Front left
+createWall(8.9, H, 0.3, 5.7, H / 2 + 0.3, D / 2, wallMat, true);    // Front right
+createWall(2.5, 2.5, 0.3, 0, H - 0.95, D / 2, wallMat, true);        // Front above door
 
 // Door
+const mainDoorPivot1 = new THREE.Group();
+mainDoorPivot1.position.set(-1.25, 2.55, D / 2);
+houseGroup.add(mainDoorPivot1);
 const doorGeo = new THREE.BoxGeometry(2.5, 4.5, 0.35);
 const door = new THREE.Mesh(doorGeo, doorMat);
-door.position.set(0, 2.55, D / 2); door.castShadow = true; houseGroup.add(door);
+door.position.set(1.25, 0, 0); door.castShadow = true;
+mainDoorPivot1.add(door);
 const handle = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), handleMat);
-handle.position.set(0.7, 2.8, D / 2 + 0.2); houseGroup.add(handle);
+handle.position.set(2.1, 0.25, 0.2);
+mainDoorPivot1.add(handle);
+window.mainDoorPivot1 = mainDoorPivot1;
 
 // Windows
 function createWindow(x, y, z, rotY) {
@@ -156,7 +163,7 @@ clockRim.position.set(3, 5.5, -D / 2 + 0.22); interiorGroup.add(clockRim);
 // ═══════════════════════════════════════════════
 //  1BHK ROOM PARTITIONS & DOORS
 // ═══════════════════════════════════════════════
-const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85 });
+const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, transparent: true, opacity: 0.35 });
 // Horizontal partition separating front rooms from bedroom
 const pw1 = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, H, 0.2), partWallMat1BHK);
 pw1.position.set(0, H / 2 + 0.3, -1.5); pw1.castShadow = true; houseGroup.add(pw1);
@@ -166,11 +173,27 @@ pw2.position.set(-2.5, H / 2 + 0.3, (D / 2 - 1.5) / 2 + 0.75); pw2.castShadow = 
 
 // Room doors
 const roomDoorMat1 = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
+const bhk1Doors = [];
 function add1BHKDoor(x, y, z, ry) {
-    const d = new THREE.Mesh(new THREE.BoxGeometry(1.7, 3.8, 0.25), roomDoorMat1);
-    d.position.set(x, y, z); d.rotation.y = ry || 0; houseGroup.add(d);
+    const doorW = 1.7, halfW = 0.85;
+    // Pivot at hinge edge
+    const pivot = new THREE.Group();
+    if (ry) {
+        pivot.position.set(x, y, z + halfW);
+    } else {
+        pivot.position.set(x - halfW, y, z);
+    }
+    pivot.rotation.y = ry || 0;
+    houseGroup.add(pivot);
+    // Door mesh (offset so hinge edge is at pivot origin)
+    const d = new THREE.Mesh(new THREE.BoxGeometry(doorW, 3.8, 0.25), roomDoorMat1);
+    d.position.set(halfW, 0, 0);
+    pivot.add(d);
+    // Handle on far side from hinge
     const h = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), handleMat);
-    h.position.set(x + (ry ? 0 : 0.55), y, z + (ry ? 0.55 : 0)); houseGroup.add(h);
+    h.position.set(doorW - 0.3, 0, 0.15);
+    pivot.add(h);
+    bhk1Doors.push({ pivot, mesh: d, handle: h, wx: -14 + x, wz: z, baseRy: ry || 0, openAngle: 0 });
 }
 add1BHKDoor(3, 2.2, -1.5, 0);       // Bedroom door
 add1BHKDoor(-2.5, 2.2, 3.5, Math.PI / 2);  // Kitchen door

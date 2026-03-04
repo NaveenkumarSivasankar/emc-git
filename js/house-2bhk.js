@@ -39,13 +39,22 @@ bhk2Floor.position.y = 0.15; bhk2Floor.receiveShadow = true; roomGroups['Structu
 addBhk2Wall(W2, H, 0.3, 0, H / 2 + 0.3, -D2 / 2, false);
 addBhk2Wall(0.3, H, D2, -W2 / 2, H / 2 + 0.3, 0, true);
 addBhk2Wall(0.3, H, D2, W2 / 2, H / 2 + 0.3, 0, true);
-addBhk2Wall(5, H, 0.3, -5.5, H / 2 + 0.3, D2 / 2, true);
-addBhk2Wall(5, H, 0.3, 5.5, H / 2 + 0.3, D2 / 2, true);
-addBhk2Wall(6, 2, 0.3, 0, H - 0.7, D2 / 2, true);
+// Front walls: extend past side walls (overlap by 0.15) to eliminate corner gaps
+addBhk2Wall(8.9, H, 0.3, -5.7, H / 2 + 0.3, D2 / 2, true);
+addBhk2Wall(8.9, H, 0.3, 5.7, H / 2 + 0.3, D2 / 2, true);
+addBhk2Wall(2.5, 3.0, 0.3, 0, H - 1.2, D2 / 2, true);
 
 // Door
+const mainDoorPivot2 = new THREE.Group();
+mainDoorPivot2.position.set(-1.25, 2.3, D2 / 2);
+roomGroups['Structure'].add(mainDoorPivot2);
 const bhk2Door = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4, 0.35), bhk2DoorMat);
-bhk2Door.position.set(0, 2.3, D2 / 2); roomGroups['Structure'].add(bhk2Door);
+bhk2Door.position.set(1.25, 0, 0);
+mainDoorPivot2.add(bhk2Door);
+const handle2 = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), handleMat);
+handle2.position.set(2.1, 0.1, 0.2);
+mainDoorPivot2.add(handle2);
+window.mainDoorPivot2 = mainDoorPivot2;
 
 // Roof
 const bhk2RoofShape = new THREE.Shape();
@@ -90,17 +99,33 @@ addPartWall(W2 / 2 - 5 - 0.2, H, 0.2, -(5 + W2 / 2) / 2, H / 2 + 0.3, 4);
 
 // Room doors
 const roomDoorMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
+const bhk2Doors = [];
 function addRoomDoor(x, y, z, ry, room) {
-    const d = new THREE.Mesh(new THREE.BoxGeometry(1.5, 3.5, 0.25), roomDoorMat);
-    d.position.set(x, y, z); d.rotation.y = ry || 0;
-    (room ? roomGroups[room] : roomGroups['Structure']).add(d);
+    const doorW = 1.5, halfW = 0.75;
+    const parentGroup = room ? roomGroups[room] : roomGroups['Structure'];
+    // Pivot at hinge edge
+    const pivot = new THREE.Group();
+    if (ry) {
+        pivot.position.set(x, y, z + halfW);
+    } else {
+        pivot.position.set(x - halfW, y, z);
+    }
+    pivot.rotation.y = ry || 0;
+    parentGroup.add(pivot);
+    // Door mesh (offset so hinge edge is at pivot origin)
+    const d = new THREE.Mesh(new THREE.BoxGeometry(doorW, 3.5, 0.25), roomDoorMat);
+    d.position.set(halfW, 0, 0);
+    pivot.add(d);
+    // Handle on far side from hinge
+    const h = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.9, roughness: 0.2 }));
+    h.position.set(doorW - 0.25, 0, 0.15);
+    pivot.add(h);
+    // Door frame (stays fixed, not part of pivot)
     const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x4a2e10, roughness: 0.6 });
     const frameTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.28), frameMat2);
     frameTop.position.set(x, y + 1.85, z); frameTop.rotation.y = ry || 0;
-    (room ? roomGroups[room] : roomGroups['Structure']).add(frameTop);
-    const h = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.9, roughness: 0.2 }));
-    h.position.set(x + (ry ? 0 : 0.5), y, z + (ry ? 0.5 : 0));
-    (room ? roomGroups[room] : roomGroups['Structure']).add(h);
+    parentGroup.add(frameTop);
+    bhk2Doors.push({ pivot, mesh: d, handle: h, wx: 16 + x, wz: z, baseRy: ry || 0, openAngle: 0 });
 }
 addRoomDoor(-3, 2.05, -2.5, 0, 'Bedroom 1');
 addRoomDoor(3, 2.05, -2.5, 0, 'Bedroom 2');
