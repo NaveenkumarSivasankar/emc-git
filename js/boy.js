@@ -266,19 +266,35 @@ function exitHouse() {
 //  UPDATE FUNCTION (called from animate loop)
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
-    let moveX = 0;
-    let moveZ = 0;
+    let inputX = 0;  // left/right input
+    let inputZ = 0;  // forward/back input
 
-    if (boyState.keys.left) moveX = -1;
-    if (boyState.keys.right) moveX = 1;
-    if (boyState.keys.up) moveZ = -1;
-    if (boyState.keys.down) moveZ = 1;
+    if (boyState.keys.left) inputX = -1;
+    if (boyState.keys.right) inputX = 1;
+    if (boyState.keys.up) inputZ = 1;    // forward (into screen from camera's view)
+    if (boyState.keys.down) inputZ = -1; // backward
 
-    const isMoving = (moveX !== 0 || moveZ !== 0);
+    const isMoving = (inputX !== 0 || inputZ !== 0);
 
     if (isMoving) {
-        boyGroup.position.x += moveX * boyState.speed * delta;
-        boyGroup.position.z += moveZ * boyState.speed * delta;
+        // Compute camera-relative forward/right vectors, snapped to nearest 45°
+        // so small camera angle deviations don't cause diagonal drift
+        const camDir = new THREE.Vector3();
+        camera.getWorldDirection(camDir);
+        let yaw = Math.atan2(camDir.x, camDir.z);
+        yaw = Math.round(yaw / (Math.PI / 4)) * (Math.PI / 4); // snap to 45°
+
+        const camForward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
+        const camRight = new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw));
+
+        // Combine input with camera-relative directions
+        const moveDir = new THREE.Vector3();
+        moveDir.addScaledVector(camForward, inputZ);
+        moveDir.addScaledVector(camRight, inputX);
+        moveDir.normalize();
+
+        boyGroup.position.x += moveDir.x * boyState.speed * delta;
+        boyGroup.position.z += moveDir.z * boyState.speed * delta;
 
         // Clamp based on mode
         if (boyState.mode === 'outdoor') {
@@ -290,8 +306,8 @@ function updateBoy(delta) {
             boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
         }
 
-        // Face movement direction
-        const targetAngle = Math.atan2(moveX, -moveZ);
+        // Face movement direction (using camera-relative moveDir)
+        const targetAngle = Math.atan2(moveDir.x, moveDir.z);
         boyGroup.rotation.y += (targetAngle - boyGroup.rotation.y) * 0.15;
 
         // Walking animation
