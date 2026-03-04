@@ -67,15 +67,21 @@ function updateStats() {
     const list = is2BHK ? bhk2Appliances : simpleAppliances;
     list.forEach(a => { if (a.on) total += a.watt; });
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
-    document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
+    const elConsumption = document.getElementById('stat-consumption');
+    if (elConsumption) elConsumption.textContent = total.toLocaleString() + ' W';
+    const elPanels = document.getElementById('stat-panels');
+    if (elPanels) elPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
     const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
-    document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
-    document.getElementById('stat-fact').textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
-    document.getElementById('panel-num').textContent = currentPanelCount;
+    const elSavings = document.getElementById('stat-savings');
+    if (elSavings) elSavings.textContent = '₹' + monthlySaving.toLocaleString();
+    const elCo2 = document.getElementById('stat-co2');
+    if (elCo2) elCo2.textContent = co2Saved + ' kg/yr';
+    const elFact = document.getElementById('stat-fact');
+    if (elFact) elFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+    const elPanelNum = document.getElementById('panel-num');
+    if (elPanelNum) elPanelNum.textContent = currentPanelCount;
     updateBarChart(total, coverageRatio);
 }
 
