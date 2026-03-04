@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-//  SOLAR PANELS
+//  SOLAR PANELS (adjusted for enlarged 1BHK)
 // ═══════════════════════════════════════════════
 const solarPanels = [];
 const maxPanels = 10;
@@ -32,8 +32,8 @@ function createSolarPanel(index) {
 
     const col = index % 5;
     const row = Math.floor(index / 5);
-    const xPos = -3.6 + col * 2.0;
-    const zPos = -2.0 + row * 2.5;
+    const xPos = -4.0 + col * 2.2;
+    const zPos = -2.5 + row * 2.8;
     const slopeAngle = Math.atan2(roofH, W / 2 + 0.8);
     const roofY = H + 0.3 + roofH - Math.abs(xPos) * (roofH / (W / 2 + 0.8));
 
@@ -87,15 +87,15 @@ function toggleSolar() {
     const panelCounter = document.getElementById('panel-counter');
 
     if (isSolarMode) {
-        btn.className = 'solar-mode';
-        btnText.textContent = 'Switch to Grid';
+        btn.className = 'solar-mode bottom-action-btn';
+        btnText.textContent = 'Remove Solar';
         btnIcon.textContent = '⚡';
         panelCounter.classList.add('visible');
         currentPanelCount = 0;
         solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
     } else {
-        btn.className = 'grid-mode';
-        btnText.textContent = 'Switch to Solar Energy';
+        btn.className = 'grid-mode bottom-action-btn';
+        btnText.textContent = 'Add Solar Panels';
         btnIcon.textContent = '☀️';
         panelCounter.classList.remove('visible');
         currentPanelCount = 0;

@@ -31,7 +31,7 @@ tfLabelDiv.innerHTML = '<span class="name" style="font-size:0.8rem">⚡ Grid Tra
 const tfLabel = new THREE.CSS2DObject(tfLabelDiv);
 tfLabel.position.set(1, 9.5, 10); poleGroup.add(tfLabel);
 
-// Wires to 1BHK house
+// Wires to 1BHK house (adjusted for enlarged house W=20)
 const wireMat = new THREE.LineBasicMaterial({ color: 0x333333, linewidth: 2 });
 for (let i = -1; i <= 1; i++) {
     const pts = [];
