@@ -99,7 +99,7 @@ scene.add(boyGroup);
 const boyState = {
     moving: false, speed: 8, walkPhase: 0,
     keys: { up: false, down: false, left: false, right: false },
-    mode: 'outdoor', insideHouse: null, nearEntry: null, cameraFollow: true
+    mode: 'outdoor', insideHouse: null, nearEntry: null, cameraFollow: true, currentRoom: null
 };
 
 // Load default avatar
@@ -242,18 +242,7 @@ const roomRegions = [
 // ═══════════════════════════════════════════════
 let mainDoorTransition = null;
 
-const boyState = {
-    moving: false,
-    speed: 8,
-    walkPhase: 0,
-    keys: { up: false, down: false, left: false, right: false },
-    // Navigation state
-    mode: 'outdoor',       // 'outdoor' | 'indoor'
-    insideHouse: null,     // '1bhk' | '2bhk'
-    nearEntry: null,       // '1bhk' | '2bhk' | null
-    cameraFollow: true,    // camera follows boy when indoor
-    currentRoom: null      // current room name (for enter zone notifications)
-};
+
 
 // Entry circle world positions
 const entryPositions = {
