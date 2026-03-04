@@ -47,9 +47,10 @@ function createWall(w, h, d, x, y, z, mat, isTransparent) {
 createWall(W, H, 0.3, 0, H / 2 + 0.3, -D / 2, wallMat, false);       // Back
 createWall(0.3, H, D, -W / 2, H / 2 + 0.3, 0, wallMat, true);         // Left
 createWall(0.3, H, D, W / 2, H / 2 + 0.3, 0, wallMat, true);          // Right
-createWall(5, H, 0.3, -5, H / 2 + 0.3, D / 2, wallMat, true);         // Front left
-createWall(5, H, 0.3, 5, H / 2 + 0.3, D / 2, wallMat, true);          // Front right
-createWall(5, 2.5, 0.3, 0, H - 0.95, D / 2, wallMat, true);           // Front above door
+// Front walls: extend past side walls (overlap by 0.15) to eliminate corner gaps
+createWall(8.9, H, 0.3, -5.7, H / 2 + 0.3, D / 2, wallMat, true);   // Front left
+createWall(8.9, H, 0.3, 5.7, H / 2 + 0.3, D / 2, wallMat, true);    // Front right
+createWall(2.5, 2.5, 0.3, 0, H - 0.95, D / 2, wallMat, true);        // Front above door
 
 // Door
 const doorGeo = new THREE.BoxGeometry(2.5, 4.5, 0.35);
@@ -156,7 +157,7 @@ clockRim.position.set(3, 5.5, -D / 2 + 0.22); interiorGroup.add(clockRim);
 // ═══════════════════════════════════════════════
 //  1BHK ROOM PARTITIONS & DOORS
 // ═══════════════════════════════════════════════
-const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85 });
+const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, transparent: true, opacity: 0.35 });
 // Horizontal partition separating front rooms from bedroom
 const pw1 = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, H, 0.2), partWallMat1BHK);
 pw1.position.set(0, H / 2 + 0.3, -1.5); pw1.castShadow = true; houseGroup.add(pw1);
