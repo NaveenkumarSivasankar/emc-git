@@ -6,6 +6,8 @@ AvatarManager.register('defaultBoy', {
     speed: 8,
     color: '#2196F3',
     emoji: '🧑',
+    glbUrl: 'https://models.readyplayer.me/64f9f1c20ec0c60ab2e3b8a1.glb',
+    targetHeight: 2.3,
     buildMesh(group) {
         const skinMat = new THREE.MeshStandardMaterial({ color: 0xFFCC99, roughness: 0.8 });
         const hairMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.9 });
@@ -208,11 +210,14 @@ function exitHouse() {
 }
 
 // ═══════════════════════════════════════════════
-//  UPDATE FUNCTION — uses AvatarManager pivots
+//  UPDATE FUNCTION — supports GLB skeleton + legacy pivots
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
     const pivots = AvatarManager.getPivots();
     if (!pivots) return;
+
+    const mixer = AvatarManager.getMixer();
+    const actions = AvatarManager.getActions();
 
     let moveX = 0, moveZ = 0;
     if (boyState.keys.left) moveX = -1;
@@ -236,24 +241,70 @@ function updateBoy(delta) {
         const targetAngle = Math.atan2(moveX, -moveZ);
         boyGroup.rotation.y += (targetAngle - boyGroup.rotation.y) * 0.15;
 
-        boyState.walkPhase += delta * 10;
-        const swing = Math.sin(boyState.walkPhase) * 0.6;
-        pivots.leftLeg.rotation.x = swing;
-        pivots.rightLeg.rotation.x = -swing;
-        pivots.leftArm.rotation.x = -swing * 0.7;
-        pivots.rightArm.rotation.x = swing * 0.7;
-        boyGroup.position.y = 0.15 + Math.abs(Math.sin(boyState.walkPhase * 2)) * 0.04;
-        pivots.torso.rotation.z = Math.sin(boyState.walkPhase) * 0.03;
+        // Handle animation based on avatar type
+        if (mixer && actions) {
+            // GLB with embedded animations — switch to walk/run
+            if (actions.walk && !actions.walk.isRunning()) {
+                if (actions.idle) actions.idle.fadeOut(0.3);
+                actions.walk.reset().fadeIn(0.3).play();
+            } else if (!actions.walk && actions.default && !actions.default.isRunning()) {
+                actions.default.reset().play();
+            }
+        }
+
+        if (pivots.isGLB && !mixer) {
+            // GLB without embedded animations — procedural bone rotation
+            boyState.walkPhase += delta * 10;
+            const swing = Math.sin(boyState.walkPhase) * 0.4;
+            if (pivots.leftLeg && !pivots.leftLeg._isDummy) pivots.leftLeg.rotation.x = swing;
+            if (pivots.rightLeg && !pivots.rightLeg._isDummy) pivots.rightLeg.rotation.x = -swing;
+            if (pivots.leftArm && !pivots.leftArm._isDummy) pivots.leftArm.rotation.x = -swing * 0.5;
+            if (pivots.rightArm && !pivots.rightArm._isDummy) pivots.rightArm.rotation.x = swing * 0.5;
+        } else if (!pivots.isGLB) {
+            // Legacy shape-based pivot animation
+            boyState.walkPhase += delta * 10;
+            const swing = Math.sin(boyState.walkPhase) * 0.6;
+            pivots.leftLeg.rotation.x = swing;
+            pivots.rightLeg.rotation.x = -swing;
+            pivots.leftArm.rotation.x = -swing * 0.7;
+            pivots.rightArm.rotation.x = swing * 0.7;
+            pivots.torso.rotation.z = Math.sin(boyState.walkPhase) * 0.03;
+        }
+
+        boyGroup.position.y = 0.15 + Math.abs(Math.sin((boyState.walkPhase || 0) * 2)) * 0.04;
     } else {
+        // Idle state
+        if (mixer && actions) {
+            if (actions.idle && !actions.idle.isRunning()) {
+                if (actions.walk) actions.walk.fadeOut(0.3);
+                actions.idle.reset().fadeIn(0.3).play();
+            }
+        }
+
         boyState.walkPhase = 0;
-        pivots.leftLeg.rotation.x *= 0.85;
-        pivots.rightLeg.rotation.x *= 0.85;
-        pivots.leftArm.rotation.x *= 0.85;
-        pivots.rightArm.rotation.x *= 0.85;
-        pivots.torso.rotation.z *= 0.85;
-        const breath = Math.sin(Date.now() * 0.003) * 0.01;
-        pivots.torso.scale.y = 1 + breath;
+
+        if (pivots.isGLB && !mixer) {
+            // Smoothly return bones to rest pose
+            if (pivots.leftLeg && !pivots.leftLeg._isDummy) pivots.leftLeg.rotation.x *= 0.85;
+            if (pivots.rightLeg && !pivots.rightLeg._isDummy) pivots.rightLeg.rotation.x *= 0.85;
+            if (pivots.leftArm && !pivots.leftArm._isDummy) pivots.leftArm.rotation.x *= 0.85;
+            if (pivots.rightArm && !pivots.rightArm._isDummy) pivots.rightArm.rotation.x *= 0.85;
+        } else if (!pivots.isGLB) {
+            pivots.leftLeg.rotation.x *= 0.85;
+            pivots.rightLeg.rotation.x *= 0.85;
+            pivots.leftArm.rotation.x *= 0.85;
+            pivots.rightArm.rotation.x *= 0.85;
+            pivots.torso.rotation.z *= 0.85;
+            const breath = Math.sin(Date.now() * 0.003) * 0.01;
+            pivots.torso.scale.y = 1 + breath;
+        }
+
         boyGroup.position.y = 0.15;
+    }
+
+    // Update animation mixer
+    if (mixer) {
+        mixer.update(delta);
     }
 
     // Proximity check for entry circles (outdoor only)
@@ -324,8 +375,24 @@ function buildCharacterSelector() {
     let html = '<div class="char-selector-title">🎭 Characters</div><div class="char-selector-scroll">';
     avatars.forEach(av => {
         const sel = av.id === currentId ? ' selected' : '';
+        const badge3D = av.isGLB ? '<span class="avatar-3d-badge">3D</span>' : '';
+
+        // Use local thumbnail if character is a custom 3D model, else fallback to emoji
+        const thumbUrl = `images/thumbnails/${av.id}.png`;
+        let iconContent = '';
+        let iconStyle = `background:${av.color};`;
+
+        if (av.isGLB) {
+            // we apply the image as background. If it fails to load, it will just show the background color
+            iconStyle += ` background-image: url('${thumbUrl}'); background-size: cover; background-position: center;`;
+            // don't show emoji for 3D models with thumbnails, just the 3D badge
+            iconContent = badge3D;
+        } else {
+            iconContent = av.emoji + badge3D;
+        }
+
         html += '<div class="avatar-card' + sel + '" data-avatar-id="' + av.id + '" onclick="switchAvatar(\'' + av.id + '\')">';
-        html += '<div class="avatar-icon" style="background:' + av.color + '">' + av.emoji + '</div>';
+        html += `<div class="avatar-icon" style="${iconStyle}">${iconContent}</div>`;
         html += '<div class="avatar-name">' + av.name + '</div>';
         html += '</div>';
     });
