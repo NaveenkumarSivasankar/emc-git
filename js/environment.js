@@ -1,4 +1,10 @@
 // ═══════════════════════════════════════════════
+//  ENVIRONMENT GROUP (toggle visibility when inside)
+// ═══════════════════════════════════════════════
+const environmentGroup = new THREE.Group();
+scene.add(environmentGroup);
+
+// ═══════════════════════════════════════════════
 //  GROUND
 // ═══════════════════════════════════════════════
 const groundGeo = new THREE.PlaneGeometry(120, 120);
@@ -6,7 +12,7 @@ const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a8c3f, roughness: 0
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
-scene.add(ground);
+environmentGroup.add(ground);
 
 // Grass patches for natural look
 for (let i = 0; i < 30; i++) {
@@ -17,7 +23,7 @@ for (let i = 0; i < 30; i++) {
     );
     patch.rotation.x = -Math.PI / 2;
     patch.position.set((Math.random() - 0.5) * 100, 0.01, (Math.random() - 0.5) * 100);
-    scene.add(patch);
+    environmentGroup.add(patch);
 }
 
 // ═══════════════════════════════════════════════
@@ -29,35 +35,35 @@ const road = new THREE.Mesh(roadGeo, roadMat);
 road.rotation.x = -Math.PI / 2;
 road.position.set(1, 0.03, 13);
 road.receiveShadow = true;
-scene.add(road);
+environmentGroup.add(road);
 
 // Yellow dashed center line
 for (let i = -20; i <= 20; i++) {
     const mk = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.15), new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.8 }));
     mk.rotation.x = -Math.PI / 2;
     mk.position.set(i * 2.2, 0.04, 13);
-    scene.add(mk);
+    environmentGroup.add(mk);
 }
 // White edge lines
 [-3.4, 3.4].forEach(zOff => {
     const edge = new THREE.Mesh(new THREE.PlaneGeometry(90, 0.12), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.7 }));
     edge.rotation.x = -Math.PI / 2;
     edge.position.set(1, 0.04, 13 + zOff);
-    scene.add(edge);
+    environmentGroup.add(edge);
 });
 // Sidewalks
 [-4.3, 4.3].forEach(zOff => {
     const sw = new THREE.Mesh(new THREE.PlaneGeometry(90, 1.2), new THREE.MeshStandardMaterial({ color: 0x999999, roughness: 0.9 }));
     sw.rotation.x = -Math.PI / 2;
     sw.position.set(1, 0.025, 13 + zOff + (zOff > 0 ? 0.6 : -0.6));
-    scene.add(sw);
+    environmentGroup.add(sw);
 });
 // Driveways
 const driveMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 });
 const drive1 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
-drive1.rotation.x = -Math.PI / 2; drive1.position.set(-14, 0.02, 9.5); scene.add(drive1);
+drive1.rotation.x = -Math.PI / 2; drive1.position.set(-14, 0.02, 9.5); environmentGroup.add(drive1);
 const drive2 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
-drive2.rotation.x = -Math.PI / 2; drive2.position.set(16, 0.02, 11); scene.add(drive2);
+drive2.rotation.x = -Math.PI / 2; drive2.position.set(16, 0.02, 11); environmentGroup.add(drive2);
 
 // ═══════════════════════════════════════════════
 //  FRONT WALL BETWEEN HOUSES
@@ -72,39 +78,39 @@ const frontWallTopMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughn
 // Main wall section (fills the gap between houses)
 const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.4), frontWallMat);
 frontWall.position.set(1, 2.3, 7.75); frontWall.castShadow = true; frontWall.receiveShadow = true;
-scene.add(frontWall);
+environmentGroup.add(frontWall);
 
 // Wall top cap
 const frontWallTop = new THREE.Mesh(new THREE.BoxGeometry(10.4, 0.25, 0.6), frontWallTopMat);
 frontWallTop.position.set(1, 4.42, 7.75); frontWallTop.castShadow = true;
-scene.add(frontWallTop);
+environmentGroup.add(frontWallTop);
 
 // Pillars on the wall
 for (let pi = 0; pi < 4; pi++) {
     const px = -3.5 + pi * 3;
     const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.8, 0.55), frontWallPillarMat);
     pillar.position.set(px, 2.7, 7.75); pillar.castShadow = true;
-    scene.add(pillar);
+    environmentGroup.add(pillar);
     // Pillar cap
     const pillarCap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.75), frontWallTopMat);
     pillarCap.position.set(px, 5.2, 7.75);
-    scene.add(pillarCap);
+    environmentGroup.add(pillarCap);
 }
 
 // Decorative arch gate in the center of the wall
 const gatePostMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6, metalness: 0.2 });
 const gatePostL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
-gatePostL.position.set(-0.1, 3, 7.75); gatePostL.castShadow = true; scene.add(gatePostL);
+gatePostL.position.set(-0.1, 3, 7.75); gatePostL.castShadow = true; environmentGroup.add(gatePostL);
 const gatePostR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
-gatePostR.position.set(2.1, 3, 7.75); gatePostR.castShadow = true; scene.add(gatePostR);
+gatePostR.position.set(2.1, 3, 7.75); gatePostR.castShadow = true; environmentGroup.add(gatePostR);
 // Gate arch top
 const gateArch = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.35, 0.5), gatePostMat);
-gateArch.position.set(1, 5.75, 7.75); scene.add(gateArch);
+gateArch.position.set(1, 5.75, 7.75); environmentGroup.add(gateArch);
 // Gate bars (iron gate look)
 const gateBarMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
 for (let gi = 0; gi < 5; gi++) {
     const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 6), gateBarMat);
-    bar.position.set(0.2 + gi * 0.4, 2.3, 7.75); scene.add(bar);
+    bar.position.set(0.2 + gi * 0.4, 2.3, 7.75); environmentGroup.add(bar);
 }
 
 // ═══════════════════════════════════════════════
@@ -114,13 +120,13 @@ const sunGeo = new THREE.SphereGeometry(3, 32, 32);
 const sunMat = new THREE.MeshBasicMaterial({ color: 0xffdd44 });
 const sunMesh = new THREE.Mesh(sunGeo, sunMat);
 sunMesh.position.set(30, 35, -20);
-scene.add(sunMesh);
+environmentGroup.add(sunMesh);
 
 const sunGlowGeo = new THREE.SphereGeometry(5, 32, 32);
 const sunGlowMat = new THREE.MeshBasicMaterial({ color: 0xffee88, transparent: true, opacity: 0.15 });
 const sunGlow = new THREE.Mesh(sunGlowGeo, sunGlowMat);
 sunGlow.position.copy(sunMesh.position);
-scene.add(sunGlow);
+environmentGroup.add(sunGlow);
 
 // ═══════════════════════════════════════════════
 //  CLOUDS
@@ -139,7 +145,7 @@ function createCloud(x, y, z, scale) {
     });
     group.position.set(x, y, z);
     group.scale.setScalar(scale);
-    scene.add(group);
+    environmentGroup.add(group);
     return group;
 }
 
@@ -206,7 +212,7 @@ function createTree(x, y, z, scale) {
         g.add(f);
     });
 
-    g.position.set(x, y, z); scene.add(g); return g;
+    g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 function createBush(x, y, z, scale) {
@@ -221,7 +227,7 @@ function createBush(x, y, z, scale) {
         b.position.set((Math.random() - 0.5) * 0.4 * scale, (0.2 + radius * 0.5) * scale, (Math.random() - 0.5) * 0.3 * scale);
         g.add(b);
     }
-    g.position.set(x, y, z); scene.add(g); return g;
+    g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 // Far side trees (across the road - kept)
@@ -262,7 +268,7 @@ function createFlowerPatch(x, z) {
         g.add(stem);
     }
     g.position.set(x, 0, z);
-    scene.add(g);
+    environmentGroup.add(g);
 }
 createFlowerPatch(-20, 6); createFlowerPatch(-10, 5.5);
 createFlowerPatch(10, 6); createFlowerPatch(22, 5.5);
@@ -300,7 +306,7 @@ function createBird(x, y, z, scale) {
     g.add(rightWing);
 
     g.position.set(x, y, z);
-    scene.add(g);
+    environmentGroup.add(g);
 
     birds.push({
         group: g,
