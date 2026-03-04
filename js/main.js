@@ -161,6 +161,9 @@ function animate() {
     // Boy character animation
     updateBoy(delta);
 
+    // Entry circle pulse animation
+    updateEntryCircles(elapsed);
+
     updateWallTransparency();
 
     // TV flicker
