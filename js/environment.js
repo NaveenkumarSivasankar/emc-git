@@ -156,63 +156,118 @@ const clouds = [
 ];
 
 // ═══════════════════════════════════════════════
-//  NATURAL TREES & BUSHES
+//  NATURAL TREES & BUSHES — 5 DISTINCT TYPES
 // ═══════════════════════════════════════════════
-function createTree(x, y, z, scale) {
+
+// ── TYPE 1: ROUND TREE (classic) ──
+function createRoundTree(x, y, z, scale) {
     const g = new THREE.Group();
-
-    // Trunk with root flare
     const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.9 });
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * scale, 0.3 * scale, 2.8 * scale, 8), trunkMat);
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * scale, 0.28 * scale, 2.8 * scale, 8), trunkMat);
     trunk.position.y = 1.4 * scale; trunk.castShadow = true; g.add(trunk);
-
-    // Root flare
-    const rootMat = new THREE.MeshStandardMaterial({ color: 0x4a2e14, roughness: 0.95 });
-    for (let ri = 0; ri < 4; ri++) {
-        const root = new THREE.Mesh(new THREE.CylinderGeometry(0.04 * scale, 0.12 * scale, 0.6 * scale, 4), rootMat);
-        const angle = (ri / 4) * Math.PI * 2 + Math.random() * 0.5;
-        root.position.set(Math.cos(angle) * 0.15 * scale, 0.15 * scale, Math.sin(angle) * 0.15 * scale);
-        root.rotation.z = (Math.random() - 0.5) * 0.4;
-        g.add(root);
-    }
-
-    // Branches
-    const branchMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.85 });
-    for (let bi = 0; bi < 3; bi++) {
-        const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * scale, 0.06 * scale, 1.2 * scale, 4), branchMat);
-        const angle = (bi / 3) * Math.PI * 2 + Math.random() * 0.5;
-        branch.position.set(Math.cos(angle) * 0.5 * scale, (2.2 + bi * 0.4) * scale, Math.sin(angle) * 0.5 * scale);
-        branch.rotation.z = Math.cos(angle) * 0.6;
-        branch.rotation.x = Math.sin(angle) * 0.6;
-        g.add(branch);
-    }
-
-    // Foliage clusters (varied spheres for natural look)
     const foliageColors = [0x2d7d2d, 0x3a9d3a, 0x228B22, 0x1a6b1a, 0x45a845];
-    const foliagePositions = [
-        { x: 0, y: 3.2, z: 0, r: 1.3 },
-        { x: 0.6, y: 3.6, z: 0.3, r: 1.0 },
-        { x: -0.5, y: 3.4, z: -0.4, r: 1.1 },
-        { x: 0.3, y: 4.2, z: -0.2, r: 0.9 },
-        { x: -0.3, y: 4.5, z: 0.3, r: 0.7 },
-        { x: 0, y: 4.8, z: 0, r: 0.55 },
-        { x: 0.7, y: 3.0, z: -0.5, r: 0.8 },
-        { x: -0.6, y: 3.8, z: 0.5, r: 0.75 }
+    const positions = [
+        { x: 0, y: 3.2, z: 0, r: 1.3 }, { x: 0.6, y: 3.6, z: 0.3, r: 1.0 },
+        { x: -0.5, y: 3.4, z: -0.4, r: 1.1 }, { x: 0.3, y: 4.2, z: -0.2, r: 0.9 },
+        { x: -0.3, y: 4.5, z: 0.3, r: 0.7 }, { x: 0, y: 4.8, z: 0, r: 0.55 }
     ];
-    foliagePositions.forEach((fp, i) => {
-        const jitterX = (Math.random() - 0.5) * 0.3;
-        const jitterZ = (Math.random() - 0.5) * 0.3;
-        const color = foliageColors[i % foliageColors.length];
+    positions.forEach((fp, i) => {
         const f = new THREE.Mesh(
             new THREE.SphereGeometry(fp.r * scale * (0.85 + Math.random() * 0.3), 10, 10),
-            new THREE.MeshStandardMaterial({ color: color, roughness: 0.85 })
+            new THREE.MeshStandardMaterial({ color: foliageColors[i % foliageColors.length], roughness: 0.85 })
         );
-        f.position.set((fp.x + jitterX) * scale, fp.y * scale, (fp.z + jitterZ) * scale);
-        f.castShadow = true;
-        g.add(f);
+        f.position.set((fp.x + (Math.random() - 0.5) * 0.3) * scale, fp.y * scale, (fp.z + (Math.random() - 0.5) * 0.3) * scale);
+        f.castShadow = true; g.add(f);
     });
+    g.position.set(x, y, z); scene.add(g); return g;
+}
+
+// ── TYPE 2: PINE TREE (conical) ──
+function createPineTree(x, y, z, scale) {
+    const g = new THREE.Group();
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x4a2e14, roughness: 0.9 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.08 * scale, 0.2 * scale, 3.5 * scale, 6), trunkMat);
+    trunk.position.y = 1.75 * scale; trunk.castShadow = true; g.add(trunk);
+    const pineColors = [0x1a5c1a, 0x1e6b1e, 0x155215];
+    for (let i = 0; i < 4; i++) {
+        const coneR = (1.6 - i * 0.3) * scale;
+        const coneH = (1.4 - i * 0.1) * scale;
+        const cone = new THREE.Mesh(
+            new THREE.ConeGeometry(coneR, coneH, 8),
+            new THREE.MeshStandardMaterial({ color: pineColors[i % pineColors.length], roughness: 0.85 })
+        );
+        cone.position.y = (2.8 + i * 1.1) * scale;
+        cone.castShadow = true; g.add(cone);
+    }
+    g.position.set(x, y, z); scene.add(g); return g;
+}
+
+// ── TYPE 3: TALL TREE (high canopy) ──
+function createTallTree(x, y, z, scale) {
+    const g = new THREE.Group();
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.85 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.1 * scale, 0.22 * scale, 4.5 * scale, 7), trunkMat);
+    trunk.position.y = 2.25 * scale; trunk.castShadow = true; g.add(trunk);
+    // Branches
+    for (let bi = 0; bi < 2; bi++) {
+        const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.03 * scale, 0.06 * scale, 1.5 * scale, 4), trunkMat);
+        const angle = bi * Math.PI + Math.random() * 0.8;
+        branch.position.set(Math.cos(angle) * 0.5 * scale, (3.5 + bi * 0.8) * scale, Math.sin(angle) * 0.5 * scale);
+        branch.rotation.z = Math.cos(angle) * 0.7; g.add(branch);
+    }
+    // High foliage clusters
+    const foliageColors = [0x2a8a2a, 0x3e9e3e, 0x1f751f];
+    for (let fi = 0; fi < 5; fi++) {
+        const r = (0.7 + Math.random() * 0.5) * scale;
+        const f = new THREE.Mesh(
+            new THREE.SphereGeometry(r, 8, 8),
+            new THREE.MeshStandardMaterial({ color: foliageColors[fi % foliageColors.length], roughness: 0.85 })
+        );
+        f.position.set((Math.random() - 0.5) * 1.2 * scale, (4.8 + Math.random() * 1.5) * scale, (Math.random() - 0.5) * 1.2 * scale);
+        f.castShadow = true; g.add(f);
+    }
+    g.position.set(x, y, z); scene.add(g); return g;
+}
+
+// ── TYPE 4: BUSHY TREE (short & wide) ──
+function createBushyTree(x, y, z, scale) {
+    const g = new THREE.Group();
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.9 });
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.15 * scale, 0.3 * scale, 1.6 * scale, 8), trunkMat);
+    trunk.position.y = 0.8 * scale; trunk.castShadow = true; g.add(trunk);
+    // Wide dense foliage
+    const bushyColors = [0x3d8b3d, 0x4ca64c, 0x2e7d2e, 0x55b855];
+    for (let fi = 0; fi < 8; fi++) {
+        const r = (0.6 + Math.random() * 0.6) * scale;
+        const angle = (fi / 8) * Math.PI * 2;
+        const dist = (0.4 + Math.random() * 0.8) * scale;
+        const f = new THREE.Mesh(
+            new THREE.SphereGeometry(r, 8, 8),
+            new THREE.MeshStandardMaterial({ color: bushyColors[fi % bushyColors.length], roughness: 0.9 })
+        );
+        f.position.set(Math.cos(angle) * dist, (1.6 + Math.random() * 0.8) * scale, Math.sin(angle) * dist);
+        f.castShadow = true; g.add(f);
+    }
+    // Top cluster
+    const topF = new THREE.Mesh(
+        new THREE.SphereGeometry(0.9 * scale, 8, 8),
+        new THREE.MeshStandardMaterial({ color: 0x35993e, roughness: 0.85 })
+    );
+    topF.position.y = 2.8 * scale; topF.castShadow = true; g.add(topF);
+    g.position.set(x, y, z); scene.add(g); return g;
+}
 
     g.position.set(x, y, z); environmentGroup.add(g); return g;
+}
+
+// ── RANDOM TREE PICKER (ensures variety) ──
+const treeCreators = [createRoundTree, createPineTree, createTallTree, createBushyTree, createPalmTree];
+let lastTreeType = -1;
+function createRandomTree(x, y, z, scale) {
+    let idx;
+    do { idx = Math.floor(Math.random() * treeCreators.length); } while (idx === lastTreeType);
+    lastTreeType = idx;
+    return treeCreators[idx](x, y, z, scale);
 }
 
 function createBush(x, y, z, scale) {
@@ -230,18 +285,18 @@ function createBush(x, y, z, scale) {
     g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
-// Far side trees (across the road - kept)
-createTree(-30, 0, 19, 1.3); createTree(-22, 0, 18, 1.1); createTree(-12, 0, 20, 1.4);
-createTree(-2, 0, 19, 1.0); createTree(8, 0, 20, 1.5); createTree(18, 0, 18, 1.2);
-createTree(28, 0, 19, 1.3); createTree(35, 0, 20, 1.1);
+// Far side trees (across the road — varied types)
+createPineTree(-30, 0, 19, 1.3); createRoundTree(-22, 0, 18, 1.1); createBushyTree(-12, 0, 20, 1.4);
+createPalmTree(-2, 0, 19, 1.0); createTallTree(8, 0, 20, 1.5); createPineTree(18, 0, 18, 1.2);
+createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 
 // NOTE: Near-side trees REMOVED to clear view of both houses
 
 // NOTE: Trees behind houses REMOVED for clearer view
 
-// Side trees (far from houses)
-createTree(-35, 0, 5, 1.1); createTree(38, 0, 6, 1.2);
-createTree(-38, 0, -5, 1.0); createTree(40, 0, -6, 1.3);
+// Side trees (far from houses — varied)
+createTallTree(-35, 0, 5, 1.1); createPalmTree(38, 0, 6, 1.2);
+createPineTree(-38, 0, -5, 1.0); createBushyTree(40, 0, -6, 1.3);
 
 // Bushes along far side of road only
 createBush(-25, 0, 18, 1.2); createBush(-16, 0, 19, 1.0); createBush(-5, 0, 18, 0.9);
