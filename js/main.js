@@ -33,6 +33,13 @@ function updateWallTransparency() {
         label.element.style.opacity = 1 - t2BHK;
         label.element.style.display = (1 - t2BHK) > 0.2 ? 'block' : 'none';
     });
+
+    // Hide environment & other house when inside a house
+    const insideSimple = tSimple < 0.3;
+    const inside2BHK = t2BHK < 0.3;
+    environmentGroup.visible = !insideSimple && !inside2BHK;
+    bhk2Group.visible = !insideSimple;   // hide 2BHK when inside 1BHK
+    houseGroup.visible = !inside2BHK;    // hide 1BHK when inside 2BHK
 }
 
 // ═══════════════════════════════════════════════
@@ -160,6 +167,9 @@ function animate() {
 
     // Boy character animation
     updateBoy(delta);
+
+    // Entry circle pulse animation
+    updateEntryCircles(elapsed);
 
     updateWallTransparency();
 

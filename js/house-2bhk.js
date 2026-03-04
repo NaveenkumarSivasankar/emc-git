@@ -39,9 +39,10 @@ bhk2Floor.position.y = 0.15; bhk2Floor.receiveShadow = true; roomGroups['Structu
 addBhk2Wall(W2, H, 0.3, 0, H / 2 + 0.3, -D2 / 2, false);
 addBhk2Wall(0.3, H, D2, -W2 / 2, H / 2 + 0.3, 0, true);
 addBhk2Wall(0.3, H, D2, W2 / 2, H / 2 + 0.3, 0, true);
-addBhk2Wall(5, H, 0.3, -5.5, H / 2 + 0.3, D2 / 2, true);
-addBhk2Wall(5, H, 0.3, 5.5, H / 2 + 0.3, D2 / 2, true);
-addBhk2Wall(6, 2, 0.3, 0, H - 0.7, D2 / 2, true);
+// Front walls: extend past side walls (overlap by 0.15) to eliminate corner gaps
+addBhk2Wall(8.9, H, 0.3, -5.7, H / 2 + 0.3, D2 / 2, true);
+addBhk2Wall(8.9, H, 0.3, 5.7, H / 2 + 0.3, D2 / 2, true);
+addBhk2Wall(2.5, 3.0, 0.3, 0, H - 1.2, D2 / 2, true);
 
 // Door
 const bhk2Door = new THREE.Mesh(new THREE.BoxGeometry(2.5, 4, 0.35), bhk2DoorMat);
