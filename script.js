@@ -313,7 +313,6 @@
         houseGroup.add(chimneyTop);
 
         // ═══════════════════════════════════════════════
-<<<<<<< HEAD
         //  INTERIOR ROOM DETAILS (Simple House Room System)
         // ═══════════════════════════════════════════════
         const simpleRoomGroups = {
@@ -326,17 +325,10 @@
 
         // Alias for backward compat
         const interiorGroup = simpleRoomGroups['Living Room'];
-=======
-        //  INTERIOR ROOM DETAILS
-        // ═══════════════════════════════════════════════
-        const interiorGroup = new THREE.Group();
-        houseGroup.add(interiorGroup);
->>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
 
         // Interior wall color (painted)
         const intWallMat = new THREE.MeshStandardMaterial({ color: 0xf5efe6, roughness: 0.9, side: THREE.BackSide });
 
-<<<<<<< HEAD
         // ── Simple House Partition Walls ──
         const simplePartWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, transparent: true, opacity: 0.35 });
 
@@ -509,8 +501,6 @@
         bathIntLight.position.set(W / 4, 5.5, -(D / 2 + 1.5) / 2);
         simpleRoomGroups['Bathroom'].add(bathIntLight);
 
-=======
->>>>>>> f4cdb29bbe49968f67c244d30fc702a8c16efbe5
         // Carpet / Rug
         const rugGeo = new THREE.PlaneGeometry(6, 5);
         const rugMat = new THREE.MeshStandardMaterial({ color: 0x8B2252, roughness: 0.95 });
