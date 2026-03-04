@@ -52,9 +52,16 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 1.5;
 controls.maxDistance = 70;
-controls.maxPolarAngle = Math.PI / 2.05;
+controls.maxPolarAngle = Math.PI / 2; // Allow ground level view
 controls.target.set(0, 4, 0);
 controls.update();
+
+// Stop following boy when user manually orbits
+controls.addEventListener('start', () => {
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        boyState.cameraFollow = false;
+    }
+});
 
 // ═══════════════════════════════════════════════
 //  LIGHTING
