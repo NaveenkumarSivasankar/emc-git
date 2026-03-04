@@ -6,19 +6,27 @@ const AvatarManager = (() => {
   let currentId = null;
   let currentPivots = null;
 
+  // Deep dispose helper — recursively disposes all geometries/materials
+  function deepDispose(obj) {
+    while (obj.children.length > 0) {
+      deepDispose(obj.children[0]);
+      obj.remove(obj.children[0]);
+    }
+    if (obj.geometry) obj.geometry.dispose();
+    if (obj.material) {
+      if (Array.isArray(obj.material)) {
+        obj.material.forEach(m => m.dispose());
+      } else {
+        obj.material.dispose();
+      }
+    }
+  }
+
   return {
-    /**
-     * Register an avatar definition.
-     * @param {string} id   unique key e.g. "shinchan"
-     * @param {object} cfg  { name, speed, color, emoji, buildMesh(group) => pivots }
-     */
     register(id, cfg) {
       registry[id] = cfg;
     },
 
-    /**
-     * Returns array of { id, name, speed, color, emoji }
-     */
     getAll() {
       return Object.entries(registry).map(([id, cfg]) => ({
         id,
@@ -29,65 +37,55 @@ const AvatarManager = (() => {
       }));
     },
 
-    /**
-     * Get current avatar id
-     */
     getCurrent() {
       return currentId;
     },
 
-    /**
-     * Get current pivots for animation
-     */
     getPivots() {
       return currentPivots;
     },
 
-    /**
-     * Load an avatar by id — rebuilds boyGroup mesh
-     * @param {string} id
-     */
     load(id) {
-      const cfg = registry[id];
-      if (!cfg) { console.warn('Avatar not found:', id); return; }
+      try {
+        const cfg = registry[id];
+        if (!cfg) { console.warn('Avatar not found:', id); return; }
 
-      // Save current position & rotation
-      const pos = boyGroup.position.clone();
-      const rot = boyGroup.rotation.clone();
-      const scl = boyGroup.scale.clone();
+        // Save current transform
+        const pos = boyGroup.position.clone();
+        const rot = boyGroup.rotation.clone();
+        const scl = boyGroup.scale.clone();
 
-      // Remove all children from boyGroup
-      while (boyGroup.children.length > 0) {
-        const child = boyGroup.children[0];
-        boyGroup.remove(child);
-        // Dispose geometry & material
-        if (child.geometry) child.geometry.dispose();
-        if (child.material) {
-          if (Array.isArray(child.material)) {
-            child.material.forEach(m => m.dispose());
-          } else {
-            child.material.dispose();
-          }
+        // Deep dispose all current children
+        while (boyGroup.children.length > 0) {
+          const child = boyGroup.children[0];
+          deepDispose(child);
+          boyGroup.remove(child);
         }
+
+        // Build new mesh
+        const pivots = cfg.buildMesh(boyGroup);
+        currentPivots = pivots;
+        currentId = id;
+
+        // Apply speed
+        if (typeof boyState !== 'undefined') {
+          boyState.speed = cfg.speed || 8;
+        }
+
+        // Restore transform
+        boyGroup.position.copy(pos);
+        boyGroup.rotation.copy(rot);
+        boyGroup.scale.copy(scl);
+
+        // Update selector UI highlight
+        document.querySelectorAll('.avatar-card').forEach(card => {
+          card.classList.toggle('selected', card.dataset.avatarId === id);
+        });
+
+        console.log('Avatar loaded:', cfg.name);
+      } catch (e) {
+        console.error('Avatar load error:', e);
       }
-
-      // Build new mesh
-      const pivots = cfg.buildMesh(boyGroup);
-      currentPivots = pivots;
-      currentId = id;
-
-      // Apply speed
-      boyState.speed = cfg.speed || 8;
-
-      // Restore transform
-      boyGroup.position.copy(pos);
-      boyGroup.rotation.copy(rot);
-      boyGroup.scale.copy(scl);
-
-      // Update selector UI highlight
-      document.querySelectorAll('.avatar-card').forEach(card => {
-        card.classList.toggle('selected', card.dataset.avatarId === id);
-      });
     }
   };
 })();

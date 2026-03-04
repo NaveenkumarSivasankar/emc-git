@@ -86,12 +86,19 @@ AvatarManager.register('defaultBoy', {
 });
 
 // ═══════════════════════════════════════════════
-//  BOY GROUP + LOAD DEFAULT AVATAR
+//  BOY GROUP + STATE
 // ═══════════════════════════════════════════════
 const boyGroup = new THREE.Group();
 boyGroup.position.set(0, 0.15, 13);
 boyGroup.scale.setScalar(1.2);
 scene.add(boyGroup);
+
+// boyState MUST be defined before AvatarManager.load() since load() sets boyState.speed
+const boyState = {
+    moving: false, speed: 8, walkPhase: 0,
+    keys: { up: false, down: false, left: false, right: false },
+    mode: 'outdoor', insideHouse: null, nearEntry: null, cameraFollow: true
+};
 
 // Load default avatar
 AvatarManager.load('defaultBoy');
@@ -130,14 +137,8 @@ arrow2.position.set(0, 1.5, 0); arrow2.rotation.x = Math.PI; entry2BHK.add(arrow
 entry2BHK.position.set(16, 0, 10); scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
-//  BOY STATE & CONTROLS
+//  CONTROLS & NAVIGATION STATE
 // ═══════════════════════════════════════════════
-const boyState = {
-    moving: false, speed: 8, walkPhase: 0,
-    keys: { up: false, down: false, left: false, right: false },
-    mode: 'outdoor', insideHouse: null, nearEntry: null, cameraFollow: true
-};
-
 const entryPositions = {
     '1bhk': new THREE.Vector3(-14, 0, 9.5),
     '2bhk': new THREE.Vector3(16, 0, 10)
