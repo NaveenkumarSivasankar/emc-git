@@ -276,8 +276,7 @@ function zoomOutToHouse() {
 //  ENERGY CHART TOGGLE
 // ═══════════════════════════════════════════════
 function toggleEnergyChart() {
-    const chart = document.getElementById('energy-chart');
-    chart.classList.toggle('visible');
+    openEnergyModal();
 }
 
 function toggleRoomNav() {

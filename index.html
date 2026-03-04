@@ -9,7 +9,7 @@
         content="An interactive 3D web application for school students to learn about solar energy by exploring a virtual house and switching to solar power.">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -22,10 +22,15 @@
             <div class="logo-icon">☀️</div>
             <span>SolarHome</span>
         </div>
-        <div class="house-btns">
-            <button id="upgrade-btn" onclick="focusHouse('simple')">🏠 1BHK House</button>
-            <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')">🏢 2BHK House</button>
-        </div>
+        <button id="upgrade-btn" onclick="focusHouse('simple')">👈 1BHK House</button>
+        <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
+            style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
+            2BHK House</button>
+        <button id="solar-btn" class="grid-mode" onclick="toggleSolar()">
+            <span id="solar-btn-icon">☀️</span>
+            <span id="solar-btn-text">Switch to Solar Energy</span>
+        </button>
+        <button id="energy-graphs-btn" onclick="toggleEnergyGraphs()">📊 Energy Graphs</button>
     </div>
 
     <!-- Appliance Control Panel -->
@@ -87,6 +92,28 @@
         </button>
     </div>
 
+    <!-- Simple House Room Navigation Panel -->
+    <div id="simple-room-nav-panel"></div>
+
+    <!-- Graph Overlay -->
+    <div id="graph-overlay" onclick="toggleEnergyGraphs()"></div>
+
+    <!-- Energy Graphs Panel -->
+    <div id="energy-graphs-panel">
+        <div class="graph-header">
+            <h2>📊 Energy Consumption Analysis</h2>
+            <button class="close-btn" onclick="toggleEnergyGraphs()">✕</button>
+        </div>
+        <div class="chart-container">
+            <h3>Room-wise Energy Consumption (Watts)</h3>
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Energy Distribution by Room (%)</h3>
+            <canvas id="doughnutChart"></canvas>
+        </div>
+    </div>
+
     <!-- Zoom Hint -->
     <div id="zoom-hint">
         🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
@@ -95,10 +122,13 @@
     <!-- Enter House Prompt -->
     <div id="enter-prompt">⏎ Press ENTER to explore house</div>
 
+    <!-- Room Indicator -->
+    <div id="room-indicator"></div>
+
     <!-- Back Button for Room Zoom -->
     <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
 
-    <!-- Energy Bar Chart -->
+    <!-- Energy Bar Chart (legacy - kept for grid/solar comparison) -->
     <div id="energy-chart">
         <h3>⚡ Energy Comparison</h3>
         <div class="bar-row">
@@ -120,10 +150,29 @@
         </div>
     </div>
 
+    <!-- ═══ Energy Learning Dashboard Modal (ApexCharts) ═══ -->
+    <div id="energy-modal">
+        <div class="energy-modal-backdrop" onclick="closeEnergyModal()"></div>
+        <div class="energy-modal-content">
+            <button class="energy-modal-close" onclick="closeEnergyModal()">✕</button>
+            <h2 class="energy-modal-title">⚡ Energy Learning Dashboard</h2>
+            <p class="energy-modal-subtitle">🎓 Click any chart bar to learn how electricity bills are calculated!</p>
+            <div id="energy-modal-body" class="energy-modal-body"></div>
+        </div>
+    </div>
+
     <!-- Three.js Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+
+    <!-- ApexCharts -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Energy Graph Modules -->
+    <script src="graphs/applianceDataset.js"></script>
+    <script src="graphs/energyCalculator.js"></script>
+    <script src="graphs/energyChart.js"></script>
 
     <!-- Application Scripts (order matters) -->
     <script src="js/scene.js"></script>

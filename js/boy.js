@@ -134,8 +134,106 @@ entry2BHK.position.set(16, 0, 10);
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
+//  COLLISION SYSTEM — SOLID OBJECTS
+// ═══════════════════════════════════════════════
+const BOY_RADIUS = 0.35;
+const collisionBoxes = [
+    // ── 1BHK OUTER WALLS (house at x=-14) ──
+    { xMin: -24, xMax: -4, zMin: -7.65, zMax: -7.35, house: '1bhk' },
+    { xMin: -24.15, xMax: -23.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -4.15, xMax: -3.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -24.15, xMax: -15.25, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    { xMin: -12.75, xMax: -3.85, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    // ── 1BHK PARTITIONS (with door gaps) ──
+    { xMin: -23.8, xMax: -11.85, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -10.15, xMax: -4.2, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 0.85, zMax: 2.65, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 4.35, zMax: 6.65, house: '1bhk' },
+    // ── 1BHK FURNITURE ──
+    { xMin: -19.5, xMax: -14.5, zMin: -5.75, zMax: -3.4, house: '1bhk' },
+    { xMin: -8.75, xMax: -6.25, zMin: -5.45, zMax: -4.55, house: '1bhk' },
+    { xMin: -15.75, xMax: -12.25, zMin: -6.65, zMax: -2.0, house: '1bhk' },
+    { xMin: -22.7, xMax: -20.3, zMin: -6, zMax: -5, house: '1bhk' },
+    { xMin: -21.75, xMax: -18.25, zMin: -0.95, zMax: -0.05, house: '1bhk' },
+    // ── 2BHK OUTER WALLS (house at x=16) ──
+    { xMin: 6, xMax: 26, zMin: -8.15, zMax: -7.85, house: '2bhk' },
+    { xMin: 5.85, xMax: 6.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 25.85, xMax: 26.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 5.85, xMax: 14.75, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    { xMin: 17.25, xMax: 26.15, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    // ── 2BHK PARTITIONS (with door gaps) ──
+    { xMin: 6.2, xMax: 12.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 13.75, xMax: 18.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 19.75, xMax: 25.8, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 15.9, xMax: 16.1, zMin: -7.9, zMax: -2.6, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -2.3, zMax: -0.25, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 1.25, zMax: 4.75, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 6.25, zMax: 8.0, house: '2bhk' },
+    { xMin: 6.1, xMax: 10.9, zMin: 3.9, zMax: 4.1, house: '2bhk' },
+    // ── 2BHK FURNITURE ──
+    { xMin: 9.6, xMax: 12.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 19.6, xMax: 22.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 20.95, xMax: 25.45, zMin: 0, zMax: 2.2, house: '2bhk' },
+    { xMin: 17.25, xMax: 19.75, zMin: 0.4, zMax: 1.6, house: '2bhk' },
+    { xMin: 6.3, xMax: 9.3, zMin: -1.9, zMax: -1.1, house: '2bhk' },
+];
+
+function checkCollision(testX, testZ) {
+    const house = boyState.insideHouse;
+    for (const box of collisionBoxes) {
+        if (box.house !== house) continue;
+        const closestX = Math.max(box.xMin, Math.min(testX, box.xMax));
+        const closestZ = Math.max(box.zMin, Math.min(testZ, box.zMax));
+        const dx = testX - closestX;
+        const dz = testZ - closestZ;
+        if (dx * dx + dz * dz < BOY_RADIUS * BOY_RADIUS) return true;
+    }
+    return false;
+}
+
+// ═══════════════════════════════════════════════
+//  DOOR PUSH/PULL ANIMATION
+// ═══════════════════════════════════════════════
+const DOOR_OPEN_ANGLE = Math.PI / 2.2;  // ~80 degrees swing
+const DOOR_PROXIMITY = 1.5;             // distance to trigger open (touch)
+const DOOR_ANIM_SPEED = 5;              // animation speed
+
+function updateDoors(delta) {
+    if (boyState.mode !== 'indoor') return;
+    const bx = boyGroup.position.x;
+    const bz = boyGroup.position.z;
+    const doors = boyState.insideHouse === '1bhk' ? bhk1Doors : bhk2Doors;
+    doors.forEach(door => {
+        const dx = bx - door.wx;
+        const dz = bz - door.wz;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        const targetAngle = dist < DOOR_PROXIMITY ? DOOR_OPEN_ANGLE : 0;
+        // Smoothly animate toward target
+        door.openAngle += (targetAngle - door.openAngle) * DOOR_ANIM_SPEED * delta;
+        if (Math.abs(door.openAngle) < 0.01) door.openAngle = 0;
+        door.pivot.rotation.y = door.baseRy + door.openAngle;
+    });
+}
+
+// Room regions for detecting which room the boy is in
+const roomRegions = [
+    // 1BHK
+    { xMin: -16.5, xMax: -4, zMin: -1.5, zMax: 7.5, room: '🏠 Hall', house: '1bhk' },
+    { xMin: -24, xMax: -16.5, zMin: -1.5, zMax: 7.5, room: '🍳 Kitchen', house: '1bhk' },
+    { xMin: -24, xMax: -4, zMin: -7.5, zMax: -1.5, room: '🛏️ Bedroom', house: '1bhk' },
+    // 2BHK
+    { xMin: 11, xMax: 26, zMin: -2.5, zMax: 8, room: '🏠 Hall', house: '2bhk' },
+    { xMin: 6, xMax: 16, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 1', house: '2bhk' },
+    { xMin: 16, xMax: 26, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 2', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: -2.5, zMax: 4, room: '🍳 Kitchen', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: 4, zMax: 8, room: '🚿 Bathroom', house: '2bhk' },
+];
+
+// ═══════════════════════════════════════════════
 //  BOY STATE & CONTROLS
 // ═══════════════════════════════════════════════
+let mainDoorTransition = null;
+
 const boyState = {
     moving: false,
     speed: 8,
@@ -145,7 +243,8 @@ const boyState = {
     mode: 'outdoor',       // 'outdoor' | 'indoor'
     insideHouse: null,     // '1bhk' | '2bhk'
     nearEntry: null,       // '1bhk' | '2bhk' | null
-    cameraFollow: true     // camera follows boy when indoor
+    cameraFollow: true,    // camera follows boy when indoor
+    currentRoom: null      // current room name (for enter zone notifications)
 };
 
 // Entry circle world positions
@@ -200,6 +299,16 @@ document.addEventListener('keyup', (e) => {
 //  ENTER / EXIT HOUSE
 // ═══════════════════════════════════════════════
 function enterHouse(houseId) {
+    if (boyState.mode === 'transition' || mainDoorTransition) return;
+    boyState.mode = 'transition';
+    mainDoorTransition = { type: 'enter', houseId: houseId, progress: 0 };
+
+    document.getElementById('enter-prompt').classList.remove('visible');
+    entry1BHK.visible = false;
+    entry2BHK.visible = false;
+}
+
+function finishEnterHouse(houseId) {
     boyState.mode = 'indoor';
     boyState.insideHouse = houseId;
     boyState.nearEntry = null;
@@ -208,9 +317,6 @@ function enterHouse(houseId) {
     const spawn = indoorSpawn[houseId];
     boyGroup.position.copy(spawn.pos);
     boyGroup.rotation.y = spawn.rot;
-
-    // Disable orbit controls, enable camera follow
-    controls.enabled = false;
 
     // Focus on the right house
     if (houseId === '1bhk') {
@@ -221,10 +327,7 @@ function enterHouse(houseId) {
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
-
-    // Hide entry circles
-    entry1BHK.visible = false;
-    entry2BHK.visible = false;
+    boyState.currentRoom = null;
 
     // Show exit hint
     const prompt = document.getElementById('enter-prompt');
@@ -236,36 +339,75 @@ function enterHouse(houseId) {
 }
 
 function exitHouse() {
+    if (boyState.mode === 'transition' || mainDoorTransition) return;
     const houseId = boyState.insideHouse;
-    boyState.mode = 'outdoor';
+
+    boyState.mode = 'transition';
     boyState.insideHouse = null;
 
-    // Move boy back to entry circle position
+    // Move boy back outside, closer to door for exit animation
     const entryPos = entryPositions[houseId];
-    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 2);
+    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 0.5);
     boyGroup.rotation.y = 0;
-
-    // Re-enable orbit controls
-    controls.enabled = true;
 
     // Reset camera to overview
     camera.position.set(0, 20, 40);
     controls.target.set(0, 4, 0);
     controls.update();
 
-    // Show entry circles again
-    entry1BHK.visible = true;
-    entry2BHK.visible = true;
+    boyState.currentRoom = null;
 
-    // Hide prompt
+    // Reset all doors to closed
+    bhk1Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
+    bhk2Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
+
+    // Hide prompt and room indicator
     document.getElementById('enter-prompt').classList.remove('visible');
     document.getElementById('back-btn').classList.remove('visible');
+    document.getElementById('room-indicator').classList.remove('visible');
+
+    mainDoorTransition = { type: 'exit', houseId: houseId, progress: 0 };
 }
 
 // ═══════════════════════════════════════════════
 //  UPDATE FUNCTION (called from animate loop)
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
+    if (boyState.mode === 'transition') {
+        boyState.walkPhase += delta * boyState.speed * 1.5;
+        boyGroup.position.y = 0.15 + Math.abs(Math.sin(boyState.walkPhase * 2)) * 0.04;
+
+        if (mainDoorTransition) {
+            const pivot = mainDoorTransition.houseId === '1bhk' ? mainDoorPivot1 : mainDoorPivot2;
+            mainDoorTransition.progress += delta * 1.8;
+
+            if (mainDoorTransition.type === 'enter') {
+                const t = Math.min(mainDoorTransition.progress, 1);
+                pivot.rotation.y = t * (Math.PI / 2.2);
+                boyGroup.position.z -= delta * 2; // autowalk into house
+
+                if (t === 1) {
+                    pivot.rotation.y = 0;
+                    finishEnterHouse(mainDoorTransition.houseId);
+                    mainDoorTransition = null;
+                }
+            } else if (mainDoorTransition.type === 'exit') {
+                const t = Math.min(mainDoorTransition.progress, 1);
+                pivot.rotation.y = (1 - t) * (Math.PI / 2.2); // starts open, closes
+                boyGroup.position.z += delta * 2; // autowalk outwards
+
+                if (t === 1) {
+                    pivot.rotation.y = 0;
+                    boyState.mode = 'outdoor';
+                    mainDoorTransition = null;
+                    entry1BHK.visible = true;
+                    entry2BHK.visible = true;
+                }
+            }
+        }
+        return;
+    }
+
     let inputX = 0;  // left/right input
     let inputZ = 0;  // forward/back input
 
@@ -293,17 +435,25 @@ function updateBoy(delta) {
         moveDir.addScaledVector(camRight, inputX);
         moveDir.normalize();
 
-        boyGroup.position.x += moveDir.x * boyState.speed * delta;
-        boyGroup.position.z += moveDir.z * boyState.speed * delta;
-
-        // Clamp based on mode
-        if (boyState.mode === 'outdoor') {
-            boyGroup.position.x = Math.max(-40, Math.min(42, boyGroup.position.x));
-            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
-        } else if (boyState.mode === 'indoor') {
+        if (boyState.mode === 'indoor') {
+            // Per-axis collision detection for sliding along walls
+            const newX = boyGroup.position.x + moveDir.x * boyState.speed * delta;
+            if (!checkCollision(newX, boyGroup.position.z)) {
+                boyGroup.position.x = newX;
+            }
+            const newZ = boyGroup.position.z + moveDir.z * boyState.speed * delta;
+            if (!checkCollision(boyGroup.position.x, newZ)) {
+                boyGroup.position.z = newZ;
+            }
+            // Clamp to house bounds
             const bounds = indoorBounds[boyState.insideHouse];
             boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
             boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+        } else {
+            boyGroup.position.x += moveDir.x * boyState.speed * delta;
+            boyGroup.position.z += moveDir.z * boyState.speed * delta;
+            boyGroup.position.x = Math.max(-40, Math.min(42, boyGroup.position.x));
+            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
         }
 
         // Face movement direction (using camera-relative moveDir)
@@ -354,7 +504,38 @@ function updateBoy(delta) {
         }
     }
 
-    // ── Camera follow (indoor mode) ──
+    // ── Room zone detection (indoor only) ──
+    if (boyState.mode === 'indoor') {
+        const bx = boyGroup.position.x;
+        const bz = boyGroup.position.z;
+        const house = boyState.insideHouse;
+        let detectedRoom = null;
+        // Check which room region the boy is in
+        for (const reg of roomRegions) {
+            if (reg.house !== house) continue;
+            if (bx >= reg.xMin && bx <= reg.xMax && bz >= reg.zMin && bz <= reg.zMax) {
+                detectedRoom = reg.room;
+                break;
+            }
+        }
+        // Show room indicator when room changes
+        const indicator = document.getElementById('room-indicator');
+        if (detectedRoom && detectedRoom !== boyState.currentRoom) {
+            boyState.currentRoom = detectedRoom;
+            indicator.textContent = detectedRoom;
+            indicator.classList.add('visible');
+            // Auto-hide after 2 seconds
+            clearTimeout(window._roomIndicatorTimeout);
+            window._roomIndicatorTimeout = setTimeout(() => {
+                indicator.classList.remove('visible');
+            }, 2000);
+        }
+    }
+
+    // ── Door push/pull animation ──
+    updateDoors(delta);
+
+    // ── Camera follow (indoor & outdoor) ──
     if (boyState.mode === 'indoor') {
         const targetCamPos = new THREE.Vector3(
             boyGroup.position.x,
@@ -365,6 +546,11 @@ function updateBoy(delta) {
         const lookAt = new THREE.Vector3(boyGroup.position.x, boyGroup.position.y + 2, boyGroup.position.z);
         controls.target.lerp(lookAt, 0.05);
         controls.update();
+    } else if (boyState.mode === 'outdoor' && isMoving) {
+        // Track the boy when moving outside
+        const lookAt = new THREE.Vector3(boyGroup.position.x, 2, boyGroup.position.z);
+        controls.target.lerp(lookAt, 0.05);
+        controls.update();
     }
 }
 
@@ -372,25 +558,27 @@ function updateBoy(delta) {
 //  ENTRY CIRCLE PULSE ANIMATION
 // ═══════════════════════════════════════════════
 function updateEntryCircles(elapsed) {
-    if (boyState.mode === 'indoor') return;
-
     const pulse = 0.5 + Math.sin(elapsed * 3) * 0.3;
     const glowPulse = 0.2 + Math.sin(elapsed * 2) * 0.15;
     const arrowBob = Math.sin(elapsed * 4) * 0.3;
 
-    // 1BHK circle
-    entry1Circle.material.opacity = pulse;
-    entry1Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
-    entry1Glow.material.opacity = glowPulse;
-    const scale1 = 1 + Math.sin(elapsed * 2) * 0.08;
-    entry1Circle.scale.set(scale1, scale1, 1);
-    arrow1.position.y = 1.5 + arrowBob;
+    if (boyState.mode === 'outdoor') {
+        // 1BHK circle
+        entry1Circle.material.opacity = pulse;
+        entry1Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
+        entry1Glow.material.opacity = glowPulse;
+        const scale1 = 1 + Math.sin(elapsed * 2) * 0.08;
+        entry1Circle.scale.set(scale1, scale1, 1);
+        arrow1.position.y = 1.5 + arrowBob;
 
-    // 2BHK circle
-    entry2Circle.material.opacity = pulse;
-    entry2Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
-    entry2Glow.material.opacity = glowPulse;
-    const scale2 = 1 + Math.sin(elapsed * 2 + 0.5) * 0.08;
-    entry2Circle.scale.set(scale2, scale2, 1);
-    arrow2.position.y = 1.5 + arrowBob;
+        // 2BHK circle
+        entry2Circle.material.opacity = pulse;
+        entry2Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
+        entry2Glow.material.opacity = glowPulse;
+        const scale2 = 1 + Math.sin(elapsed * 2 + 0.5) * 0.08;
+        entry2Circle.scale.set(scale2, scale2, 1);
+        arrow2.position.y = 1.5 + arrowBob;
+    }
+
+
 }
