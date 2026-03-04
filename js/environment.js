@@ -179,7 +179,7 @@ function createRoundTree(x, y, z, scale) {
         f.position.set((fp.x + (Math.random() - 0.5) * 0.3) * scale, fp.y * scale, (fp.z + (Math.random() - 0.5) * 0.3) * scale);
         f.castShadow = true; g.add(f);
     });
-    g.position.set(x, y, z); scene.add(g); return g;
+    g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 // ── TYPE 2: PINE TREE (conical) ──
@@ -199,7 +199,7 @@ function createPineTree(x, y, z, scale) {
         cone.position.y = (2.8 + i * 1.1) * scale;
         cone.castShadow = true; g.add(cone);
     }
-    g.position.set(x, y, z); scene.add(g); return g;
+    g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 // ── TYPE 3: TALL TREE (high canopy) ──
@@ -226,7 +226,7 @@ function createTallTree(x, y, z, scale) {
         f.position.set((Math.random() - 0.5) * 1.2 * scale, (4.8 + Math.random() * 1.5) * scale, (Math.random() - 0.5) * 1.2 * scale);
         f.castShadow = true; g.add(f);
     }
-    g.position.set(x, y, z); scene.add(g); return g;
+    g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 // ── TYPE 4: BUSHY TREE (short & wide) ──
@@ -254,14 +254,11 @@ function createBushyTree(x, y, z, scale) {
         new THREE.MeshStandardMaterial({ color: 0x35993e, roughness: 0.85 })
     );
     topF.position.y = 2.8 * scale; topF.castShadow = true; g.add(topF);
-    g.position.set(x, y, z); scene.add(g); return g;
-}
-
     g.position.set(x, y, z); environmentGroup.add(g); return g;
 }
 
 // ── RANDOM TREE PICKER (ensures variety) ──
-const treeCreators = [createRoundTree, createPineTree, createTallTree, createBushyTree, createPalmTree];
+const treeCreators = [createRoundTree, createPineTree, createTallTree, createBushyTree];
 let lastTreeType = -1;
 function createRandomTree(x, y, z, scale) {
     let idx;
@@ -287,7 +284,7 @@ function createBush(x, y, z, scale) {
 
 // Far side trees (across the road — varied types)
 createPineTree(-30, 0, 19, 1.3); createRoundTree(-22, 0, 18, 1.1); createBushyTree(-12, 0, 20, 1.4);
-createPalmTree(-2, 0, 19, 1.0); createTallTree(8, 0, 20, 1.5); createPineTree(18, 0, 18, 1.2);
+createTallTree(-2, 0, 19, 1.0); createTallTree(8, 0, 20, 1.5); createPineTree(18, 0, 18, 1.2);
 createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 
 // NOTE: Near-side trees REMOVED to clear view of both houses
@@ -295,7 +292,7 @@ createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 // NOTE: Trees behind houses REMOVED for clearer view
 
 // Side trees (far from houses — varied)
-createTallTree(-35, 0, 5, 1.1); createPalmTree(38, 0, 6, 1.2);
+createTallTree(-35, 0, 5, 1.1); createRoundTree(38, 0, 6, 1.2);
 createPineTree(-38, 0, -5, 1.0); createBushyTree(40, 0, -6, 1.3);
 
 // Bushes along far side of road only
