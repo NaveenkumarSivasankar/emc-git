@@ -98,13 +98,8 @@
         </div>
     </div>
 
-    <!-- Zoom Hint -->
-    <div id="zoom-hint">
-        🖱️ Scroll to zoom in &amp; explore the house &nbsp;|&nbsp; Click &amp; drag to rotate
-    </div>
-
-    <!-- Enter House Prompt -->
-    <div id="enter-prompt">⏎ Press ENTER to explore house</div>
+    <!-- Interaction Popup -->
+    <div id="interaction-popup"></div>
 
     <!-- Back Button for Room Zoom -->
     <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>
@@ -157,6 +152,7 @@
 
     <!-- Application Scripts (order matters) -->
     <script src="js/scene.js"></script>
+    <script src="js/interiors.js"></script>
     <script src="js/environment.js"></script>
     <script src="js/house-1bhk.js"></script>
     <script src="js/transformer.js"></script>
