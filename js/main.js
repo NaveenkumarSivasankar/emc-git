@@ -49,7 +49,9 @@ let hintTimeout;
 controls.addEventListener('change', () => {
     const hint = document.getElementById('zoom-hint');
     if (camera.position.distanceTo(controls.target) < 15) {
-        hint.classList.add('hidden');
+        if (hint) {
+            hint.classList.add('hidden');
+        }
     }
     clearTimeout(hintTimeout);
 });
