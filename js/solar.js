@@ -127,21 +127,21 @@ function updateStats() {
     const list = is2BHK ? bhk2Appliances : simpleAppliances;
     list.forEach(a => { if (a.on) total += a.watt; });
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    const elConsumption = document.getElementById('stat-consumption');
-    if (elConsumption) elConsumption.textContent = total.toLocaleString() + ' W';
-    const elPanels = document.getElementById('stat-panels');
-    if (elPanels) elPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
+    const statConsumption = document.getElementById('stat-consumption');
+    if (statConsumption) statConsumption.textContent = total.toLocaleString() + ' W';
+    const statPanels = document.getElementById('stat-panels');
+    if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
     const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    const elSavings = document.getElementById('stat-savings');
-    if (elSavings) elSavings.textContent = '₹' + monthlySaving.toLocaleString();
-    const elCo2 = document.getElementById('stat-co2');
-    if (elCo2) elCo2.textContent = co2Saved + ' kg/yr';
-    const elFact = document.getElementById('stat-fact');
-    if (elFact) elFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
-    const elPanelNum = document.getElementById('panel-num');
-    if (elPanelNum) elPanelNum.textContent = currentPanelCount;
+    const statSavings = document.getElementById('stat-savings');
+    if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
+    const statCo2 = document.getElementById('stat-co2');
+    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+    const statFact = document.getElementById('stat-fact');
+    if (statFact) statFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+    const panelNum = document.getElementById('panel-num');
+    if (panelNum) panelNum.textContent = currentPanelCount;
     updateBarChart(total, coverageRatio);
 }
 
@@ -153,17 +153,17 @@ function toggleSolar() {
     const panelCounter = document.getElementById('panel-counter');
 
     if (isSolarMode) {
-        btn.className = 'solar-mode bottom-action-btn';
-        btnText.textContent = 'Remove Solar';
-        btnIcon.textContent = '⚡';
-        panelCounter.classList.add('visible');
+        if (btn) btn.className = 'solar-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Remove Solar';
+        if (btnIcon) btnIcon.textContent = '⚡';
+        if (panelCounter) panelCounter.classList.add('visible');
         currentPanelCount = 0;
         layoutSolarPanels(0);
     } else {
-        btn.className = 'grid-mode bottom-action-btn';
-        btnText.textContent = 'Add Solar Panels';
-        btnIcon.textContent = '☀️';
-        panelCounter.classList.remove('visible');
+        if (btn) btn.className = 'grid-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Add Solar Panels';
+        if (btnIcon) btnIcon.textContent = '☀️';
+        if (panelCounter) panelCounter.classList.remove('visible');
         currentPanelCount = 0;
         layoutSolarPanels(0);
         poleGroup.children.forEach(child => { if (child.material) child.material.opacity = 1; });

@@ -125,8 +125,11 @@ entry1Circle.rotation.x = -Math.PI / 2; entry1Circle.position.set(0, 0.06, 0); e
 const entry1Glow = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.8, 24), entryGlowMat.clone());
 entry1Glow.rotation.x = -Math.PI / 2; entry1Glow.position.set(0, 0.05, 0); entry1BHK.add(entry1Glow);
 const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
-arrow1.position.set(0, 1.5, 0); arrow1.rotation.x = Math.PI; entry1BHK.add(arrow1);
-entry1BHK.position.set(-14, 0, 9.5); scene.add(entry1BHK);
+arrow1.position.set(0, 1.5, 0);
+arrow1.rotation.x = Math.PI; // point down
+entry1BHK.add(arrow1);
+entry1BHK.position.set(-22, 0, 12);
+scene.add(entry1BHK);
 
 // 2BHK entry circle
 const entry2BHK = new THREE.Group();
@@ -138,7 +141,7 @@ const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow2.position.set(0, 1.5, 0);
 arrow2.rotation.x = Math.PI;
 entry2BHK.add(arrow2);
-entry2BHK.position.set(16, 0, 10);
+entry2BHK.position.set(24, 0, 13);
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
@@ -240,27 +243,39 @@ const roomRegions = [
 // ═══════════════════════════════════════════════
 //  CONTROLS & NAVIGATION STATE
 // ═══════════════════════════════════════════════
-let mainDoorTransition = null;
-
-
+const boyState = {
+    moving: false,
+    speed: 8,
+    walkPhase: 0,
+    keys: { up: false, down: false, left: false, right: false },
+    // Navigation state
+    mode: 'outdoor',       // 'outdoor' | 'indoor'
+    insideHouse: null,     // '1bhk' | '2bhk'
+    nearEntry: null,       // '1bhk' | '2bhk' | null
+    nearExit: false,       // determines if Exit prompt is visible near doors inside
+    cameraFollow: true,    // camera follows boy when indoor
+    followTarget: new THREE.Vector3(),
+    followInit: false
+};
 
 // Entry circle world positions
 const entryPositions = {
-    '1bhk': new THREE.Vector3(-14, 0, 9.5),
-    '2bhk': new THREE.Vector3(16, 0, 10)
+    '1bhk': new THREE.Vector3(-22, 0, 12),
+    '2bhk': new THREE.Vector3(24, 0, 13)
 };
 const indoorSpawn = {
-    '1bhk': { pos: new THREE.Vector3(-14, 0.15, 5), rot: Math.PI },
-    '2bhk': { pos: new THREE.Vector3(16, 0.15, 5), rot: Math.PI }
+    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI },
+    '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI }
 };
 const indoorBounds = {
-    '1bhk': { xMin: -24, xMax: -4, zMin: -7.5, zMax: 7 },
-    '2bhk': { xMin: 6, xMax: 26, zMin: -8, zMax: 7.5 }
+    '1bhk': { xMin: -36, xMax: -8, zMin: -11, zMax: 10 },
+    '2bhk': { xMin: 10, xMax: 38, zMin: -12, zMax: 11 }
 };
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
 
 // KEY LISTENERS
 document.addEventListener('keydown', (e) => {
+    // Arrow keys will no longer pan the OrbitControls, only move the boy.
     if (e.key === 'ArrowUp') { boyState.keys.up = true; e.preventDefault(); }
     if (e.key === 'ArrowDown') { boyState.keys.down = true; e.preventDefault(); }
     if (e.key === 'ArrowLeft') { boyState.keys.left = true; e.preventDefault(); }
@@ -268,37 +283,49 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
         enterHouse(boyState.nearEntry); e.preventDefault();
     }
-    if (e.key === 'Escape' && boyState.mode === 'indoor') {
-        exitHouse(); e.preventDefault();
+
+    // ESCAPE — exit house back to road
+    if (e.key === 'Escape' && boyState.mode === 'indoor' && boyState.nearExit) {
+        exitHouse();
+        e.preventDefault();
     }
-});
+}, { passive: false });
+
 document.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp') boyState.keys.up = false;
-    if (e.key === 'ArrowDown') boyState.keys.down = false;
-    if (e.key === 'ArrowLeft') boyState.keys.left = false;
-    if (e.key === 'ArrowRight') boyState.keys.right = false;
-});
+    if (e.key === 'ArrowUp') { boyState.keys.up = false; e.preventDefault(); }
+    if (e.key === 'ArrowDown') { boyState.keys.down = false; e.preventDefault(); }
+    if (e.key === 'ArrowLeft') { boyState.keys.left = false; e.preventDefault(); }
+    if (e.key === 'ArrowRight') { boyState.keys.right = false; e.preventDefault(); }
+}, { passive: false });
+
+// Disable camera panning with arrow keys
+if (typeof controls !== 'undefined') {
+    controls.enableKeys = false; // Prevent arrow keys from shifting the camera
+}
 
 // ═══════════════════════════════════════════════
 //  ENTER / EXIT HOUSE
 // ═══════════════════════════════════════════════
 function enterHouse(houseId) {
-    if (boyState.mode === 'transition' || mainDoorTransition) return;
-    boyState.mode = 'transition';
-    mainDoorTransition = { type: 'enter', houseId: houseId, progress: 0 };
+    // Animate main door open
+    if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
-    document.getElementById('enter-prompt').classList.remove('visible');
-    entry1BHK.visible = false;
-    entry2BHK.visible = false;
-}
-
-function finishEnterHouse(houseId) {
     boyState.mode = 'indoor';
     boyState.insideHouse = houseId;
     boyState.nearEntry = null;
     const spawn = indoorSpawn[houseId];
     boyGroup.position.copy(spawn.pos);
     boyGroup.rotation.y = spawn.rot;
+
+    boyState.followTarget.copy(spawn.pos);
+
+    // Position camera behind and above the boy for a good indoor view
+    if (typeof controls !== 'undefined') {
+        controls.enabled = true;
+        camera.position.set(spawn.pos.x, spawn.pos.y + 6, spawn.pos.z + 8);
+        controls.target.set(spawn.pos.x, spawn.pos.y + 1.5, spawn.pos.z);
+        controls.update();
+    }
 
     // Focus on the right house
     if (houseId === '1bhk') {
@@ -309,20 +336,28 @@ function finishEnterHouse(houseId) {
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
-    boyState.currentRoom = null;
 
-    // Show exit hint
-    const prompt = document.getElementById('enter-prompt');
-    prompt.textContent = '🏠 Inside ' + (houseId === '1bhk' ? '1BHK' : '2BHK') + ' House — Press ESC to exit';
-    prompt.classList.add('visible');
+    // Hide entry circles
+    entry1BHK.visible = false;
+    entry2BHK.visible = false;
+
+    // Show back button
     document.getElementById('back-btn').classList.add('visible');
+
+    // Close door after boy is inside (delayed)
+    setTimeout(() => {
+        if (typeof closeMainDoor === 'function') closeMainDoor(houseId);
+    }, 1500);
 }
 
 function exitHouse() {
     if (boyState.mode === 'transition' || mainDoorTransition) return;
     const houseId = boyState.insideHouse;
 
-    boyState.mode = 'transition';
+    // Animate main door open
+    if (typeof openMainDoor === 'function') openMainDoor(houseId);
+
+    boyState.mode = 'outdoor';
     boyState.insideHouse = null;
 
     // Move boy back outside, closer to door for exit animation
@@ -330,10 +365,15 @@ function exitHouse() {
     boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 0.5);
     boyGroup.rotation.y = 0;
 
-    // Reset camera to overview
-    camera.position.set(0, 20, 40);
-    controls.target.set(0, 4, 0);
-    controls.update();
+    boyState.followTarget.copy(boyGroup.position);
+
+    // Position camera near the boy on exit
+    if (typeof controls !== 'undefined') {
+        controls.enabled = true;
+        camera.position.set(boyGroup.position.x, 6, boyGroup.position.z + 10);
+        controls.target.set(boyGroup.position.x, 1.5, boyGroup.position.z);
+        controls.update();
+    }
 
     boyState.currentRoom = null;
 
@@ -341,104 +381,78 @@ function exitHouse() {
     bhk1Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
     bhk2Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
 
-    // Hide prompt and room indicator
-    document.getElementById('enter-prompt').classList.remove('visible');
+    // Hide prompt
+    const prompt = document.getElementById('interaction-popup');
+    if (prompt) prompt.classList.remove('visible');
     document.getElementById('back-btn').classList.remove('visible');
-    document.getElementById('room-indicator').classList.remove('visible');
 
-    mainDoorTransition = { type: 'exit', houseId: houseId, progress: 0 };
+    // Close door after boy exits (delayed)
+    setTimeout(() => {
+        if (typeof closeMainDoor === 'function') closeMainDoor(houseId);
+    }, 1500);
 }
 
 // ═══════════════════════════════════════════════
 //  UPDATE FUNCTION — supports GLB skeleton + legacy pivots
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
-    if (boyState.mode === 'transition') {
-        boyState.walkPhase += delta * boyState.speed * 1.5;
-        boyGroup.position.y = 0.15 + Math.abs(Math.sin(boyState.walkPhase * 2)) * 0.04;
-
-        if (mainDoorTransition) {
-            const pivot = mainDoorTransition.houseId === '1bhk' ? mainDoorPivot1 : mainDoorPivot2;
-            mainDoorTransition.progress += delta * 1.8;
-
-            if (mainDoorTransition.type === 'enter') {
-                const t = Math.min(mainDoorTransition.progress, 1);
-                pivot.rotation.y = t * (Math.PI / 2.2);
-                boyGroup.position.z -= delta * 2; // autowalk into house
-
-                if (t === 1) {
-                    pivot.rotation.y = 0;
-                    finishEnterHouse(mainDoorTransition.houseId);
-                    mainDoorTransition = null;
-                }
-            } else if (mainDoorTransition.type === 'exit') {
-                const t = Math.min(mainDoorTransition.progress, 1);
-                pivot.rotation.y = (1 - t) * (Math.PI / 2.2); // starts open, closes
-                boyGroup.position.z += delta * 2; // autowalk outwards
-
-                if (t === 1) {
-                    pivot.rotation.y = 0;
-                    boyState.mode = 'outdoor';
-                    mainDoorTransition = null;
-                    entry1BHK.visible = true;
-                    entry2BHK.visible = true;
-                }
-            }
-        }
-        return;
-    }
-
-    let inputX = 0;  // left/right input
-    let inputZ = 0;  // forward/back input
+    let inputX = 0;
+    let inputZ = 0;
 
     if (boyState.keys.left) inputX = -1;
     if (boyState.keys.right) inputX = 1;
-    if (boyState.keys.up) inputZ = 1;    // forward (into screen from camera's view)
-    if (boyState.keys.down) inputZ = -1; // backward
+    if (boyState.keys.up) inputZ = -1;
+    if (boyState.keys.down) inputZ = 1;
 
     const isMoving = (inputX !== 0 || inputZ !== 0);
 
     if (isMoving) {
-        // Compute camera-relative forward/right vectors, snapped to nearest 45°
-        // so small camera angle deviations don't cause diagonal drift
-        const camDir = new THREE.Vector3();
-        camera.getWorldDirection(camDir);
-        let yaw = Math.atan2(camDir.x, camDir.z);
-        yaw = Math.round(yaw / (Math.PI / 4)) * (Math.PI / 4); // snap to 45°
+        // Camera-relative movement: derive forward/right from camera direction
+        const forward = new THREE.Vector3();
+        forward.subVectors(controls.target, camera.position);
+        forward.y = 0;
+        if (forward.lengthSq() > 0.0001) {
+            forward.normalize();
+        } else {
+            forward.set(0, 0, -1);
+        }
+        const right = new THREE.Vector3();
+        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-        const camForward = new THREE.Vector3(Math.sin(yaw), 0, Math.cos(yaw));
-        const camRight = new THREE.Vector3(-Math.cos(yaw), 0, Math.sin(yaw));
-
-        // Combine input with camera-relative directions
+        // inputZ: -1 = UP key = move in camera forward direction
         const moveDir = new THREE.Vector3();
-        moveDir.addScaledVector(camForward, inputZ);
-        moveDir.addScaledVector(camRight, inputX);
-        moveDir.normalize();
+        moveDir.addScaledVector(forward, -inputZ);
+        moveDir.addScaledVector(right, inputX);
+        if (moveDir.lengthSq() > 0) moveDir.normalize();
 
-        if (boyState.mode === 'indoor') {
-            // Per-axis collision detection for sliding along walls
-            const newX = boyGroup.position.x + moveDir.x * boyState.speed * delta;
-            if (!checkCollision(newX, boyGroup.position.z)) {
-                boyGroup.position.x = newX;
-            }
-            const newZ = boyGroup.position.z + moveDir.z * boyState.speed * delta;
-            if (!checkCollision(boyGroup.position.x, newZ)) {
-                boyGroup.position.z = newZ;
-            }
-            // Clamp to house bounds
+        // Save position before move for collision rollback
+        const prevX = boyGroup.position.x;
+        const prevZ = boyGroup.position.z;
+
+        boyGroup.position.x += moveDir.x * boyState.speed * delta;
+        boyGroup.position.z += moveDir.z * boyState.speed * delta;
+
+        // Clamp based on mode
+        if (boyState.mode === 'outdoor') {
+            boyGroup.position.x = Math.max(-45, Math.min(48, boyGroup.position.x));
+            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
+        } else if (boyState.mode === 'indoor') {
             const bounds = indoorBounds[boyState.insideHouse];
             boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
             boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
-        } else {
-            boyGroup.position.x += moveDir.x * boyState.speed * delta;
-            boyGroup.position.z += moveDir.z * boyState.speed * delta;
-            boyGroup.position.x = Math.max(-40, Math.min(42, boyGroup.position.x));
-            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
         }
 
-        // Face movement direction (using camera-relative moveDir)
+        // Furniture collision check — revert if colliding
+        if (typeof checkFurnitureCollision === 'function' &&
+            checkFurnitureCollision(boyGroup.position.x, boyGroup.position.z)) {
+            boyGroup.position.x = prevX;
+            boyGroup.position.z = prevZ;
+        }
+
+        // Face movement direction
         const targetAngle = Math.atan2(moveDir.x, moveDir.z);
-        boyGroup.rotation.y += (targetAngle - boyGroup.rotation.y) * 0.15;
+        const diff = Math.atan2(Math.sin(targetAngle - boyGroup.rotation.y), Math.cos(targetAngle - boyGroup.rotation.y));
+        boyGroup.rotation.y += diff * 0.2;
 
         // Handle animation based on avatar type
         if (mixer && actions) {
@@ -501,80 +515,69 @@ function updateBoy(delta) {
         boyGroup.position.y = 0.15;
     }
 
-    // Update animation mixer
-    if (mixer) {
-        mixer.update(delta);
-    }
-
-    // Proximity check for entry circles (outdoor only)
+    // ── Proximity check for entry circles (outdoor only) ──
+    // ── Proximity check for entry circles and exit doors ──
+    const prompt = document.getElementById('interaction-popup');
     if (boyState.mode === 'outdoor') {
         const boyPos = boyGroup.position;
         const dist1 = boyPos.distanceTo(entryPositions['1bhk']);
         const dist2 = boyPos.distanceTo(entryPositions['2bhk']);
         const threshold = 3;
-        const prompt = document.getElementById('enter-prompt');
+
         if (dist1 < threshold) {
             boyState.nearEntry = '1bhk';
-            prompt.textContent = '⏎ Press ENTER to explore 1BHK House';
-            prompt.classList.add('visible');
+            if (prompt) {
+                prompt.textContent = 'Press ENTER to enter the house';
+                prompt.classList.add('visible');
+            }
         } else if (dist2 < threshold) {
             boyState.nearEntry = '2bhk';
-            prompt.textContent = '⏎ Press ENTER to explore 2BHK House';
-            prompt.classList.add('visible');
+            if (prompt) {
+                prompt.textContent = 'Press ENTER to enter the house';
+                prompt.classList.add('visible');
+            }
         } else {
             boyState.nearEntry = null;
-            prompt.classList.remove('visible');
+            if (prompt) prompt.classList.remove('visible');
         }
-    }
+    } else if (boyState.mode === 'indoor') {
+        const boyPos = boyGroup.position;
+        const distExit = boyPos.distanceTo(indoorSpawn[boyState.insideHouse].pos);
+        const threshold = 3;
 
-    // ── Room zone detection (indoor only) ──
-    if (boyState.mode === 'indoor') {
-        const bx = boyGroup.position.x;
-        const bz = boyGroup.position.z;
-        const house = boyState.insideHouse;
-        let detectedRoom = null;
-        // Check which room region the boy is in
-        for (const reg of roomRegions) {
-            if (reg.house !== house) continue;
-            if (bx >= reg.xMin && bx <= reg.xMax && bz >= reg.zMin && bz <= reg.zMax) {
-                detectedRoom = reg.room;
-                break;
+        if (distExit < threshold) {
+            boyState.nearExit = true;
+            if (prompt) {
+                prompt.textContent = 'Press ESC to exit the house';
+                prompt.classList.add('visible');
+            }
+        } else {
+            boyState.nearExit = false;
+            // Only hide if we were showing the exit prompt and have drifted away
+            if (prompt && prompt.textContent === 'Press ESC to exit the house') {
+                prompt.classList.remove('visible');
             }
         }
-        // Show room indicator when room changes
-        const indicator = document.getElementById('room-indicator');
-        if (detectedRoom && detectedRoom !== boyState.currentRoom) {
-            boyState.currentRoom = detectedRoom;
-            indicator.textContent = detectedRoom;
-            indicator.classList.add('visible');
-            // Auto-hide after 2 seconds
-            clearTimeout(window._roomIndicatorTimeout);
-            window._roomIndicatorTimeout = setTimeout(() => {
-                indicator.classList.remove('visible');
-            }, 2000);
-        }
     }
 
-    // ── Door push/pull animation ──
-    updateDoors(delta);
-
-    // ── Camera follow (indoor & outdoor) ──
-    if (boyState.mode === 'indoor') {
-        const targetCamPos = new THREE.Vector3(
+    // ── Smooth Camera Follow (only when boy is moving) ──
+    if (isMoving && typeof camera !== 'undefined' && typeof controls !== 'undefined') {
+        const desiredTarget = new THREE.Vector3(
             boyGroup.position.x,
-            boyGroup.position.y + indoorCameraOffset.y,
-            boyGroup.position.z + indoorCameraOffset.z
+            boyGroup.position.y + 1.5,
+            boyGroup.position.z
         );
-        camera.position.lerp(targetCamPos, 0.05);
-        const lookAt = new THREE.Vector3(boyGroup.position.x, boyGroup.position.y + 2, boyGroup.position.z);
-        controls.target.lerp(lookAt, 0.05);
-        controls.update();
-    } else if (boyState.mode === 'outdoor' && isMoving) {
-        // Track the boy when moving outside
-        const lookAt = new THREE.Vector3(boyGroup.position.x, 2, boyGroup.position.z);
-        controls.target.lerp(lookAt, 0.05);
+        const prevTarget = controls.target.clone();
+        controls.target.lerp(desiredTarget, 0.12);
+        const delta = controls.target.clone().sub(prevTarget);
+        camera.position.add(delta);
         controls.update();
     }
+
+    // ── Door animation + room transparency + main doors (every frame) ──
+    if (typeof updateDoors === 'function') updateDoors();
+    if (typeof updateMainDoors === 'function') updateMainDoors();
+    if (typeof updateRoomTransparency === 'function') updateRoomTransparency();
 }
 
 // ═══════════════════════════════════════════════

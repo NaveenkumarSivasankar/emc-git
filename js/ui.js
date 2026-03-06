@@ -27,7 +27,9 @@ function toggleAppliance(idx, isOn) {
     } else if (a.kind === 'tap') {
         waterStream.visible = isOn;
     }
+    // 'generic', 'fridge', 'tablefan' kinds: no mesh toggle needed
     recalcWattage();
+    buildAppliancePanel();
 }
 
 function toggleSimpleAppliance(idx, isOn) {
@@ -54,7 +56,9 @@ function toggleSimpleAppliance(idx, isOn) {
         }
         screen.material.needsUpdate = true;
     }
+    // 'generic' kind: no mesh toggle needed
     recalcWattage();
+    buildAppliancePanel();
 }
 
 // ═══════════════════════════════════════════════
@@ -139,7 +143,9 @@ const tvTextures = [createTvTexture('nature'), createTvTexture('city')];
 // ═══════════════════════════════════════════════
 function buildAppliancePanel() {
     const panel = document.getElementById('appliance-panel');
-    let html = '';
+    const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
+    let html = '<div class="panel-header"><span class="panel-header-icon">⚡</span> Appliances</div>';
+
     if (is2BHK) {
         const grouped = {};
         bhk2Appliances.forEach((a, i) => {
@@ -147,9 +153,10 @@ function buildAppliancePanel() {
             grouped[a.room].push({ ...a, idx: i });
         });
         for (const room in grouped) {
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             grouped[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
@@ -162,13 +169,21 @@ function buildAppliancePanel() {
         });
         for (const room in rooms) {
             if (rooms[room].length === 0) continue;
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             rooms[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
     }
+
+    // Total wattage footer
+    let totalOn = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) totalOn += a.watt; });
+    html += '<div class="panel-footer"><span class="footer-label">Total Active</span><span class="footer-value">' + totalOn.toLocaleString() + ' W</span></div>';
+
     panel.innerHTML = html;
 }
 
@@ -178,12 +193,12 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-14, 4, 0);
-        camera.position.set(-14, 16, 28);
+        controls.target.set(-22, 4, 0);
+        camera.position.set(-22, 20, 35);
     } else {
         is2BHK = true;
-        controls.target.set(16, 4, 0);
-        camera.position.set(16, 16, 28);
+        controls.target.set(24, 4, 0);
+        camera.position.set(24, 20, 35);
     }
     controls.update();
     buildAppliancePanel();
@@ -203,11 +218,11 @@ function toggleUpgrade() { focusHouse('2bhk'); }
 // ═══════════════════════════════════════════════
 // 2BHK room zoom positions
 const bhk2RoomPositions = {
-    'Hall': { target: new THREE.Vector3(22, 3.5, 3), camera: new THREE.Vector3(22, 10, 16) },
-    'Bedroom 1': { target: new THREE.Vector3(11, 3.5, -6), camera: new THREE.Vector3(11, 10, 6) },
-    'Bedroom 2': { target: new THREE.Vector3(21, 3.5, -6), camera: new THREE.Vector3(21, 10, 6) },
-    'Kitchen': { target: new THREE.Vector3(8.5, 3.5, 0.75), camera: new THREE.Vector3(8.5, 10, 12) },
-    'Bathroom': { target: new THREE.Vector3(8.5, 3.5, 6), camera: new THREE.Vector3(8.5, 10, 16) }
+    'Hall': { target: new THREE.Vector3(29, 3.5, 4), camera: new THREE.Vector3(29, 12, 20) },
+    'Bedroom 1': { target: new THREE.Vector3(17, 3.5, -8.5), camera: new THREE.Vector3(17, 12, 4) },
+    'Bedroom 2': { target: new THREE.Vector3(31, 3.5, -8.5), camera: new THREE.Vector3(31, 12, 4) },
+    'Kitchen': { target: new THREE.Vector3(14.5, 3.5, -1), camera: new THREE.Vector3(14.5, 12, 12) },
+    'Bathroom': { target: new THREE.Vector3(14.5, 3.5, 7.5), camera: new THREE.Vector3(14.5, 12, 18) }
 };
 
 function buildRoomNavPanel() {

@@ -1,9 +1,44 @@
-// ═══════════════════════════════════════════════
-//  WALL + ROOF TRANSPARENCY
-// ═══════════════════════════════════════════════
 function updateWallTransparency() {
     const camPos = camera.position.clone();
-    const distSimple = camPos.distanceTo(new THREE.Vector3(-14, 4, 0));
+
+    // When indoor, make outer walls fully transparent so interior is visible
+    // Room partition transparency is handled by updateRoomTransparency() in interiors.js
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        if (boyState.insideHouse === '1bhk') {
+            transparentWalls.forEach(wall => {
+                wall.material.opacity = 0;
+                wall.material.transparent = true;
+                wall.material.needsUpdate = true;
+            });
+            roofMat.opacity = 0; roofMat.needsUpdate = true;
+            doorMat.opacity = 0; doorMat.needsUpdate = true;
+            labels.forEach(label => {
+                label.element.style.opacity = 1;
+                label.element.style.display = 'block';
+            });
+            environmentGroup.visible = false;
+            bhk2Group.visible = false;
+        } else if (boyState.insideHouse === '2bhk') {
+            bhk2TransWalls.forEach(wall => {
+                wall.material.opacity = 0;
+                wall.material.transparent = true;
+                wall.material.needsUpdate = true;
+            });
+            bhk2RoofMat.opacity = 0; bhk2RoofMat.needsUpdate = true;
+            bhk2DoorMat.opacity = 0; bhk2DoorMat.needsUpdate = true;
+            bhk2WallMat.opacity = 0; bhk2WallMat.needsUpdate = true;
+            roomLabels.forEach(label => {
+                label.element.style.opacity = 1;
+                label.element.style.display = 'block';
+            });
+            environmentGroup.visible = false;
+            houseGroup.visible = false;
+        }
+        return;
+    }
+
+    // Outdoor camera-distance-based transparency
+    const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, 0));
     const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
 
     transparentWalls.forEach(wall => {
@@ -18,7 +53,7 @@ function updateWallTransparency() {
         label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
     });
 
-    const dist2BHK = camPos.distanceTo(new THREE.Vector3(16, 4, 0));
+    const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, 0));
     const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
 
     bhk2TransWalls.forEach(wall => {
@@ -38,21 +73,11 @@ function updateWallTransparency() {
     const insideSimple = tSimple < 0.3;
     const inside2BHK = t2BHK < 0.3;
     environmentGroup.visible = !insideSimple && !inside2BHK;
-    bhk2Group.visible = !insideSimple;   // hide 2BHK when inside 1BHK
-    houseGroup.visible = !inside2BHK;    // hide 1BHK when inside 2BHK
+    bhk2Group.visible = !insideSimple;
+    houseGroup.visible = !inside2BHK;
 }
 
-// ═══════════════════════════════════════════════
-//  ZOOM HINT
-// ═══════════════════════════════════════════════
-let hintTimeout;
-controls.addEventListener('change', () => {
-    const hint = document.getElementById('zoom-hint');
-    if (camera.position.distanceTo(controls.target) < 15) {
-        hint.classList.add('hidden');
-    }
-    clearTimeout(hintTimeout);
-});
+
 
 // ═══════════════════════════════════════════════
 //  ANIMATION LOOP
