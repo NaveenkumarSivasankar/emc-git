@@ -37,7 +37,12 @@ function updateWallTransparency() {
         return;
     }
 
-    // Outdoor camera-distance-based transparency
+    // Outdoor: restore visibility
+    houseGroup.visible = true;
+    bhk2Group.visible = true;
+    environmentGroup.visible = true;
+
+    // Camera-distance-based transparency for 1BHK
     const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, 0));
     const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
 
@@ -53,6 +58,7 @@ function updateWallTransparency() {
         label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
     });
 
+    // Camera-distance-based transparency for 2BHK
     const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, 0));
     const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
 
@@ -68,13 +74,6 @@ function updateWallTransparency() {
         label.element.style.opacity = 1 - t2BHK;
         label.element.style.display = (1 - t2BHK) > 0.2 ? 'block' : 'none';
     });
-
-    // Hide environment & other house when inside a house
-    const insideSimple = tSimple < 0.3;
-    const inside2BHK = t2BHK < 0.3;
-    environmentGroup.visible = !insideSimple && !inside2BHK;
-    bhk2Group.visible = !insideSimple;
-    houseGroup.visible = !inside2BHK;
 }
 
 

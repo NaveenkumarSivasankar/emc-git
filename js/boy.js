@@ -1,82 +1,125 @@
 // ═══════════════════════════════════════════════
-//  ANIMATED BOY CHARACTER — WITH HOUSE NAVIGATION
+//  ANIMATED BOY CHARACTER — REALISTIC 3D + HOUSE NAVIGATION
 // ═══════════════════════════════════════════════
 const boyGroup = new THREE.Group();
 
-// Materials
-const skinMat = new THREE.MeshStandardMaterial({ color: 0xFFCC99, roughness: 0.8 });
-const hairMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.9 });
-const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.75 });
+// ── MATERIALS ──
+const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDBCB4, roughness: 0.7 });
+const hairMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
+const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.65 });
 const pantsMat = new THREE.MeshStandardMaterial({ color: 0x37474F, roughness: 0.8 });
-const shoeMat = new THREE.MeshStandardMaterial({ color: 0xE53935, roughness: 0.7 });
-const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.6 });
-const eyeMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.3 });
-const tshirtStripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.75 });
+const shoeMat = new THREE.MeshStandardMaterial({ color: 0xE53935, roughness: 0.6 });
+const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.5 });
+const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 });
+const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
+const tshirtStripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.65 });
 
 // ── HEAD ──
-const head = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 12), skinMat);
-head.position.y = 2.05; head.castShadow = true; boyGroup.add(head);
-const hair = new THREE.Mesh(new THREE.SphereGeometry(0.30, 12, 12), hairMat);
-hair.position.y = 2.15; hair.scale.set(1.02, 0.7, 1.02); boyGroup.add(hair);
-const fringe = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.06, 0.12), hairMat);
-fringe.position.set(0, 2.1, 0.24); boyGroup.add(fringe);
-const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
-leftEye.position.set(-0.1, 2.06, 0.25); boyGroup.add(leftEye);
-const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 8), eyeMat);
-rightEye.position.set(0.1, 2.06, 0.25); boyGroup.add(rightEye);
-const smileMat = new THREE.MeshStandardMaterial({ color: 0xCC6666, roughness: 0.5 });
-const smile = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.02, 0.03), smileMat);
-smile.position.set(0, 1.95, 0.27); boyGroup.add(smile);
+const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), skinMat);
+head.position.y = 2.1; head.castShadow = true; boyGroup.add(head);
 
-// ── BODY (T-SHIRT) ──
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.6, 0.25), tshirtMat);
+// Hair (main cap + side tufts)
+const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 16), hairMat);
+hairMain.position.y = 2.22; hairMain.scale.set(1.04, 0.72, 1.04); boyGroup.add(hairMain);
+const hairFringe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 0.14), hairMat);
+hairFringe.position.set(0, 2.14, 0.27); boyGroup.add(hairFringe);
+const hairSideL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
+hairSideL.position.set(-0.3, 2.1, 0); boyGroup.add(hairSideL);
+const hairSideR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
+hairSideR.position.set(0.3, 2.1, 0); boyGroup.add(hairSideR);
+
+// Eyes (white + dark pupil)
+const leftEyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeWhiteMat);
+leftEyeWhite.position.set(-0.11, 2.12, 0.27); boyGroup.add(leftEyeWhite);
+const leftEye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
+leftEye.position.set(-0.11, 2.12, 0.30); boyGroup.add(leftEye);
+const rightEyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeWhiteMat);
+rightEyeWhite.position.set(0.11, 2.12, 0.27); boyGroup.add(rightEyeWhite);
+const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
+rightEye.position.set(0.11, 2.12, 0.30); boyGroup.add(rightEye);
+
+// Mouth
+const mouthMat = new THREE.MeshStandardMaterial({ color: 0xCC6666, roughness: 0.4 });
+const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.025, 0.03), mouthMat);
+mouth.position.set(0, 1.97, 0.30); boyGroup.add(mouth);
+
+// ── NECK ──
+const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.18, 8), skinMat);
+neck.position.y = 1.85; boyGroup.add(neck);
+
+// ── TORSO ──
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.65, 0.28), tshirtMat);
 torso.position.y = 1.45; torso.castShadow = true; boyGroup.add(torso);
-const collar = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.06, 0.27), tshirtMat);
-collar.position.y = 1.78; boyGroup.add(collar);
-const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.06, 0.26), tshirtStripeMat);
+
+// Collar
+const collar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.07, 0.30), tshirtMat);
+collar.position.y = 1.80; boyGroup.add(collar);
+
+// Stripe detail
+const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.06, 0.29), tshirtStripeMat);
 stripe.position.set(0, 1.45, 0); boyGroup.add(stripe);
 
-// ── ARMS ──
-const leftArmPivot = new THREE.Group();
-leftArmPivot.position.set(-0.3, 1.7, 0); boyGroup.add(leftArmPivot);
-const leftUpperArm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.12), tshirtMat);
-leftUpperArm.position.set(0, -0.18, 0); leftUpperArm.castShadow = true; leftArmPivot.add(leftUpperArm);
-const leftLowerArm = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.3, 0.10), skinMat);
-leftLowerArm.position.set(0, -0.48, 0); leftArmPivot.add(leftLowerArm);
-const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), skinMat);
-leftHand.position.set(0, -0.65, 0); leftArmPivot.add(leftHand);
+// ── HIPS ──
+const hips = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.18, 0.25), pantsMat);
+hips.position.y = 1.08; boyGroup.add(hips);
 
-const rightArmPivot = new THREE.Group();
-rightArmPivot.position.set(0.3, 1.7, 0); boyGroup.add(rightArmPivot);
-const rightUpperArm = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.35, 0.12), tshirtMat);
-rightUpperArm.position.set(0, -0.18, 0); rightUpperArm.castShadow = true; rightArmPivot.add(rightUpperArm);
-const rightLowerArm = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.3, 0.10), skinMat);
-rightLowerArm.position.set(0, -0.48, 0); rightArmPivot.add(rightLowerArm);
-const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), skinMat);
-rightHand.position.set(0, -0.65, 0); rightArmPivot.add(rightHand);
+// ── ARMS (Cylinder-based with elbow pivots) ──
+const leftShoulderPivot = new THREE.Group();
+leftShoulderPivot.position.set(-0.34, 1.72, 0); boyGroup.add(leftShoulderPivot);
+const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+leftUpperArm.position.set(0, -0.18, 0); leftUpperArm.castShadow = true; leftShoulderPivot.add(leftUpperArm);
+const leftElbowPivot = new THREE.Group();
+leftElbowPivot.position.set(0, -0.36, 0); leftShoulderPivot.add(leftElbowPivot);
+const leftForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.32, 8), skinMat);
+leftForearm.position.set(0, -0.16, 0); leftElbowPivot.add(leftForearm);
+const leftHand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), skinMat);
+leftHand.position.set(0, -0.34, 0); leftElbowPivot.add(leftHand);
 
-// ── LEGS ──
-const leftLegPivot = new THREE.Group();
-leftLegPivot.position.set(-0.12, 1.15, 0); boyGroup.add(leftLegPivot);
-const leftUpperLeg = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.4, 0.14), pantsMat);
-leftUpperLeg.position.set(0, -0.2, 0); leftUpperLeg.castShadow = true; leftLegPivot.add(leftUpperLeg);
-const leftLowerLeg = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.35, 0.13), pantsMat);
-leftLowerLeg.position.set(0, -0.57, 0); leftLegPivot.add(leftLowerLeg);
-const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.22), shoeMat);
-leftShoe.position.set(0, -0.79, 0.03); leftLegPivot.add(leftShoe);
-const leftSole = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.23), shoeSoleMat);
-leftSole.position.set(0, -0.85, 0.03); leftLegPivot.add(leftSole);
+const rightShoulderPivot = new THREE.Group();
+rightShoulderPivot.position.set(0.34, 1.72, 0); boyGroup.add(rightShoulderPivot);
+const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+rightUpperArm.position.set(0, -0.18, 0); rightUpperArm.castShadow = true; rightShoulderPivot.add(rightUpperArm);
+const rightElbowPivot = new THREE.Group();
+rightElbowPivot.position.set(0, -0.36, 0); rightShoulderPivot.add(rightElbowPivot);
+const rightForearm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.32, 8), skinMat);
+rightForearm.position.set(0, -0.16, 0); rightElbowPivot.add(rightForearm);
+const rightHand = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), skinMat);
+rightHand.position.set(0, -0.34, 0); rightElbowPivot.add(rightHand);
 
-const rightLegPivot = new THREE.Group();
-rightLegPivot.position.set(0.12, 1.15, 0); boyGroup.add(rightLegPivot);
-const rightUpperLeg = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.4, 0.14), pantsMat);
-rightUpperLeg.position.set(0, -0.2, 0); rightUpperLeg.castShadow = true; rightLegPivot.add(rightUpperLeg);
-const rightLowerLeg = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.35, 0.13), pantsMat);
-rightLowerLeg.position.set(0, -0.57, 0); rightLegPivot.add(rightLowerLeg);
-const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.22), shoeMat);
-rightShoe.position.set(0, -0.79, 0.03); rightLegPivot.add(rightShoe);
-const rightSole = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.23), shoeSoleMat);
-rightSole.position.set(0, -0.85, 0.03); rightLegPivot.add(rightSole);
+// Arm pivot aliases for animation compatibility
+const leftArmPivot = leftShoulderPivot;
+const rightArmPivot = rightShoulderPivot;
+
+// ── LEGS (Cylinder-based with knee pivots) ──
+const leftHipPivot = new THREE.Group();
+leftHipPivot.position.set(-0.13, 1.0, 0); boyGroup.add(leftHipPivot);
+const leftThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.42, 8), pantsMat);
+leftThigh.position.set(0, -0.21, 0); leftThigh.castShadow = true; leftHipPivot.add(leftThigh);
+const leftKneePivot = new THREE.Group();
+leftKneePivot.position.set(0, -0.42, 0); leftHipPivot.add(leftKneePivot);
+const leftShin = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.38, 8), pantsMat);
+leftShin.position.set(0, -0.19, 0); leftKneePivot.add(leftShin);
+const leftShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.24), shoeMat);
+leftShoe.position.set(0, -0.42, 0.04); leftKneePivot.add(leftShoe);
+const leftSole = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.25), shoeSoleMat);
+leftSole.position.set(0, -0.48, 0.04); leftKneePivot.add(leftSole);
+
+const rightHipPivot = new THREE.Group();
+rightHipPivot.position.set(0.13, 1.0, 0); boyGroup.add(rightHipPivot);
+const rightThigh = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.42, 8), pantsMat);
+rightThigh.position.set(0, -0.21, 0); rightThigh.castShadow = true; rightHipPivot.add(rightThigh);
+const rightKneePivot = new THREE.Group();
+rightKneePivot.position.set(0, -0.42, 0); rightHipPivot.add(rightKneePivot);
+const rightShin = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.05, 0.38, 8), pantsMat);
+rightShin.position.set(0, -0.19, 0); rightKneePivot.add(rightShin);
+const rightShoe = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.1, 0.24), shoeMat);
+rightShoe.position.set(0, -0.42, 0.04); rightKneePivot.add(rightShoe);
+const rightSole = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.25), shoeSoleMat);
+rightSole.position.set(0, -0.48, 0.04); rightKneePivot.add(rightSole);
+
+// Leg pivot aliases for animation compatibility
+const leftLegPivot = leftHipPivot;
+const rightLegPivot = rightHipPivot;
 
 // ── PLACE BOY ON ROAD ──
 boyGroup.position.set(0, 0.15, 13);
@@ -91,13 +134,12 @@ const entryCircleMat = new THREE.MeshStandardMaterial({
     transparent: true, opacity: 0.7, roughness: 0.4, metalness: 0.2
 });
 
-// Outer glow ring
 const entryGlowMat = new THREE.MeshStandardMaterial({
     color: 0x00ff88, emissive: 0x00ff66, emissiveIntensity: 0.4,
     transparent: true, opacity: 0.3, roughness: 0.5
 });
 
-// 1BHK entry circle — in front of 1BHK house door (house at x=-14, door at z=7.5)
+// 1BHK entry circle
 const entry1BHK = new THREE.Group();
 const entry1Circle = new THREE.Mesh(new THREE.CircleGeometry(1.2, 24), entryCircleMat.clone());
 entry1Circle.rotation.x = -Math.PI / 2;
@@ -107,16 +149,15 @@ const entry1Glow = new THREE.Mesh(new THREE.RingGeometry(1.2, 1.8, 24), entryGlo
 entry1Glow.rotation.x = -Math.PI / 2;
 entry1Glow.position.set(0, 0.05, 0);
 entry1BHK.add(entry1Glow);
-// Arrow indicator
 const arrowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.5 });
 const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow1.position.set(0, 1.5, 0);
-arrow1.rotation.x = Math.PI; // point down
+arrow1.rotation.x = Math.PI;
 entry1BHK.add(arrow1);
 entry1BHK.position.set(-22, 0, 12);
 scene.add(entry1BHK);
 
-// 2BHK entry circle — in front of 2BHK house door (house at x=16, door at z=8)
+// 2BHK entry circle
 const entry2BHK = new THREE.Group();
 const entry2Circle = new THREE.Mesh(new THREE.CircleGeometry(1.2, 24), entryCircleMat.clone());
 entry2Circle.rotation.x = -Math.PI / 2;
@@ -142,13 +183,16 @@ const boyState = {
     walkPhase: 0,
     keys: { up: false, down: false, left: false, right: false },
     // Navigation state
-    mode: 'outdoor',       // 'outdoor' | 'indoor'
+    mode: 'outdoor',       // 'outdoor' | 'transitioning' | 'indoor'
     insideHouse: null,     // '1bhk' | '2bhk'
     nearEntry: null,       // '1bhk' | '2bhk' | null
-    nearExit: false,       // determines if Exit prompt is visible near doors inside
-    cameraFollow: true,    // camera follows boy when indoor
+    nearExit: false,
+    cameraFollow: true,
     followTarget: new THREE.Vector3(),
-    followInit: false
+    followInit: false,
+    // Room tracking for popup HUD
+    currentRoom: null,
+    lastRoom: null
 };
 
 // Entry circle world positions
@@ -157,7 +201,7 @@ const entryPositions = {
     '2bhk': new THREE.Vector3(24, 0, 13)
 };
 
-// Indoor spawn positions (world coords — where boy appears inside the house)
+// Indoor spawn positions (world coords)
 const indoorSpawn = {
     '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI },
     '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI }
@@ -169,16 +213,15 @@ const indoorBounds = {
     '2bhk': { xMin: 10, xMax: 38, zMin: -12, zMax: 11 }
 };
 
-// Camera offsets for indoor follow
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
 
 // ── KEY LISTENERS ──
 document.addEventListener('keydown', (e) => {
-    // Arrow keys will no longer pan the OrbitControls, only move the boy.
-    if (e.key === 'ArrowUp') { boyState.keys.up = true; e.preventDefault(); }
-    if (e.key === 'ArrowDown') { boyState.keys.down = true; e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { boyState.keys.left = true; e.preventDefault(); }
-    if (e.key === 'ArrowRight') { boyState.keys.right = true; e.preventDefault(); }
+    // Always accept key presses (even during transition — they queue up)
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { boyState.keys.up = true; e.preventDefault(); }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { boyState.keys.down = true; e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { boyState.keys.left = true; e.preventDefault(); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { boyState.keys.right = true; e.preventDefault(); }
 
     // ENTER — enter house if near entry circle
     if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
@@ -194,36 +237,43 @@ document.addEventListener('keydown', (e) => {
 }, { passive: false });
 
 document.addEventListener('keyup', (e) => {
-    if (e.key === 'ArrowUp') { boyState.keys.up = false; e.preventDefault(); }
-    if (e.key === 'ArrowDown') { boyState.keys.down = false; e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { boyState.keys.left = false; e.preventDefault(); }
-    if (e.key === 'ArrowRight') { boyState.keys.right = false; e.preventDefault(); }
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { boyState.keys.up = false; e.preventDefault(); }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { boyState.keys.down = false; e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { boyState.keys.left = false; e.preventDefault(); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { boyState.keys.right = false; e.preventDefault(); }
 }, { passive: false });
 
 // Disable camera panning with arrow keys
 if (typeof controls !== 'undefined') {
-    controls.enableKeys = false; // Prevent arrow keys from shifting the camera
+    controls.enableKeys = false;
 }
 
 // ═══════════════════════════════════════════════
-//  ENTER / EXIT HOUSE
+//  ENTER / EXIT HOUSE — Clean state machine
+//  OUTSIDE → TRANSITIONING → INSIDE
+//  Input only blocked during TRANSITIONING (200ms)
 // ═══════════════════════════════════════════════
 function enterHouse(houseId) {
+    if (boyState.mode === 'transitioning') return; // prevent double-entry
+
     // Animate main door open
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
-    boyState.mode = 'indoor';
+    // TRANSITIONING state — block movement briefly
+    boyState.mode = 'transitioning';
     boyState.insideHouse = houseId;
     boyState.nearEntry = null;
+
+    // CRITICAL FIX: Reset all key states to prevent stale input
+    boyState.keys = { up: false, down: false, left: false, right: false };
 
     // Move boy inside
     const spawn = indoorSpawn[houseId];
     boyGroup.position.copy(spawn.pos);
     boyGroup.rotation.y = spawn.rot;
-
     boyState.followTarget.copy(spawn.pos);
 
-    // Position camera behind and above the boy for a good indoor view
+    // Position camera for indoor view
     if (typeof controls !== 'undefined') {
         controls.enabled = true;
         camera.position.set(spawn.pos.x, spawn.pos.y + 6, spawn.pos.z + 8);
@@ -232,11 +282,7 @@ function enterHouse(houseId) {
     }
 
     // Focus on the right house
-    if (houseId === '1bhk') {
-        is2BHK = false;
-    } else {
-        is2BHK = true;
-    }
+    is2BHK = (houseId === '2bhk');
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
@@ -248,29 +294,38 @@ function enterHouse(houseId) {
     // Show back button
     document.getElementById('back-btn').classList.add('visible');
 
-    // Close door after boy is inside (delayed)
+    // Transition to INDOOR after short delay — movement immediately works
+    setTimeout(() => {
+        boyState.mode = 'indoor';
+    }, 200);
+
+    // Close door after boy is inside
     setTimeout(() => {
         if (typeof closeMainDoor === 'function') closeMainDoor(houseId);
     }, 1500);
 }
 
 function exitHouse() {
+    if (boyState.mode === 'transitioning') return;
+
     const houseId = boyState.insideHouse;
 
     // Animate main door open
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
-    boyState.mode = 'outdoor';
-    boyState.insideHouse = null;
+    // TRANSITIONING state
+    boyState.mode = 'transitioning';
+
+    // CRITICAL FIX: Reset all key states
+    boyState.keys = { up: false, down: false, left: false, right: false };
 
     // Move boy back to entry circle position
     const entryPos = entryPositions[houseId];
     boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 2);
     boyGroup.rotation.y = 0;
-
     boyState.followTarget.copy(boyGroup.position);
 
-    // Position camera near the boy on exit
+    // Position camera
     if (typeof controls !== 'undefined') {
         controls.enabled = true;
         camera.position.set(boyGroup.position.x, 6, boyGroup.position.z + 10);
@@ -282,12 +337,23 @@ function exitHouse() {
     entry1BHK.visible = true;
     entry2BHK.visible = true;
 
-    // Hide prompt
+    // Hide prompts
     const prompt = document.getElementById('interaction-popup');
     if (prompt) prompt.classList.remove('visible');
     document.getElementById('back-btn').classList.remove('visible');
 
-    // Close door after boy exits (delayed)
+    // Hide room popup
+    if (typeof hideRoomPopup === 'function') hideRoomPopup();
+    boyState.currentRoom = null;
+    boyState.lastRoom = null;
+
+    // Transition to OUTDOOR
+    setTimeout(() => {
+        boyState.mode = 'outdoor';
+        boyState.insideHouse = null;
+    }, 200);
+
+    // Close door
     setTimeout(() => {
         if (typeof closeMainDoor === 'function') closeMainDoor(houseId);
     }, 1500);
@@ -297,6 +363,9 @@ function exitHouse() {
 //  UPDATE FUNCTION (called from animate loop)
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
+    // Don't process movement during transition
+    if (boyState.mode === 'transitioning') return;
+
     let inputX = 0;
     let inputZ = 0;
 
@@ -308,7 +377,7 @@ function updateBoy(delta) {
     const isMoving = (inputX !== 0 || inputZ !== 0);
 
     if (isMoving) {
-        // Camera-relative movement: derive forward/right from camera direction
+        // Camera-relative movement
         const forward = new THREE.Vector3();
         forward.subVectors(controls.target, camera.position);
         forward.y = 0;
@@ -320,7 +389,6 @@ function updateBoy(delta) {
         const right = new THREE.Vector3();
         right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
 
-        // inputZ: -1 = UP key = move in camera forward direction
         const moveDir = new THREE.Vector3();
         moveDir.addScaledVector(forward, -inputZ);
         moveDir.addScaledVector(right, inputX);
@@ -339,11 +407,13 @@ function updateBoy(delta) {
             boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
         } else if (boyState.mode === 'indoor') {
             const bounds = indoorBounds[boyState.insideHouse];
-            boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
-            boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+            if (bounds) {
+                boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
+                boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+            }
         }
 
-        // Furniture collision check — revert if colliding
+        // Furniture collision check
         if (typeof checkFurnitureCollision === 'function' &&
             checkFurnitureCollision(boyGroup.position.x, boyGroup.position.z)) {
             boyGroup.position.x = prevX;
@@ -355,29 +425,47 @@ function updateBoy(delta) {
         const diff = Math.atan2(Math.sin(targetAngle - boyGroup.rotation.y), Math.cos(targetAngle - boyGroup.rotation.y));
         boyGroup.rotation.y += diff * 0.2;
 
-        // Walking animation
+        // Walking animation — arm and leg swing with elbow/knee bend
         boyState.walkPhase += delta * 10;
         const swing = Math.sin(boyState.walkPhase) * 0.6;
-        leftLegPivot.rotation.x = swing;
-        rightLegPivot.rotation.x = -swing;
-        leftArmPivot.rotation.x = -swing * 0.7;
-        rightArmPivot.rotation.x = swing * 0.7;
-        boyGroup.position.y = (boyState.mode === 'indoor' ? 0.15 : 0.15) + Math.abs(Math.sin(boyState.walkPhase * 2)) * 0.04;
+
+        // Legs swing at hip
+        leftHipPivot.rotation.x = swing;
+        rightHipPivot.rotation.x = -swing;
+        // Knees bend on backswing
+        leftKneePivot.rotation.x = Math.max(0, -swing) * 0.5;
+        rightKneePivot.rotation.x = Math.max(0, swing) * 0.5;
+
+        // Arms swing oppositely
+        leftShoulderPivot.rotation.x = -swing * 0.7;
+        rightShoulderPivot.rotation.x = swing * 0.7;
+        // Elbows bend slightly during swing
+        leftElbowPivot.rotation.x = Math.abs(swing) * 0.3;
+        rightElbowPivot.rotation.x = Math.abs(swing) * 0.3;
+
+        // Body bounce
+        boyGroup.position.y = 0.15 + Math.abs(Math.sin(boyState.walkPhase * 2)) * 0.04;
         torso.rotation.z = Math.sin(boyState.walkPhase) * 0.03;
     } else {
-        // Idle
+        // Idle animation — breathing + smooth decay
         boyState.walkPhase = 0;
-        leftLegPivot.rotation.x *= 0.85;
-        rightLegPivot.rotation.x *= 0.85;
-        leftArmPivot.rotation.x *= 0.85;
-        rightArmPivot.rotation.x *= 0.85;
+        leftHipPivot.rotation.x *= 0.85;
+        rightHipPivot.rotation.x *= 0.85;
+        leftKneePivot.rotation.x *= 0.85;
+        rightKneePivot.rotation.x *= 0.85;
+        leftShoulderPivot.rotation.x *= 0.85;
+        rightShoulderPivot.rotation.x *= 0.85;
+        leftElbowPivot.rotation.x *= 0.85;
+        rightElbowPivot.rotation.x *= 0.85;
         torso.rotation.z *= 0.85;
-        const breath = Math.sin(Date.now() * 0.003) * 0.01;
+
+        // Breathing — subtle torso scale oscillation
+        const breath = Math.sin(Date.now() * 0.003) * 0.012;
         torso.scale.y = 1 + breath;
+        torso.scale.x = 1 - breath * 0.3;
         boyGroup.position.y = 0.15;
     }
 
-    // ── Proximity check for entry circles (outdoor only) ──
     // ── Proximity check for entry circles and exit doors ──
     const prompt = document.getElementById('interaction-popup');
     if (boyState.mode === 'outdoor') {
@@ -389,13 +477,13 @@ function updateBoy(delta) {
         if (dist1 < threshold) {
             boyState.nearEntry = '1bhk';
             if (prompt) {
-                prompt.textContent = 'Press ENTER to enter the house';
+                prompt.textContent = 'Press ENTER to enter 1BHK House';
                 prompt.classList.add('visible');
             }
         } else if (dist2 < threshold) {
             boyState.nearEntry = '2bhk';
             if (prompt) {
-                prompt.textContent = 'Press ENTER to enter the house';
+                prompt.textContent = 'Press ENTER to enter 2BHK House';
                 prompt.classList.add('visible');
             }
         } else {
@@ -415,14 +503,25 @@ function updateBoy(delta) {
             }
         } else {
             boyState.nearExit = false;
-            // Only hide if we were showing the exit prompt and have drifted away
             if (prompt && prompt.textContent === 'Press ESC to exit the house') {
                 prompt.classList.remove('visible');
             }
         }
+
+        // ── Room tracking for popup HUD (FIX 4) ──
+        if (typeof getBoyRoom === 'function') {
+            const room = getBoyRoom();
+            if (room !== boyState.currentRoom) {
+                boyState.lastRoom = boyState.currentRoom;
+                boyState.currentRoom = room;
+                if (room && typeof showRoomPopup === 'function') {
+                    showRoomPopup(room, boyState.insideHouse);
+                }
+            }
+        }
     }
 
-    // ── Smooth Camera Follow (only when boy is moving) ──
+    // ── Smooth Camera Follow ──
     if (isMoving && typeof camera !== 'undefined' && typeof controls !== 'undefined') {
         const desiredTarget = new THREE.Vector3(
             boyGroup.position.x,
@@ -431,12 +530,12 @@ function updateBoy(delta) {
         );
         const prevTarget = controls.target.clone();
         controls.target.lerp(desiredTarget, 0.12);
-        const delta = controls.target.clone().sub(prevTarget);
-        camera.position.add(delta);
+        const camDelta = controls.target.clone().sub(prevTarget);
+        camera.position.add(camDelta);
         controls.update();
     }
 
-    // ── Door animation + room transparency + main doors (every frame) ──
+    // ── Door animation + room transparency + main doors ──
     if (typeof updateDoors === 'function') updateDoors();
     if (typeof updateMainDoors === 'function') updateMainDoors();
     if (typeof updateRoomTransparency === 'function') updateRoomTransparency();
@@ -446,13 +545,12 @@ function updateBoy(delta) {
 //  ENTRY CIRCLE PULSE ANIMATION
 // ═══════════════════════════════════════════════
 function updateEntryCircles(elapsed) {
-    if (boyState.mode === 'indoor') return;
+    if (boyState.mode === 'indoor' || boyState.mode === 'transitioning') return;
 
     const pulse = 0.5 + Math.sin(elapsed * 3) * 0.3;
     const glowPulse = 0.2 + Math.sin(elapsed * 2) * 0.15;
     const arrowBob = Math.sin(elapsed * 4) * 0.3;
 
-    // 1BHK circle
     entry1Circle.material.opacity = pulse;
     entry1Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
     entry1Glow.material.opacity = glowPulse;
@@ -460,7 +558,6 @@ function updateEntryCircles(elapsed) {
     entry1Circle.scale.set(scale1, scale1, 1);
     arrow1.position.y = 1.5 + arrowBob;
 
-    // 2BHK circle
     entry2Circle.material.opacity = pulse;
     entry2Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
     entry2Glow.material.opacity = glowPulse;
