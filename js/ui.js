@@ -316,3 +316,34 @@ function toggleRoomNav() {
     const panel = document.getElementById('room-nav-panel');
     panel.classList.toggle('visible');
 }
+
+// ═══════════════════════════════════════════════
+//  STREET OVERVIEW RESET
+// ═══════════════════════════════════════════════
+function resetToStreetOverview() {
+    // Reset camera to standard overview
+    if (typeof camera !== 'undefined' && typeof controls !== 'undefined') {
+        camera.position.set(0, 20, 40);
+        controls.target.set(0, 4, 0);
+        controls.update();
+    }
+
+    // Hide house-specific UI elements
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) backBtn.classList.remove('visible');
+
+    const roomIndicator = document.getElementById('room-indicator');
+    if (roomIndicator) roomIndicator.classList.remove('visible');
+
+    const enterPrompt = document.getElementById('enter-prompt');
+    if (enterPrompt) enterPrompt.classList.remove('visible');
+
+    // Close panels if open
+    const roomNav = document.getElementById('room-nav-panel');
+    if (roomNav) roomNav.classList.remove('visible');
+
+    // Ensure all houses are visible and environment is visible
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = true;
+    if (typeof bhk2Group !== 'undefined') bhk2Group.visible = true;
+    if (typeof houseGroup !== 'undefined') houseGroup.visible = true;
+}
