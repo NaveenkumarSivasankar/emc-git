@@ -51,8 +51,9 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 1.5;
-controls.maxDistance = 70;
-controls.maxPolarAngle = Math.PI / 2; // Allow ground level view
+controls.maxDistance = 120;
+controls.minPolarAngle = 0;          // allow looking straight down
+controls.maxPolarAngle = Math.PI;    // allow looking from below (full rotation)
 controls.target.set(0, 4, 0);
 controls.update();
 

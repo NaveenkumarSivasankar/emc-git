@@ -521,18 +521,44 @@ canvas {
     left: 16px;
     top: 75px;
     z-index: 100;
-    max-height: calc(100vh - 260px);
+    max-height: calc(100vh - 180px);
     overflow-y: auto;
-    width: 210px;
+    width: 230px;
     display: block;
+    background: rgba(10, 10, 30, 0.75);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px;
+    padding-bottom: 0;
 }
 
 #appliance-panel.visible {
     display: block;
 }
 
+/* Panel Header */
+.panel-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 14px 16px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.15), rgba(255, 140, 0, 0.1));
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px 20px 0 0;
+    color: #FFD700;
+}
+
+.panel-header-icon {
+    font-size: 1.1rem;
+}
+
+/* Room sections */
 .room-section {
-    margin-bottom: 6px;
+    margin: 0;
 }
 
 .room-header {
@@ -540,35 +566,76 @@ canvas {
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
-    padding: 7px 12px;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 10px 10px 0 0;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-bottom: none;
+    padding: 8px 14px;
+    background: rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: rgba(255, 255, 255, 0.75);
 }
 
+.room-header-icon {
+    font-size: 0.85rem;
+}
+
+/* Appliance rows */
 .appliance-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 12px;
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-top: none;
-    font-size: 0.75rem;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.85rem;
+    transition: background 0.25s ease;
+}
+
+.appliance-row:hover {
+    background: rgba(255, 255, 255, 0.07);
 }
 
 .appliance-row:last-child {
-    border-radius: 0 0 10px 10px;
+    border-radius: 0;
+}
+
+.app-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    min-width: 0;
+}
+
+.app-emoji {
+    font-size: 1.15rem;
+    flex-shrink: 0;
+    width: 24px;
+    text-align: center;
+}
+
+.app-info>div {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
 }
 
 .appliance-row .app-name {
-    opacity: 0.85;
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.95);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .appliance-row .app-watt {
-    opacity: 0.5;
-    font-size: 0.62rem;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #FFD700;
+    opacity: 0.7;
+    margin-top: 1px;
 }
 
 /* Toggle switch */
@@ -577,6 +644,7 @@ canvas {
     width: 38px;
     height: 22px;
     flex-shrink: 0;
+    margin-left: 8px;
 }
 
 .toggle input {
@@ -591,7 +659,7 @@ canvas {
     left: 0;
     right: 0;
     bottom: 0;
-    background: #444;
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 22px;
     cursor: pointer;
     transition: 0.3s;
@@ -607,27 +675,68 @@ canvas {
     bottom: 3px;
     background: #fff;
     transition: 0.3s;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 .toggle input:checked+.slider {
-    background: #00b894;
+    background: linear-gradient(135deg, #00b894, #55efc4);
+    box-shadow: 0 0 8px rgba(0, 184, 148, 0.4);
 }
 
 .toggle input:checked+.slider:before {
     transform: translateX(16px);
 }
 
+/* Panel Footer (Total Wattage) */
+.panel-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 140, 0, 0.06));
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0 0 20px 20px;
+    position: sticky;
+    bottom: 0;
+}
+
+.footer-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.6;
+}
+
+.footer-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+    background: linear-gradient(135deg, #FFD700, #FF8C00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Scrollbar */
 #appliance-panel::-webkit-scrollbar {
     width: 4px;
 }
 
+#appliance-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
 #appliance-panel::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.15);
     border-radius: 2px;
 }
 
-/* ── Enter House Prompt ────────────────────────── */
-#enter-prompt {
+#appliance-panel::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* ── Interaction Popup ────────────────────────── */
+#interaction-popup {
     position: fixed;
     bottom: 100px;
     left: 50%;
@@ -652,7 +761,7 @@ canvas {
     animation: none;
 }
 
-#enter-prompt.visible {
+#interaction-popup.visible {
     opacity: 1;
     transform: translateX(-50%) translateY(0);
     animation: promptPulse 2s ease-in-out infinite;

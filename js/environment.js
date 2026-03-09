@@ -61,9 +61,9 @@ for (let i = -20; i <= 20; i++) {
 // Driveways
 const driveMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.9 });
 const drive1 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
-drive1.rotation.x = -Math.PI / 2; drive1.position.set(-14, 0.02, 9.5); environmentGroup.add(drive1);
+drive1.rotation.x = -Math.PI / 2; drive1.position.set(-22, 0.02, 12); environmentGroup.add(drive1);
 const drive2 = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 5), driveMat);
-drive2.rotation.x = -Math.PI / 2; drive2.position.set(16, 0.02, 11); environmentGroup.add(drive2);
+drive2.rotation.x = -Math.PI / 2; drive2.position.set(24, 0.02, 13); environmentGroup.add(drive2);
 
 // ═══════════════════════════════════════════════
 //  FRONT WALL BETWEEN HOUSES
@@ -76,41 +76,40 @@ const frontWallPillarMat = new THREE.MeshStandardMaterial({ color: 0xc0a882, rou
 const frontWallTopMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
 
 // Main wall section (fills the gap between houses)
-const frontWall = new THREE.Mesh(new THREE.BoxGeometry(10, 4, 0.4), frontWallMat);
-frontWall.position.set(1, 2.3, 7.75); frontWall.castShadow = true; frontWall.receiveShadow = true;
+const frontWall = new THREE.Mesh(new THREE.BoxGeometry(18, 4, 0.4), frontWallMat);
+frontWall.position.set(1, 2.3, 10); frontWall.castShadow = true; frontWall.receiveShadow = true;
 environmentGroup.add(frontWall);
 
 // Wall top cap
-const frontWallTop = new THREE.Mesh(new THREE.BoxGeometry(10.4, 0.25, 0.6), frontWallTopMat);
-frontWallTop.position.set(1, 4.42, 7.75); frontWallTop.castShadow = true;
+const frontWallTop = new THREE.Mesh(new THREE.BoxGeometry(18.4, 0.25, 0.6), frontWallTopMat);
+frontWallTop.position.set(1, 4.42, 10); frontWallTop.castShadow = true;
 environmentGroup.add(frontWallTop);
 
 // Pillars on the wall
-for (let pi = 0; pi < 4; pi++) {
-    const px = -3.5 + pi * 3;
+for (let pi = 0; pi < 6; pi++) {
+    const px = -7 + pi * 3.2;
     const pillar = new THREE.Mesh(new THREE.BoxGeometry(0.5, 4.8, 0.55), frontWallPillarMat);
-    pillar.position.set(px, 2.7, 7.75); pillar.castShadow = true;
+    pillar.position.set(px, 2.7, 10); pillar.castShadow = true;
     environmentGroup.add(pillar);
-    // Pillar cap
     const pillarCap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.2, 0.75), frontWallTopMat);
-    pillarCap.position.set(px, 5.2, 7.75);
+    pillarCap.position.set(px, 5.2, 10);
     environmentGroup.add(pillarCap);
 }
 
 // Decorative arch gate in the center of the wall
 const gatePostMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.6, metalness: 0.2 });
 const gatePostL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
-gatePostL.position.set(-0.1, 3, 7.75); gatePostL.castShadow = true; environmentGroup.add(gatePostL);
+gatePostL.position.set(-0.1, 3, 10); gatePostL.castShadow = true; environmentGroup.add(gatePostL);
 const gatePostR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 5.5, 0.5), gatePostMat);
-gatePostR.position.set(2.1, 3, 7.75); gatePostR.castShadow = true; environmentGroup.add(gatePostR);
+gatePostR.position.set(2.1, 3, 10); gatePostR.castShadow = true; environmentGroup.add(gatePostR);
 // Gate arch top
 const gateArch = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.35, 0.5), gatePostMat);
-gateArch.position.set(1, 5.75, 7.75); environmentGroup.add(gateArch);
-// Gate bars (iron gate look)
+gateArch.position.set(1, 5.75, 10); environmentGroup.add(gateArch);
+// Gate bars
 const gateBarMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.8, roughness: 0.3 });
 for (let gi = 0; gi < 5; gi++) {
     const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 4, 6), gateBarMat);
-    bar.position.set(0.2 + gi * 0.4, 2.3, 7.75); environmentGroup.add(bar);
+    bar.position.set(0.2 + gi * 0.4, 2.3, 10); environmentGroup.add(bar);
 }
 
 // ═══════════════════════════════════════════════
