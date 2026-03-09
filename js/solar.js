@@ -49,7 +49,6 @@ function getRoofConfig(houseKey) {
         baseRoofH = roofH + 1;
         targetGroup = typeof bhk2Group !== 'undefined' ? bhk2Group : new THREE.Group();
     } else {
-        // Fallback for missing W and D variables if 1BHK script is loaded later
         const w = typeof W !== 'undefined' ? W : 28;
         const d = typeof D !== 'undefined' ? D : 22;
         const rh = typeof roofH !== 'undefined' ? roofH : 4.5;
@@ -64,11 +63,9 @@ function getRoofConfig(houseKey) {
 
     const panelGapX = 2.0;
     const panelGapZ = 1.4;
-
     const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
-    const max = colsPerSide * rows * 2; // both sides
-
+    const max = colsPerSide * rows * 2;
     return { roofWidthHalf, roofDepthHalf, startX, startZ, slopeAngle, baseRoofH, targetGroup, panelGapX, panelGapZ, colsPerSide, rows, max };
 }
 
@@ -78,11 +75,11 @@ function initializeHouseSolar(houseKey) {
     state.max = config.max;
 }
 
-// Prepare max values based on house dimensions
 setTimeout(() => {
     initializeHouseSolar('1bhk');
     initializeHouseSolar('2bhk');
 }, 500);
+
 
 
 // ═══════════════════════════════════════════════
@@ -141,11 +138,13 @@ function updateStats() {
         if (btnText) btnText.textContent = 'Remove Solar (' + activeKey.toUpperCase() + ')';
         if (btnIcon) btnIcon.textContent = '⚡';
         if (panelCounter) panelCounter.classList.add('visible');
+
     } else {
         if (btn) btn.className = 'grid-mode bottom-action-btn';
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
         if (panelCounter) panelCounter.classList.remove('visible');
+
     }
 
     updateBarChart(total, coverageRatio);
@@ -221,6 +220,7 @@ function updatePowerLines() {
     });
 }
 
+
 function changePanelCount(delta) {
     const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
     const state = houseState[activeKey];
@@ -288,3 +288,9 @@ setInterval(() => {
     houseState['1bhk'].panels.forEach(p => solarPanels.push(p));
     houseState['2bhk'].panels.forEach(p => solarPanels.push(p));
 }, 100);
+
+function refreshSolarPanelsPlacement() {
+    if (typeof houseState !== 'undefined') {
+        // Re-sync panel counts
+    }
+}

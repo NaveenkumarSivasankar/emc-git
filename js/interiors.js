@@ -183,13 +183,9 @@ function initFurnitureCollision() {
     // Segment 3: x=6 to 14
     addCollisionBox(furnitureBoxes2BHK, 10, -5, 4, wt, ox2, oz2);
 
-    // ── MAIN FRONT DOORS (Closed collision) ──
-    // 1BHK front door (local (0, 0, D/2) -> D=15 so D/2=7.5)
-    // We add a collision box right at the doorway so the boy can't walk in
-    addCollisionBox(furnitureBoxes1BHK, 0, 7.5, 1.5, wt, ox1, oz1);
-
-    // 2BHK front door (local (0, 0, D2/2) -> D2=16 so D2/2=8)
-    addCollisionBox(furnitureBoxes2BHK, 0, 8, 1.5, wt, ox2, oz2);
+    // NOTE: Main front door collision boxes REMOVED — entry/exit is gated
+    // by ENTER/ESCAPE key prompts, so blocking movement at doorways is
+    // unnecessary and was causing the "stuck after entering" bug.
 
     // Wall 2: vertical at x=0, z=-12 to -5 (between bedrooms, NO door)
     addCollisionBox(furnitureBoxes2BHK, 0, -8.5, wt, 3.5, ox2, oz2);
