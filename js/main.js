@@ -1,8 +1,10 @@
+// ═══════════════════════════════════════════════
+//  WALL TRANSPARENCY SYSTEM
+// ═══════════════════════════════════════════════
 function updateWallTransparency() {
     const camPos = camera.position.clone();
 
     // When indoor, make outer walls fully transparent so interior is visible
-    // Room partition transparency is handled by updateRoomTransparency() in interiors.js
     if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
         if (boyState.insideHouse === '1bhk') {
             transparentWalls.forEach(wall => {
@@ -77,7 +79,6 @@ function updateWallTransparency() {
 }
 
 
-
 // ═══════════════════════════════════════════════
 //  ANIMATION LOOP
 // ═══════════════════════════════════════════════
@@ -124,8 +125,8 @@ function animate() {
     if (!is2BHK) {
         const sa = simpleAppliances;
         if (sa[1].on) fan1.blades.rotation.y += delta * 5;
-        if (sa[5].on) tableFan.blades.rotation.z += delta * 8;
-        if (sa[3].on) {
+        if (sa[5] && sa[5].on && typeof tableFan !== 'undefined') tableFan.blades.rotation.z += delta * 8;
+        if (sa[3] && sa[3].on && typeof ac !== 'undefined') {
             const positions = ac.particlePositions;
             for (let i = 0; i < positions.length / 3; i++) {
                 positions[i * 3 + 1] -= delta * 0.5;
@@ -137,15 +138,15 @@ function animate() {
             }
             ac.particles.geometry.attributes.position.needsUpdate = true;
         }
-        ac.particles.visible = sa[3].on;
+        if (typeof ac !== 'undefined') ac.particles.visible = sa[3] ? sa[3].on : false;
         if (sa[0].on) {
             light1.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
             light1.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
         } else { light1.bulbMat.emissiveIntensity = 0; light1.pointLight.intensity = 0; }
-        if (sa[4].on) {
+        if (sa[4] && sa[4].on) {
             light2.bulbMat.emissiveIntensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
             light2.pointLight.intensity = 0.6 + Math.sin(elapsed * 3) * 0.3;
-        } else { light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0; }
+        } else if (sa[4]) { light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0; }
     }
 
     // 2BHK appliances
@@ -189,7 +190,7 @@ function animate() {
         }
     });
 
-    // Boy character animation
+    // Boy character animation — works in EXTERIOR and INTERIOR states
     updateBoy(delta);
 
     // Energy flow sphere animation
@@ -212,7 +213,7 @@ function animate() {
     });
 
     // Water animation
-    if (waterStream.visible) {
+    if (typeof waterStream !== 'undefined' && waterStream.visible) {
         waterStream.scale.y = 1 + Math.sin(elapsed * 20) * 0.05;
         waterStream.material.opacity = 0.5 + Math.sin(elapsed * 15) * 0.1;
     }
@@ -228,6 +229,8 @@ buildAppliancePanel();
 buildRoomNavPanel();
 updateStats();
 animate();
+
+console.log('[Main] EnergyWorld initialized — all systems active');
 
 // ═══════════════════════════════════════════════
 //  RESIZE

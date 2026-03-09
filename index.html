@@ -147,6 +147,28 @@
         </div>
     </div>
 
+    <!-- Transition Overlay -->
+    <div id="transition-overlay"></div>
+
+    <!-- Room Entry Popup -->
+    <div id="room-popup" class="popup hidden">
+        <div class="popup-banner">
+            <span class="popup-icon"></span>
+            <span class="popup-title"></span>
+        </div>
+        <div class="popup-body">
+            <div class="appliance-list"></div>
+            <div class="total-consumption"></div>
+            <div class="energy-tip"></div>
+        </div>
+        <button class="popup-explore-btn" onclick="closeRoomPopup()">
+            ✨ EXPLORE!
+        </button>
+    </div>
+
+    <!-- Toast Message -->
+    <div id="toast-message"></div>
+
     <!-- Three.js Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>

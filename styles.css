@@ -1975,3 +1975,192 @@ canvas {
         display: block;
     }
 }
+
+/* ═══════════════════════════════════════════════
+   ROOM ENTRY POPUP
+   ═══════════════════════════════════════════════ */
+#room-popup {
+    position: fixed;
+    bottom: -400px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 380px;
+    max-width: 92vw;
+    background: linear-gradient(180deg, #F5DEB3 0%, #DEB887 100%);
+    border: 4px solid #5D4037;
+    border-radius: 16px;
+    box-shadow: 0 0 0 3px #3E2723,
+        0 8px 32px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    padding: 0;
+    transition: bottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 1000;
+    font-family: 'Georgia', serif;
+}
+
+#room-popup.visible {
+    bottom: 30px;
+}
+
+#room-popup.hidden {
+    display: none;
+}
+
+.popup-banner {
+    background: linear-gradient(90deg, #8B4513, #D2691E, #8B4513);
+    border-radius: 12px 12px 0 0;
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 3px solid #5D4037;
+}
+
+.popup-icon {
+    font-size: 2rem;
+}
+
+.popup-title {
+    font-size: 1.4rem;
+    font-weight: bold;
+    color: #FFF8DC;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    letter-spacing: 1px;
+}
+
+.popup-body {
+    padding: 16px 20px;
+}
+
+.appliance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(93, 64, 55, 0.2);
+    font-size: 0.95rem;
+    color: #3E2723;
+}
+
+.appliance-item:last-child {
+    border-bottom: none;
+}
+
+.appliance-item .status-on {
+    color: #2E7D32;
+    font-weight: bold;
+}
+
+.appliance-item .status-off {
+    color: #757575;
+}
+
+.total-consumption {
+    margin-top: 12px;
+    padding: 10px;
+    background: rgba(93, 64, 55, 0.15);
+    border-radius: 8px;
+    text-align: center;
+    font-size: 1.05rem;
+    font-weight: bold;
+    color: #BF360C;
+}
+
+.energy-tip {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(46, 125, 50, 0.15);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    color: #1B5E20;
+    font-style: italic;
+}
+
+.popup-explore-btn {
+    display: block;
+    width: calc(100% - 32px);
+    margin: 0 16px 16px;
+    padding: 12px;
+    background: linear-gradient(180deg, #FF8F00, #E65100);
+    border: 3px solid #BF360C;
+    border-radius: 10px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: bold;
+    font-family: 'Georgia', serif;
+    letter-spacing: 2px;
+    cursor: pointer;
+    text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 4px 0 #BF360C, 0 6px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.1s;
+}
+
+.popup-explore-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 #BF360C;
+}
+
+/* ═══════════════════════════════════════════════
+   TRANSITION OVERLAY
+   ═══════════════════════════════════════════════ */
+#transition-overlay {
+    position: fixed;
+    inset: 0;
+    background: black;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.6s ease;
+    z-index: 999;
+}
+
+/* ═══════════════════════════════════════════════
+   TOAST MESSAGE
+   ═══════════════════════════════════════════════ */
+#toast-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-80px);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 10px 24px;
+    border-radius: 24px;
+    font-family: Georgia, serif;
+    font-size: 0.95rem;
+    transition: transform 0.4s ease;
+    z-index: 1001;
+}
+
+#toast-message.show {
+    transform: translateX(-50%) translateY(0);
+}
+
+/* ═══════════════════════════════════════════════
+   INTERACTION POPUP (ENTER/ESC prompts)
+   ═══════════════════════════════════════════════ */
+#interaction-popup {
+    position: fixed;
+    bottom: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(0, 0, 0, 0.85);
+    color: #FFD700;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s ease;
+    z-index: 200;
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+    white-space: nowrap;
+}
+
+#interaction-popup.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
