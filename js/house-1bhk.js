@@ -253,3 +253,18 @@ const stove1 = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.12, 0.7), new THREE.M
 stove1.position.set(-10, 2.36, -3.5); houseGroup.add(stove1);
 const cabinet1 = new THREE.Mesh(new THREE.BoxGeometry(4, 1.4, 0.6), new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 }));
 cabinet1.position.set(-10, 5, -3.8); houseGroup.add(cabinet1);
+
+// ═══════════════════════════════════════════════
+//  ROOF DATA — used by solar.js for panel placement
+// ═══════════════════════════════════════════════
+const ROOF_DATA_1BHK = {
+    centerX: 0,           // local to houseGroup
+    centerZ: 0,
+    y: H + 0.3,           // exact roof base height
+    peakY: H + 0.3 + roofH,
+    width: W,
+    depth: D,
+    slopeAngle: Math.atan2(roofH, W / 2 + 0.8),
+    slopeAxis: 'x',
+};
+console.log('[HOUSE-1BHK] Built — roof data exported');

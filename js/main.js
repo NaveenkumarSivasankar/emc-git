@@ -175,7 +175,7 @@ function animate() {
         });
     }
 
-    // Solar panels animation
+    // Solar panels animation (with sparkles on landing)
     solarPanels.forEach(p => {
         if (p.animating) {
             p.frame++;
@@ -185,6 +185,10 @@ function animate() {
                 if (Math.abs(p.group.position.y - p.targetY) < 0.05) {
                     p.group.position.y = p.targetY;
                     p.animating = false;
+                    // Spawn golden sparkles on panel landing
+                    if (typeof spawnSparkles === 'function') {
+                        spawnSparkles(p.group.position);
+                    }
                 }
             }
         }
