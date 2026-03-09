@@ -275,8 +275,9 @@ function zoomToRoom(roomName) {
 
     document.getElementById('back-btn').classList.add('visible');
     document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) {
-        const btn = event.target.closest('.room-nav-btn');
+    const evt = (typeof event !== 'undefined') ? event : null;
+    if (evt && evt.target) {
+        const btn = evt.target.closest('.room-nav-btn');
         if (btn) btn.classList.add('active');
     }
 }
