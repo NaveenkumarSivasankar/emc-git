@@ -134,8 +134,142 @@ entry2BHK.position.set(24, 0, 13);
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
+//  EXIT BUTTONS ABOVE DOORS
+// ═══════════════════════════════════════════════
+function createExitButton(houseId) {
+    const btn = document.createElement('button');
+    btn.className = 'exit-scene-btn';
+    btn.textContent = 'Exit House';
+    btn.onclick = (e) => {
+        e.stopPropagation();
+        exitHouse();
+    };
+
+    const obj = new THREE.CSS2DObject(btn);
+    // Position above the door (Door height is ~4-5, so 6 is good)
+    obj.position.set(0, 6, -1); // Slightly retracted to avoid clipping with front door frame
+    return obj;
+}
+
+// Add Exit button to 1BHK
+if (typeof houseGroup !== 'undefined') {
+    const exitBtn1 = createExitButton('1bhk');
+    // Align with 1BHK door at x=0 in its local space
+    exitBtn1.position.set(0, 6.5, 7.8);
+    houseGroup.add(exitBtn1);
+    window.exitBtn1 = exitBtn1; // expose for visibility control if needed
+}
+
+// Add Exit button to 2BHK
+if (typeof bhk2Group !== 'undefined') {
+    const exitBtn2 = createExitButton('2bhk');
+    // Align with 2BHK door at x=0 in its local space
+    exitBtn2.position.set(0, 6.5, 8.3);
+    bhk2Group.add(exitBtn2);
+    window.exitBtn2 = exitBtn2;
+}
+
+// ═══════════════════════════════════════════════
+//  COLLISION SYSTEM — SOLID OBJECTS
+// ═══════════════════════════════════════════════
+const BOY_RADIUS = 0.35;
+const collisionBoxes = [
+    // ── 1BHK OUTER WALLS (house at x=-14) ──
+    { xMin: -24, xMax: -4, zMin: -7.65, zMax: -7.35, house: '1bhk' },
+    { xMin: -24.15, xMax: -23.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -4.15, xMax: -3.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -24.15, xMax: -15.25, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    { xMin: -12.75, xMax: -3.85, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    // ── 1BHK PARTITIONS (with door gaps) ──
+    { xMin: -23.8, xMax: -11.85, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -10.15, xMax: -4.2, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 0.85, zMax: 2.65, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 4.35, zMax: 6.65, house: '1bhk' },
+    // ── 1BHK FURNITURE ──
+    { xMin: -19.5, xMax: -14.5, zMin: -5.75, zMax: -3.4, house: '1bhk' },
+    { xMin: -8.75, xMax: -6.25, zMin: -5.45, zMax: -4.55, house: '1bhk' },
+    { xMin: -15.75, xMax: -12.25, zMin: -6.65, zMax: -2.0, house: '1bhk' },
+    { xMin: -22.7, xMax: -20.3, zMin: -6, zMax: -5, house: '1bhk' },
+    { xMin: -21.75, xMax: -18.25, zMin: -0.95, zMax: -0.05, house: '1bhk' },
+    // ── 2BHK OUTER WALLS (house at x=16) ──
+    { xMin: 6, xMax: 26, zMin: -8.15, zMax: -7.85, house: '2bhk' },
+    { xMin: 5.85, xMax: 6.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 25.85, xMax: 26.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 5.85, xMax: 14.75, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    { xMin: 17.25, xMax: 26.15, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    // ── 2BHK PARTITIONS (with door gaps) ──
+    { xMin: 6.2, xMax: 12.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 13.75, xMax: 18.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 19.75, xMax: 25.8, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 15.9, xMax: 16.1, zMin: -7.9, zMax: -2.6, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -2.3, zMax: -0.25, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 1.25, zMax: 4.75, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 6.25, zMax: 8.0, house: '2bhk' },
+    { xMin: 6.1, xMax: 10.9, zMin: 3.9, zMax: 4.1, house: '2bhk' },
+    // ── 2BHK FURNITURE ──
+    { xMin: 9.6, xMax: 12.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 19.6, xMax: 22.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 20.95, xMax: 25.45, zMin: 0, zMax: 2.2, house: '2bhk' },
+    { xMin: 17.25, xMax: 19.75, zMin: 0.4, zMax: 1.6, house: '2bhk' },
+    { xMin: 6.3, xMax: 9.3, zMin: -1.9, zMax: -1.1, house: '2bhk' },
+];
+
+function checkCollision(testX, testZ) {
+    const house = boyState.insideHouse;
+    for (const box of collisionBoxes) {
+        if (box.house !== house) continue;
+        const closestX = Math.max(box.xMin, Math.min(testX, box.xMax));
+        const closestZ = Math.max(box.zMin, Math.min(testZ, box.zMax));
+        const dx = testX - closestX;
+        const dz = testZ - closestZ;
+        if (dx * dx + dz * dz < BOY_RADIUS * BOY_RADIUS) return true;
+    }
+    return false;
+}
+
+// ═══════════════════════════════════════════════
+//  DOOR PUSH/PULL ANIMATION
+// ═══════════════════════════════════════════════
+const DOOR_OPEN_ANGLE = Math.PI / 2.2;  // ~80 degrees swing
+const DOOR_PROXIMITY = 1.5;             // distance to trigger open (touch)
+const DOOR_ANIM_SPEED = 5;              // animation speed
+
+function updateDoors(delta) {
+    if (boyState.mode !== 'indoor') return;
+    const bx = boyGroup.position.x;
+    const bz = boyGroup.position.z;
+    const doors = boyState.insideHouse === '1bhk' ? bhk1Doors : bhk2Doors;
+    doors.forEach(door => {
+        const dx = bx - door.wx;
+        const dz = bz - door.wz;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        const targetAngle = dist < DOOR_PROXIMITY ? DOOR_OPEN_ANGLE : 0;
+        // Smoothly animate toward target
+        door.openAngle += (targetAngle - door.openAngle) * DOOR_ANIM_SPEED * delta;
+        if (Math.abs(door.openAngle) < 0.01) door.openAngle = 0;
+        door.pivot.rotation.y = door.baseRy + door.openAngle;
+    });
+}
+
+// Room regions for detecting which room the boy is in
+const roomRegions = [
+    // 1BHK
+    { xMin: -16.5, xMax: -4, zMin: -1.5, zMax: 7.5, room: '🏠 Hall', house: '1bhk' },
+    { xMin: -24, xMax: -16.5, zMin: -1.5, zMax: 7.5, room: '🍳 Kitchen', house: '1bhk' },
+    { xMin: -24, xMax: -4, zMin: -7.5, zMax: -1.5, room: '🛏️ Bedroom', house: '1bhk' },
+    // 2BHK
+    { xMin: 11, xMax: 26, zMin: -2.5, zMax: 8, room: '🏠 Hall', house: '2bhk' },
+    { xMin: 6, xMax: 16, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 1', house: '2bhk' },
+    { xMin: 16, xMax: 26, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 2', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: -2.5, zMax: 4, room: '🍳 Kitchen', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: 4, zMax: 8, room: '🚿 Bathroom', house: '2bhk' },
+];
+
+// ═══════════════════════════════════════════════
 //  BOY STATE & CONTROLS
 // ═══════════════════════════════════════════════
+let mainDoorTransition = null;
+
 const boyState = {
     moving: false,
     speed: 8,
@@ -181,9 +315,11 @@ document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight') { boyState.keys.right = true; e.preventDefault(); }
 
     // ENTER — enter house if near entry circle
-    if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
-        enterHouse(boyState.nearEntry);
-        e.preventDefault();
+    if (e.key === 'Enter') {
+        if (boyState.mode === 'outdoor' && boyState.nearEntry) {
+            enterHouse(boyState.nearEntry);
+            e.preventDefault();
+        }
     }
 
     // ESCAPE — exit house back to road
@@ -240,10 +376,7 @@ function enterHouse(houseId) {
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
-
-    // Hide entry circles
-    entry1BHK.visible = false;
-    entry2BHK.visible = false;
+    boyState.currentRoom = null;
 
     // Show back button
     document.getElementById('back-btn').classList.add('visible');
@@ -255,6 +388,7 @@ function enterHouse(houseId) {
 }
 
 function exitHouse() {
+    if (boyState.mode === 'transition' || mainDoorTransition) return;
     const houseId = boyState.insideHouse;
 
     // Animate main door open
@@ -263,9 +397,9 @@ function exitHouse() {
     boyState.mode = 'outdoor';
     boyState.insideHouse = null;
 
-    // Move boy back to entry circle position
+    // Move boy back outside, closer to door for exit animation
     const entryPos = entryPositions[houseId];
-    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 2);
+    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 0.5);
     boyGroup.rotation.y = 0;
 
     boyState.followTarget.copy(boyGroup.position);
@@ -278,9 +412,9 @@ function exitHouse() {
         controls.update();
     }
 
-    // Show entry circles again
-    entry1BHK.visible = true;
-    entry2BHK.visible = true;
+    // Reset all doors to closed
+    bhk1Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
+    bhk2Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
 
     // Hide prompt
     const prompt = document.getElementById('interaction-popup');
@@ -341,6 +475,11 @@ function updateBoy(delta) {
             const bounds = indoorBounds[boyState.insideHouse];
             boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
             boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+        } else {
+            boyGroup.position.x += moveDir.x * boyState.speed * delta;
+            boyGroup.position.z += moveDir.z * boyState.speed * delta;
+            boyGroup.position.x = Math.max(-40, Math.min(42, boyGroup.position.x));
+            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
         }
 
         // Furniture collision check — revert if colliding
@@ -434,6 +573,11 @@ function updateBoy(delta) {
         const delta = controls.target.clone().sub(prevTarget);
         camera.position.add(delta);
         controls.update();
+    } else if (boyState.mode === 'outdoor' && isMoving) {
+        // Track the boy when moving outside
+        const lookAt = new THREE.Vector3(boyGroup.position.x, 2, boyGroup.position.z);
+        controls.target.lerp(lookAt, 0.05);
+        controls.update();
     }
 
     // ── Door animation + room transparency + main doors (every frame) ──
@@ -446,25 +590,27 @@ function updateBoy(delta) {
 //  ENTRY CIRCLE PULSE ANIMATION
 // ═══════════════════════════════════════════════
 function updateEntryCircles(elapsed) {
-    if (boyState.mode === 'indoor') return;
-
     const pulse = 0.5 + Math.sin(elapsed * 3) * 0.3;
     const glowPulse = 0.2 + Math.sin(elapsed * 2) * 0.15;
     const arrowBob = Math.sin(elapsed * 4) * 0.3;
 
-    // 1BHK circle
-    entry1Circle.material.opacity = pulse;
-    entry1Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
-    entry1Glow.material.opacity = glowPulse;
-    const scale1 = 1 + Math.sin(elapsed * 2) * 0.08;
-    entry1Circle.scale.set(scale1, scale1, 1);
-    arrow1.position.y = 1.5 + arrowBob;
+    if (boyState.mode === 'outdoor') {
+        // 1BHK circle
+        entry1Circle.material.opacity = pulse;
+        entry1Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
+        entry1Glow.material.opacity = glowPulse;
+        const scale1 = 1 + Math.sin(elapsed * 2) * 0.08;
+        entry1Circle.scale.set(scale1, scale1, 1);
+        arrow1.position.y = 1.5 + arrowBob;
 
-    // 2BHK circle
-    entry2Circle.material.opacity = pulse;
-    entry2Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
-    entry2Glow.material.opacity = glowPulse;
-    const scale2 = 1 + Math.sin(elapsed * 2 + 0.5) * 0.08;
-    entry2Circle.scale.set(scale2, scale2, 1);
-    arrow2.position.y = 1.5 + arrowBob;
+        // 2BHK circle
+        entry2Circle.material.opacity = pulse;
+        entry2Circle.material.emissiveIntensity = 0.4 + Math.sin(elapsed * 3) * 0.3;
+        entry2Glow.material.opacity = glowPulse;
+        const scale2 = 1 + Math.sin(elapsed * 2 + 0.5) * 0.08;
+        entry2Circle.scale.set(scale2, scale2, 1);
+        arrow2.position.y = 1.5 + arrowBob;
+    }
+
+
 }
