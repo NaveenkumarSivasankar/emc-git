@@ -26,9 +26,9 @@
         <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
             style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
             2BHK House</button>
-        <button id="solar-btn" class="grid-mode" onclick="toggleSolar()">
-            <span id="solar-btn-icon">☀️</span>
-            <span id="solar-btn-text">Switch to Solar Energy</span>
+        <button id="solar-btn-top" class="grid-mode" onclick="toggleSolar()">
+            <span id="solar-btn-icon-top">☀️</span>
+            <span id="solar-btn-text-top">Switch to Solar Energy</span>
         </button>
         <button id="energy-graphs-btn" onclick="toggleEnergyGraphs()">📊 Energy Graphs</button>
     </div>
@@ -63,7 +63,7 @@
         </button>
 
         <div id="panel-counter">
-            <button class="panel-control-btn" onclick="changePanelCount(-1)">−</button>
+            <button class="panel-control-btn" onclick="changePanelCount(-1)">-</button>
             <div id="panel-count-display">
                 <div class="count" id="panel-num">0</div>
                 <div class="label-text">Panels</div>
@@ -100,6 +100,26 @@
 
     <!-- Interaction Popup -->
     <div id="interaction-popup"></div>
+
+    <!-- Solar Selection Modal -->
+    <div id="solar-selection-modal" class="modal-hidden">
+        <div class="modal-backdrop" onclick="closeSolarModal()"></div>
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <button class="modal-close" onclick="closeSolarModal()">✕</button>
+            <h2 style="margin-bottom: 10px; color: #1a1a2e; font-family: 'Outfit', sans-serif;">🏡 Install Solar Panels
+            </h2>
+            <p style="margin-bottom: 25px; color: #4a4a4a; font-size: 0.95rem;">Select which house you want to equip
+                with solar panels.</p>
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button onclick="selectSolarHouse('1bhk')"
+                    style="padding: 12px 24px; border: none; border-radius: 8px; background: #3498db; color: white; font-weight: 600; cursor: pointer; transition: 0.2s;">1BHK
+                    House</button>
+                <button onclick="selectSolarHouse('2bhk')"
+                    style="padding: 12px 24px; border: none; border-radius: 8px; background: #e67e22; color: white; font-weight: 600; cursor: pointer; transition: 0.2s;">2BHK
+                    House</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Back Button for Room Zoom -->
     <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>

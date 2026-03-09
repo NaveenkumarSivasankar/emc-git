@@ -66,36 +66,53 @@ function toggleSimpleAppliance(idx, isOn) {
 // ═══════════════════════════════════════════════
 function recalcWattage() {
     let total = 0;
-    if (is2BHK) {
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    if (activeKey === '2bhk') {
         bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
     } else {
         simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
     }
-    document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
+
+    // Fallback if houseState isn't fully initialized yet
+    const currentCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    setText('stat-consumption', total.toLocaleString() + ' W');
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
+    setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
+
+    const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
-    document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
+
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved + ' kg/yr');
+
     updateBarChart(total, coverageRatio);
 }
 
 function updateBarChart(totalW, coverageRatio) {
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
+
     const solarPct = Math.round(coverageRatio * 100);
     const gridPct = 100 - solarPct;
-    document.getElementById('grid-bar').style.width = Math.max(gridPct, 5) + '%';
-    document.getElementById('grid-bar').textContent = gridPct + '%';
-    document.getElementById('solar-bar').style.width = Math.max(solarPct, 5) + '%';
-    document.getElementById('solar-bar').textContent = solarPct + '%';
+
+    setWidth('grid-bar', Math.max(gridPct, 5) + '%');
+    setText('grid-bar', gridPct + '%');
+
+    setWidth('solar-bar', Math.max(solarPct, 5) + '%');
+    setText('solar-bar', solarPct + '%');
+
     const dailyKwh = totalW * 8 / 1000;
     const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
     const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
     const monthlyBill = Math.round(gridCostDaily * 30);
-    document.getElementById('calc-grid').textContent = '₹' + gridCostDaily;
-    document.getElementById('calc-solar').textContent = '₹' + solarSavingsDaily;
-    document.getElementById('calc-monthly').textContent = '₹' + monthlyBill;
+
+    setText('calc-grid', '₹' + gridCostDaily);
+    setText('calc-solar', '₹' + solarSavingsDaily);
+    setText('calc-monthly', '₹' + monthlyBill);
 }
 
 // ═══════════════════════════════════════════════
@@ -197,6 +214,7 @@ function focusHouse(which) {
         camera.position.set(24, 20, 35);
     }
     controls.update();
+    if (typeof positionSolarPanels === 'function') positionSolarPanels();
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();

@@ -183,8 +183,4 @@ const labels = [
     createLabel('🌀 Table Fan', 55, new THREE.Vector3(10, 4, 6))
 ];
 
-// ═══════════════════════════════════════════════
-//  SHARED STATE
-// ═══════════════════════════════════════════════
-let currentPanelCount = 0;
-let isSolarMode = false;
+// Global legacy variables removed.
