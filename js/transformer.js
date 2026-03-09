@@ -95,12 +95,12 @@ poleGroup.add(tfLabel);
 // Wire endpoint: top of 1BHK right wall
 const wire1BHK_X = -8;   // right edge of 1BHK
 const wire1BHK_Y = H + 1; // just above roof edge
-const wire1BHK_Z = 0;     // center of house depth
+const wire1BHK_Z = -10;     // center of house depth
 
 // 2BHK house: center at x=24, left edge at x=24-14=10
 const wire2BHK_X = 10;    // left edge of 2BHK
 const wire2BHK_Y = H + 1;
-const wire2BHK_Z = 0;
+const wire2BHK_Z = -10;
 
 const wireMat = new THREE.LineBasicMaterial({ color: 0x1a1a1a, linewidth: 2 });
 

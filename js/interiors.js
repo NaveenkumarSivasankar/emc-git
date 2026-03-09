@@ -3,7 +3,7 @@
 //  Room transparency, furniture collision, door animation
 // ═══════════════════════════════════════════════
 
-// ── ROOM DEFINITIONS (local coords relative to house origin) ──
+
 const bhk1Rooms = [
     { name: 'Hall', xMin: -4, xMax: 14, zMin: -5, zMax: 11 },
     { name: 'Kitchen', xMin: -14, xMax: -4, zMin: -5, zMax: 11 },
@@ -18,8 +18,8 @@ const bhk2Rooms = [
 ];
 
 // House world origins
-const bhk1Origin = { x: -22, z: 0 };
-const bhk2Origin = { x: 24, z: 0 };
+const bhk1Origin = { x: -22, z: -10 };
+const bhk2Origin = { x: 24, z: -10 };
 
 function getBoyRoom() {
     if (boyState.mode !== 'indoor') return null;
@@ -116,8 +116,8 @@ function addCollisionBox(list, centerX, centerZ, halfW, halfD, houseOriginX, hou
 }
 
 function initFurnitureCollision() {
-    // 1BHK furniture (local coords, houseGroup at -22, 0)
-    const ox1 = -22, oz1 = 0;
+    // 1BHK furniture (local coords, houseGroup at -22, -10)
+    const ox1 = -22, oz1 = -10;
 
     // Sofa (center 9, -3.5, size 5×2.2)
     addCollisionBox(furnitureBoxes1BHK, 9, -3.5, 3, 1.5, ox1, oz1);
@@ -152,8 +152,8 @@ function initFurnitureCollision() {
     // Segment top: z=4 to 11
     addCollisionBox(furnitureBoxes1BHK, -4, 7.5, wt, 3.5, ox1, oz1);
 
-    // 2BHK furniture (local coords, bhk2Group at 24, 0)
-    const ox2 = 24, oz2 = 0;
+    // 2BHK furniture (local coords, bhk2Group at 24, -10)
+    const ox2 = 24, oz2 = -10;
 
     // Bed 1 (center -7, -9)
     addCollisionBox(furnitureBoxes2BHK, -7, -9, 1.8, 2.2, ox2, oz2);
@@ -208,10 +208,28 @@ function initFurnitureCollision() {
 }
 
 function checkFurnitureCollision(newX, newZ) {
-    if (boyState.mode !== 'indoor') return false;
+    const boyRadius = 0.25; // slimmed down for easier navigation through doors/furniture
+
+    if (boyState.mode === 'outdoor') {
+        // 1BHK bounds: ox=-22, oz=-10, W=28, D=15. X: -36 to -8. Z: -17.5 to -2.5
+        if (newX > -36 - boyRadius && newX < -8 + boyRadius &&
+            newZ > -17.5 - boyRadius && newZ < -2.5 + boyRadius) {
+            return true;
+        }
+        // 2BHK bounds: ox=24, oz=-10, W2=28, D2=16. X: 10 to 38. Z: -18 to -2
+        if (newX > 10 - boyRadius && newX < 38 + boyRadius &&
+            newZ > -18 - boyRadius && newZ < -2 + boyRadius) {
+            return true;
+        }
+        // Transformer Fence bounds: TX=1, TZ=3. X: -1.2 to 3.2. Z: 1.2 to 4.8
+        if (newX > -1.2 - boyRadius && newX < 3.2 + boyRadius &&
+            newZ > 1.2 - boyRadius && newZ < 4.8 + boyRadius) {
+            return true;
+        }
+        return false;
+    }
 
     const boxes = boyState.insideHouse === '1bhk' ? furnitureBoxes1BHK : furnitureBoxes2BHK;
-    const boyRadius = 0.25; // slimmed down for easier navigation through doors/furniture
 
     for (const box of boxes) {
         // Expanded box by boy radius

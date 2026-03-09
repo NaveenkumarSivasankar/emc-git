@@ -113,7 +113,7 @@ const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow1.position.set(0, 1.5, 0);
 arrow1.rotation.x = Math.PI; // point down
 entry1BHK.add(arrow1);
-entry1BHK.position.set(-22, 0, 12);
+entry1BHK.position.set(-22, 0, 2); // Shifted Z
 scene.add(entry1BHK);
 
 // 2BHK entry circle — in front of 2BHK house door (house at x=16, door at z=8)
@@ -130,7 +130,7 @@ const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow2.position.set(0, 1.5, 0);
 arrow2.rotation.x = Math.PI;
 entry2BHK.add(arrow2);
-entry2BHK.position.set(24, 0, 13);
+entry2BHK.position.set(24, 0, 3); // Shifted Z
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
@@ -153,20 +153,20 @@ const boyState = {
 
 // Entry circle world positions
 const entryPositions = {
-    '1bhk': new THREE.Vector3(-22, 0, 12),
-    '2bhk': new THREE.Vector3(24, 0, 13)
+    '1bhk': new THREE.Vector3(-22, 0, 2),
+    '2bhk': new THREE.Vector3(24, 0, 3)
 };
 
 // Indoor spawn positions (world coords — where boy appears inside the house)
 const indoorSpawn = {
-    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI },
-    '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI }
+    '1bhk': { pos: new THREE.Vector3(-22, 0.15, -2), rot: Math.PI },
+    '2bhk': { pos: new THREE.Vector3(24, 0.15, -1), rot: Math.PI }
 };
 
 // Indoor movement bounds (world coords)
 const indoorBounds = {
-    '1bhk': { xMin: -36, xMax: -8, zMin: -11, zMax: 10 },
-    '2bhk': { xMin: 10, xMax: 38, zMin: -12, zMax: 11 }
+    '1bhk': { xMin: -36, xMax: -8, zMin: -21, zMax: 0 },
+    '2bhk': { xMin: 10, xMax: 38, zMin: -22, zMax: 1 }
 };
 
 // Camera offsets for indoor follow
@@ -336,7 +336,7 @@ function updateBoy(delta) {
         // Clamp based on mode
         if (boyState.mode === 'outdoor') {
             boyGroup.position.x = Math.max(-45, Math.min(48, boyGroup.position.x));
-            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
+            boyGroup.position.z = Math.max(-25, Math.min(17, boyGroup.position.z));
         } else if (boyState.mode === 'indoor') {
             const bounds = indoorBounds[boyState.insideHouse];
             boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));

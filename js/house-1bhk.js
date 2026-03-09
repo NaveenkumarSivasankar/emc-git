@@ -2,7 +2,7 @@
 //  1BHK HOUSE STRUCTURE (ENLARGED & SPACIOUS)
 // ═══════════════════════════════════════════════
 const houseGroup = new THREE.Group();
-houseGroup.position.set(-22, 0, 0);
+houseGroup.position.set(-22, 0, -10);
 scene.add(houseGroup);
 
 // Enlarged Dimensions

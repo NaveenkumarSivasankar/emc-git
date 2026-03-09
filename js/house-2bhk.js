@@ -2,7 +2,7 @@
 //  2BHK HOUSE
 // ═══════════════════════════════════════════════
 const bhk2Group = new THREE.Group();
-bhk2Group.position.set(24, 0, 0);
+bhk2Group.position.set(24, 0, -10);
 scene.add(bhk2Group);
 let is2BHK = true;
 
