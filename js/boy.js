@@ -175,8 +175,106 @@ entry2BHK.position.set(24, 0, 13);
 scene.add(entry2BHK);
 
 // ═══════════════════════════════════════════════
+//  COLLISION SYSTEM — SOLID OBJECTS
+// ═══════════════════════════════════════════════
+const BOY_RADIUS = 0.35;
+const collisionBoxes = [
+    // ── 1BHK OUTER WALLS (house at x=-14) ──
+    { xMin: -24, xMax: -4, zMin: -7.65, zMax: -7.35, house: '1bhk' },
+    { xMin: -24.15, xMax: -23.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -4.15, xMax: -3.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
+    { xMin: -24.15, xMax: -15.25, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    { xMin: -12.75, xMax: -3.85, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    // ── 1BHK PARTITIONS (with door gaps) ──
+    { xMin: -23.8, xMax: -11.85, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -10.15, xMax: -4.2, zMin: -1.6, zMax: -1.4, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 0.85, zMax: 2.65, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 4.35, zMax: 6.65, house: '1bhk' },
+    // ── 1BHK FURNITURE ──
+    { xMin: -19.5, xMax: -14.5, zMin: -5.75, zMax: -3.4, house: '1bhk' },
+    { xMin: -8.75, xMax: -6.25, zMin: -5.45, zMax: -4.55, house: '1bhk' },
+    { xMin: -15.75, xMax: -12.25, zMin: -6.65, zMax: -2.0, house: '1bhk' },
+    { xMin: -22.7, xMax: -20.3, zMin: -6, zMax: -5, house: '1bhk' },
+    { xMin: -21.75, xMax: -18.25, zMin: -0.95, zMax: -0.05, house: '1bhk' },
+    // ── 2BHK OUTER WALLS (house at x=16) ──
+    { xMin: 6, xMax: 26, zMin: -8.15, zMax: -7.85, house: '2bhk' },
+    { xMin: 5.85, xMax: 6.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 25.85, xMax: 26.15, zMin: -8, zMax: 8, house: '2bhk' },
+    { xMin: 5.85, xMax: 14.75, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    { xMin: 17.25, xMax: 26.15, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    // ── 2BHK PARTITIONS (with door gaps) ──
+    { xMin: 6.2, xMax: 12.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 13.75, xMax: 18.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 19.75, xMax: 25.8, zMin: -2.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 15.9, xMax: 16.1, zMin: -7.9, zMax: -2.6, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -2.3, zMax: -0.25, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 1.25, zMax: 4.75, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 6.25, zMax: 8.0, house: '2bhk' },
+    { xMin: 6.1, xMax: 10.9, zMin: 3.9, zMax: 4.1, house: '2bhk' },
+    // ── 2BHK FURNITURE ──
+    { xMin: 9.6, xMax: 12.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 19.6, xMax: 22.4, zMin: -7, zMax: -3.5, house: '2bhk' },
+    { xMin: 20.95, xMax: 25.45, zMin: 0, zMax: 2.2, house: '2bhk' },
+    { xMin: 17.25, xMax: 19.75, zMin: 0.4, zMax: 1.6, house: '2bhk' },
+    { xMin: 6.3, xMax: 9.3, zMin: -1.9, zMax: -1.1, house: '2bhk' },
+];
+
+function checkCollision(testX, testZ) {
+    const house = boyState.insideHouse;
+    for (const box of collisionBoxes) {
+        if (box.house !== house) continue;
+        const closestX = Math.max(box.xMin, Math.min(testX, box.xMax));
+        const closestZ = Math.max(box.zMin, Math.min(testZ, box.zMax));
+        const dx = testX - closestX;
+        const dz = testZ - closestZ;
+        if (dx * dx + dz * dz < BOY_RADIUS * BOY_RADIUS) return true;
+    }
+    return false;
+}
+
+// ═══════════════════════════════════════════════
+//  DOOR PUSH/PULL ANIMATION
+// ═══════════════════════════════════════════════
+const DOOR_OPEN_ANGLE = Math.PI / 2.2;  // ~80 degrees swing
+const DOOR_PROXIMITY = 1.5;             // distance to trigger open (touch)
+const DOOR_ANIM_SPEED = 5;              // animation speed
+
+function updateDoors(delta) {
+    if (boyState.mode !== 'indoor') return;
+    const bx = boyGroup.position.x;
+    const bz = boyGroup.position.z;
+    const doors = boyState.insideHouse === '1bhk' ? bhk1Doors : bhk2Doors;
+    doors.forEach(door => {
+        const dx = bx - door.wx;
+        const dz = bz - door.wz;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        const targetAngle = dist < DOOR_PROXIMITY ? DOOR_OPEN_ANGLE : 0;
+        // Smoothly animate toward target
+        door.openAngle += (targetAngle - door.openAngle) * DOOR_ANIM_SPEED * delta;
+        if (Math.abs(door.openAngle) < 0.01) door.openAngle = 0;
+        door.pivot.rotation.y = door.baseRy + door.openAngle;
+    });
+}
+
+// Room regions for detecting which room the boy is in
+const roomRegions = [
+    // 1BHK
+    { xMin: -16.5, xMax: -4, zMin: -1.5, zMax: 7.5, room: '🏠 Hall', house: '1bhk' },
+    { xMin: -24, xMax: -16.5, zMin: -1.5, zMax: 7.5, room: '🍳 Kitchen', house: '1bhk' },
+    { xMin: -24, xMax: -4, zMin: -7.5, zMax: -1.5, room: '🛏️ Bedroom', house: '1bhk' },
+    // 2BHK
+    { xMin: 11, xMax: 26, zMin: -2.5, zMax: 8, room: '🏠 Hall', house: '2bhk' },
+    { xMin: 6, xMax: 16, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 1', house: '2bhk' },
+    { xMin: 16, xMax: 26, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 2', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: -2.5, zMax: 4, room: '🍳 Kitchen', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: 4, zMax: 8, room: '🚿 Bathroom', house: '2bhk' },
+];
+
+// ═══════════════════════════════════════════════
 //  BOY STATE & CONTROLS
 // ═══════════════════════════════════════════════
+let mainDoorTransition = null;
+
 const boyState = {
     moving: false,
     speed: 8,
@@ -286,10 +384,7 @@ function enterHouse(houseId) {
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
-
-    // Hide entry circles
-    entry1BHK.visible = false;
-    entry2BHK.visible = false;
+    boyState.currentRoom = null;
 
     // Show back button
     document.getElementById('back-btn').classList.add('visible');
@@ -319,9 +414,9 @@ function exitHouse() {
     // CRITICAL FIX: Reset all key states
     boyState.keys = { up: false, down: false, left: false, right: false };
 
-    // Move boy back to entry circle position
+    // Move boy back outside, closer to door for exit animation
     const entryPos = entryPositions[houseId];
-    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 2);
+    boyGroup.position.set(entryPos.x, 0.15, entryPos.z + 0.5);
     boyGroup.rotation.y = 0;
     boyState.followTarget.copy(boyGroup.position);
 
@@ -333,9 +428,11 @@ function exitHouse() {
         controls.update();
     }
 
-    // Show entry circles again
-    entry1BHK.visible = true;
-    entry2BHK.visible = true;
+    boyState.currentRoom = null;
+
+    // Reset all doors to closed
+    bhk1Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
+    bhk2Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
 
     // Hide prompts
     const prompt = document.getElementById('interaction-popup');
@@ -532,6 +629,11 @@ function updateBoy(delta) {
         controls.target.lerp(desiredTarget, 0.12);
         const camDelta = controls.target.clone().sub(prevTarget);
         camera.position.add(camDelta);
+        controls.update();
+    } else if (boyState.mode === 'outdoor' && isMoving) {
+        // Track the boy when moving outside
+        const lookAt = new THREE.Vector3(boyGroup.position.x, 2, boyGroup.position.z);
+        controls.target.lerp(lookAt, 0.05);
         controls.update();
     }
 

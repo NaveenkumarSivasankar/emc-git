@@ -26,32 +26,39 @@
         <button id="focus-2bhk-btn" onclick="focusHouse('2bhk')"
             style="padding:10px 22px;border:none;border-radius:50px;font-family:'Outfit',sans-serif;font-size:0.9rem;font-weight:600;cursor:pointer;background:linear-gradient(135deg,#00b894,#55efc4);color:#1a1a2e;box-shadow:0 4px 20px rgba(0,184,148,0.4);transition:all 0.3s ease;display:flex;align-items:center;gap:6px;">👉
             2BHK House</button>
-        <button id="solar-btn" class="grid-mode" onclick="toggleSolar()">
-            <span id="solar-btn-icon">☀️</span>
-            <span id="solar-btn-text">Switch to Solar Energy</span>
-        </button>
-        <button id="energy-graphs-btn" onclick="toggleEnergyGraphs()">📊 Energy Graphs</button>
     </div>
 
     <!-- Appliance Control Panel -->
     <div id="appliance-panel"></div>
 
-    <!-- Stats Panel -->
-    <div id="stats-panel">
-        <div class="stat-card">
-            <div class="stat-label">Fun Fact</div>
-            <div class="stat-value"
-                style="font-size:0.78rem;-webkit-text-fill-color:#fff;color:#fff;font-weight:400;line-height:1.4;"
-                id="stat-fact">
-                The sun produces enough energy in 1 hour to power the entire Earth for a year!
-            </div>
-        </div>
-    </div>
 
-    <!-- Room Navigation Panel -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     <div id="room-nav-panel"></div>
 
-    <!-- Bottom Control Bar -->
+
     <div id="bottom-controls">
         <button id="nav-rooms-btn" class="bottom-action-btn" onclick="toggleRoomNav()">
             🏡 Navigate Rooms
@@ -100,6 +107,9 @@
 
     <!-- Interaction Popup -->
     <div id="interaction-popup"></div>
+
+    <!-- Room Indicator -->
+    <div id="room-indicator"></div>
 
     <!-- Back Button for Room Zoom -->
     <button id="back-btn" onclick="zoomOutToHouse()">⬅ Back to Full View</button>

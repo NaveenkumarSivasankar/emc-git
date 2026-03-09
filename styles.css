@@ -620,6 +620,46 @@ canvas {
     transform: translateX(-50%) translateY(-2px) scale(1.05);
 }
 
+/* ── Room Indicator (indoor room detection) ────────────────────────── */
+#room-indicator {
+    position: fixed;
+    top: 120px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-20px);
+    z-index: 200;
+    background: linear-gradient(135deg, rgba(68, 170, 255, 0.3), rgba(34, 136, 221, 0.4));
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(68, 170, 255, 0.5);
+    border-radius: 50px;
+    padding: 12px 30px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 30px rgba(68, 170, 255, 0.3), 0 0 60px rgba(68, 170, 255, 0.1);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    white-space: nowrap;
+}
+
+#room-indicator.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    animation: roomPulse 2s ease-in-out infinite;
+}
+
+@keyframes roomPulse {
+    0%, 100% {
+        box-shadow: 0 4px 30px rgba(68, 170, 255, 0.3), 0 0 60px rgba(68, 170, 255, 0.1);
+    }
+    50% {
+        box-shadow: 0 4px 40px rgba(68, 170, 255, 0.5), 0 0 80px rgba(68, 170, 255, 0.2);
+    }
+}
+
 /* ── Legacy Energy Chart ────────────────────────── */
 #energy-chart {
     position: fixed;

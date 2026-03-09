@@ -246,6 +246,8 @@ function buildRoomNavPanel() {
 }
 
 function zoomToRoom(roomName) {
+    if (typeof boyState !== 'undefined') boyState.cameraFollow = false;
+
     const positions = is2BHK ? bhk2RoomPositions : bhk1RoomPositions;
     const pos = positions[roomName];
     if (!pos) return;

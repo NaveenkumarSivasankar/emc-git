@@ -57,6 +57,13 @@ controls.maxPolarAngle = Math.PI;    // allow looking from below (full rotation)
 controls.target.set(0, 4, 0);
 controls.update();
 
+// Stop following boy when user manually orbits
+controls.addEventListener('start', () => {
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        boyState.cameraFollow = false;
+    }
+});
+
 // ═══════════════════════════════════════════════
 //  LIGHTING
 // ═══════════════════════════════════════════════

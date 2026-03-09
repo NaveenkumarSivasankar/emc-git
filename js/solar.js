@@ -7,7 +7,7 @@ const maxPanels = 10;
 const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.25, metalness: 0.8 });
 const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.3 });
 
-function createSolarPanel(index) {
+function createSolarPanel() {
     const g = new THREE.Group();
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.2), panelMat);
     g.add(panel);
@@ -29,24 +29,84 @@ function createSolarPanel(index) {
         const mesh = new THREE.Mesh(geo, panelFrameMat);
         mesh.position.set(...framePositions[i]); g.add(mesh);
     });
-
-    const col = index % 5;
-    const row = Math.floor(index / 5);
-    const xPos = -4.0 + col * 2.2;
-    const zPos = -2.5 + row * 2.8;
-    const slopeAngle = Math.atan2(roofH, W / 2 + 0.8);
-    const roofY = H + 0.3 + roofH - Math.abs(xPos) * (roofH / (W / 2 + 0.8));
-
-    g.position.set(xPos, roofY + 15, zPos);
-    g.rotation.x = -slopeAngle * (xPos >= 0 ? 1 : -1) * 0.5;
-    g.rotation.z = xPos >= 0 ? -slopeAngle * 0.3 : slopeAngle * 0.3;
-    g.visible = false;
-    houseGroup.add(g);
-    solarPanels.push({ group: g, targetY: roofY + 0.15, animating: false });
     return g;
 }
 
-for (let i = 0; i < maxPanels; i++) { createSolarPanel(i); }
+// Create 10 reusable panel objects initially
+for (let i = 0; i < maxPanels; i++) {
+    solarPanels.push({ group: createSolarPanel(), targetY: 0, animating: false });
+}
+
+function layoutSolarPanels(count) {
+    if (count === 0) {
+        solarPanels.forEach(p => {
+            if (p.group.parent) p.group.parent.remove(p.group);
+            p.group.visible = false;
+        });
+        return;
+    }
+
+    const targetHouse = is2BHK ? roomGroups['Structure'] : houseGroup;
+    const houseW = is2BHK ? 20 : 20; // W2 = 20, W = 20
+    const roofBaseY = is2BHK ? 7 + 0.3 : 7 + 0.3; // H + 0.3
+    const peakH = 4.5; // roofH
+    const slopeAngle = Math.atan2(peakH, houseW / 2 + 0.8);
+
+    // We'll distribute panels in a grid.
+    // For up to 10 panels, we can put 5 on the front-facing slope (z > 0)
+    // and 5 on the back-facing slope (z < 0), or just spread them across the X axis.
+    // The previous logic used X and Z grids. Let's arrange them dynamically starting from center.
+
+    for (let i = 0; i < maxPanels; i++) {
+        const p = solarPanels[i];
+
+        if (i < count) {
+            if (p.group.parent !== targetHouse) {
+                if (p.group.parent) p.group.parent.remove(p.group);
+                targetHouse.add(p.group);
+            }
+
+            // Grid layout: Up to 5 panels per row, 2 rows (front and back of the roof peak)
+            const col = i % 5;
+            const row = Math.floor(i / 5); // 0 = front slope (positive z), 1 = back slope (negative z)
+
+            // Spread panels across the X axis (width of the roof)
+            const xOffset = (col - Math.min(count - row * 5, 5) / 2 + 0.5) * 2.2;
+
+            // Place on the positive or negative Z slope
+            const zSlopeScale = is2BHK ? 1.0 : 1.0;
+            const zStart = is2BHK ? (-16 / 2 - 0.8) : (-15 / 2 - 0.8); // Center point of roof in Z
+
+            // We want panels to be on the slope.
+            // X distance from center determines the Y height on the slope.
+            // Wait, the roof slope is along X. The peak is at X=0.
+            // So X determines the Y height. Z is just depth along the roof.
+
+            // X positions: Since the peak is at x=0, we should put panels on the left (x < 0) or right (x > 0) slope.
+            // Let's divide them: even index on left, odd on right, or distribute evenly.
+            const side = i % 2 === 0 ? 1 : -1; // 1 = right, -1 = left
+            const depthIndex = Math.floor(i / 2); // 0, 0, 1, 1, 2, 2...
+
+            const xPos = side * (1.8 + (depthIndex % 2) * 2.2); // Spread them outward from peak
+            const zPos = zStart + 3 + Math.floor(depthIndex / 2) * 2.8;
+
+            const roofY = roofBaseY + peakH - Math.abs(xPos) * (peakH / (houseW / 2 + 0.8));
+
+            p.targetY = roofY + 0.15;
+
+            // Set rotation
+            p.group.rotation.x = -slopeAngle * side * 0.5;
+            p.group.rotation.z = side > 0 ? -slopeAngle * 0.3 : slopeAngle * 0.3;
+
+            p.group.position.set(xPos, p.targetY, zPos);
+            p.group.visible = true;
+
+        } else {
+            if (p.group.parent) p.group.parent.remove(p.group);
+            p.group.visible = false;
+        }
+    }
+}
 
 // ═══════════════════════════════════════════════
 //  SOLAR / GRID TOGGLE
@@ -98,14 +158,14 @@ function toggleSolar() {
         if (btnIcon) btnIcon.textContent = '⚡';
         if (panelCounter) panelCounter.classList.add('visible');
         currentPanelCount = 0;
-        solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
+        layoutSolarPanels(0);
     } else {
         if (btn) btn.className = 'grid-mode bottom-action-btn';
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
         if (panelCounter) panelCounter.classList.remove('visible');
         currentPanelCount = 0;
-        solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
+        layoutSolarPanels(0);
         poleGroup.children.forEach(child => { if (child.material) child.material.opacity = 1; });
     }
     updatePowerLines();
@@ -122,14 +182,7 @@ function updatePowerLines() {
 }
 
 function animatePanelsIn(count) {
-    solarPanels.forEach((p, i) => {
-        if (i < count) {
-            p.group.visible = true; p.group.position.y = p.targetY + 15;
-            p.animating = true; p.delay = i * 8; p.frame = 0;
-        } else {
-            p.group.visible = false; p.group.position.y = p.targetY + 15;
-        }
-    });
+    layoutSolarPanels(count);
 }
 
 function changePanelCount(delta) {
@@ -137,21 +190,14 @@ function changePanelCount(delta) {
     const newCount = Math.max(0, Math.min(maxPanels, currentPanelCount + delta));
     if (newCount === currentPanelCount) return;
 
-    if (delta > 0) {
-        const idx = currentPanelCount;
-        solarPanels[idx].group.visible = true;
-        solarPanels[idx].group.position.y = solarPanels[idx].targetY + 15;
-        solarPanels[idx].animating = true;
-        solarPanels[idx].delay = 0;
-        solarPanels[idx].frame = 0;
-    } else {
-        const idx = currentPanelCount - 1;
-        solarPanels[idx].group.visible = false;
-        solarPanels[idx].group.position.y = solarPanels[idx].targetY + 15;
-        solarPanels[idx].animating = false;
-    }
-
     currentPanelCount = newCount;
+    layoutSolarPanels(currentPanelCount);
     updatePowerLines();
     updateStats();
+}
+
+function refreshSolarPanelsPlacement() {
+    if (isSolarMode && currentPanelCount > 0) {
+        layoutSolarPanels(currentPanelCount);
+    }
 }
