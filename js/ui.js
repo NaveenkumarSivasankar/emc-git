@@ -206,12 +206,12 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-22, 4, 0);
-        camera.position.set(-22, 20, 35);
+        controls.target.set(-22, 4, -4);
+        camera.position.set(-22, 20, 31);
     } else {
         is2BHK = true;
-        controls.target.set(24, 4, 0);
-        camera.position.set(24, 20, 35);
+        controls.target.set(24, 4, -4);
+        camera.position.set(24, 20, 31);
     }
     controls.update();
     if (typeof positionSolarPanels === 'function') positionSolarPanels();

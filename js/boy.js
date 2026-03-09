@@ -215,44 +215,44 @@ if (typeof bhk2Group !== 'undefined') {
 // ═══════════════════════════════════════════════
 const BOY_RADIUS = 0.35;
 const collisionBoxes = [
-    // ── 1BHK OUTER WALLS (house at x=-14) ──
-    { xMin: -24, xMax: -4, zMin: -7.65, zMax: -7.35, house: '1bhk' },
-    { xMin: -24.15, xMax: -23.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
-    { xMin: -4.15, xMax: -3.85, zMin: -7.5, zMax: 7.5, house: '1bhk' },
-    { xMin: -24.15, xMax: -15.25, zMin: 7.35, zMax: 7.65, house: '1bhk' },
-    { xMin: -12.75, xMax: -3.85, zMin: 7.35, zMax: 7.65, house: '1bhk' },
+    // ── 1BHK OUTER WALLS (house at x=-22, z=-4) ──
+    { xMin: -24, xMax: -4, zMin: -11.65, zMax: -11.35, house: '1bhk' },
+    { xMin: -24.15, xMax: -23.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
+    { xMin: -4.15, xMax: -3.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
+    { xMin: -24.15, xMax: -15.25, zMin: 3.35, zMax: 3.65, house: '1bhk' },
+    { xMin: -12.75, xMax: -3.85, zMin: 3.35, zMax: 3.65, house: '1bhk' },
     // ── 1BHK PARTITIONS (with door gaps) ──
-    { xMin: -23.8, xMax: -11.85, zMin: -1.6, zMax: -1.4, house: '1bhk' },
-    { xMin: -10.15, xMax: -4.2, zMin: -1.6, zMax: -1.4, house: '1bhk' },
-    { xMin: -16.6, xMax: -16.4, zMin: 0.85, zMax: 2.65, house: '1bhk' },
-    { xMin: -16.6, xMax: -16.4, zMin: 4.35, zMax: 6.65, house: '1bhk' },
+    { xMin: -23.8, xMax: -11.85, zMin: -5.6, zMax: -5.4, house: '1bhk' },
+    { xMin: -10.15, xMax: -4.2, zMin: -5.6, zMax: -5.4, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: -3.15, zMax: -1.35, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 0.35, zMax: 2.65, house: '1bhk' },
     // ── 1BHK FURNITURE ──
-    { xMin: -19.5, xMax: -14.5, zMin: -5.75, zMax: -3.4, house: '1bhk' },
-    { xMin: -8.75, xMax: -6.25, zMin: -5.45, zMax: -4.55, house: '1bhk' },
-    { xMin: -15.75, xMax: -12.25, zMin: -6.65, zMax: -2.0, house: '1bhk' },
-    { xMin: -22.7, xMax: -20.3, zMin: -6, zMax: -5, house: '1bhk' },
-    { xMin: -21.75, xMax: -18.25, zMin: -0.95, zMax: -0.05, house: '1bhk' },
-    // ── 2BHK OUTER WALLS (house at x=16) ──
-    { xMin: 6, xMax: 26, zMin: -8.15, zMax: -7.85, house: '2bhk' },
-    { xMin: 5.85, xMax: 6.15, zMin: -8, zMax: 8, house: '2bhk' },
-    { xMin: 25.85, xMax: 26.15, zMin: -8, zMax: 8, house: '2bhk' },
-    { xMin: 5.85, xMax: 14.75, zMin: 7.85, zMax: 8.15, house: '2bhk' },
-    { xMin: 17.25, xMax: 26.15, zMin: 7.85, zMax: 8.15, house: '2bhk' },
+    { xMin: -19.5, xMax: -14.5, zMin: -9.75, zMax: -7.4, house: '1bhk' },
+    { xMin: -8.75, xMax: -6.25, zMin: -9.45, zMax: -8.55, house: '1bhk' },
+    { xMin: -15.75, xMax: -12.25, zMin: -10.65, zMax: -6.0, house: '1bhk' },
+    { xMin: -22.7, xMax: -20.3, zMin: -10, zMax: -9, house: '1bhk' },
+    { xMin: -21.75, xMax: -18.25, zMin: -4.95, zMax: -4.05, house: '1bhk' },
+    // ── 2BHK OUTER WALLS (house at x=24, z=-4) ──
+    { xMin: 6, xMax: 26, zMin: -12.15, zMax: -11.85, house: '2bhk' },
+    { xMin: 5.85, xMax: 6.15, zMin: -12, zMax: 4, house: '2bhk' },
+    { xMin: 25.85, xMax: 26.15, zMin: -12, zMax: 4, house: '2bhk' },
+    { xMin: 5.85, xMax: 14.75, zMin: 3.85, zMax: 4.15, house: '2bhk' },
+    { xMin: 17.25, xMax: 26.15, zMin: 3.85, zMax: 4.15, house: '2bhk' },
     // ── 2BHK PARTITIONS (with door gaps) ──
-    { xMin: 6.2, xMax: 12.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
-    { xMin: 13.75, xMax: 18.25, zMin: -2.6, zMax: -2.4, house: '2bhk' },
-    { xMin: 19.75, xMax: 25.8, zMin: -2.6, zMax: -2.4, house: '2bhk' },
-    { xMin: 15.9, xMax: 16.1, zMin: -7.9, zMax: -2.6, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: -2.3, zMax: -0.25, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: 1.25, zMax: 4.75, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: 6.25, zMax: 8.0, house: '2bhk' },
-    { xMin: 6.1, xMax: 10.9, zMin: 3.9, zMax: 4.1, house: '2bhk' },
+    { xMin: 6.2, xMax: 12.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 13.75, xMax: 18.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 19.75, xMax: 25.8, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 15.9, xMax: 16.1, zMin: -11.9, zMax: -6.6, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -6.3, zMax: -4.25, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -2.75, zMax: 0.75, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 2.25, zMax: 4.0, house: '2bhk' },
+    { xMin: 6.1, xMax: 10.9, zMin: -0.1, zMax: 0.1, house: '2bhk' },
     // ── 2BHK FURNITURE ──
-    { xMin: 9.6, xMax: 12.4, zMin: -7, zMax: -3.5, house: '2bhk' },
-    { xMin: 19.6, xMax: 22.4, zMin: -7, zMax: -3.5, house: '2bhk' },
-    { xMin: 20.95, xMax: 25.45, zMin: 0, zMax: 2.2, house: '2bhk' },
-    { xMin: 17.25, xMax: 19.75, zMin: 0.4, zMax: 1.6, house: '2bhk' },
-    { xMin: 6.3, xMax: 9.3, zMin: -1.9, zMax: -1.1, house: '2bhk' },
+    { xMin: 9.6, xMax: 12.4, zMin: -11, zMax: -7.5, house: '2bhk' },
+    { xMin: 19.6, xMax: 22.4, zMin: -11, zMax: -7.5, house: '2bhk' },
+    { xMin: 20.95, xMax: 25.45, zMin: -4, zMax: -1.8, house: '2bhk' },
+    { xMin: 17.25, xMax: 19.75, zMin: -3.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 6.3, xMax: 9.3, zMin: -5.9, zMax: -5.1, house: '2bhk' },
 ];
 
 function checkCollision(testX, testZ) {
@@ -294,16 +294,16 @@ function updateDoors(delta) {
 
 // Room regions for detecting which room the boy is in
 const roomRegions = [
-    // 1BHK
-    { xMin: -16.5, xMax: -4, zMin: -1.5, zMax: 7.5, room: '🏠 Hall', house: '1bhk' },
-    { xMin: -24, xMax: -16.5, zMin: -1.5, zMax: 7.5, room: '🍳 Kitchen', house: '1bhk' },
-    { xMin: -24, xMax: -4, zMin: -7.5, zMax: -1.5, room: '🛏️ Bedroom', house: '1bhk' },
-    // 2BHK
-    { xMin: 11, xMax: 26, zMin: -2.5, zMax: 8, room: '🏠 Hall', house: '2bhk' },
-    { xMin: 6, xMax: 16, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 1', house: '2bhk' },
-    { xMin: 16, xMax: 26, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 2', house: '2bhk' },
-    { xMin: 6, xMax: 11, zMin: -2.5, zMax: 4, room: '🍳 Kitchen', house: '2bhk' },
-    { xMin: 6, xMax: 11, zMin: 4, zMax: 8, room: '🚿 Bathroom', house: '2bhk' },
+    // 1BHK (shifted z by -4)
+    { xMin: -16.5, xMax: -4, zMin: -5.5, zMax: 3.5, room: '🏠 Hall', house: '1bhk' },
+    { xMin: -24, xMax: -16.5, zMin: -5.5, zMax: 3.5, room: '🍳 Kitchen', house: '1bhk' },
+    { xMin: -24, xMax: -4, zMin: -11.5, zMax: -5.5, room: '🛏️ Bedroom', house: '1bhk' },
+    // 2BHK (shifted z by -4)
+    { xMin: 11, xMax: 26, zMin: -6.5, zMax: 4, room: '🏠 Hall', house: '2bhk' },
+    { xMin: 6, xMax: 16, zMin: -12, zMax: -6.5, room: '🛏️ Bedroom 1', house: '2bhk' },
+    { xMin: 16, xMax: 26, zMin: -12, zMax: -6.5, room: '🛏️ Bedroom 2', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: -6.5, zMax: 0, room: '🍳 Kitchen', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: 0, zMax: 4, room: '🚿 Bathroom', house: '2bhk' },
 ];
 
 // ═══════════════════════════════════════════════
@@ -331,20 +331,20 @@ const boyState = {
 
 // Entry circle world positions
 const entryPositions = {
-    '1bhk': new THREE.Vector3(-22, 0, 12),
-    '2bhk': new THREE.Vector3(24, 0, 13)
+    '1bhk': new THREE.Vector3(-22, 0, 8),
+    '2bhk': new THREE.Vector3(24, 0, 9)
 };
 
 // Indoor spawn positions (world coords)
 const indoorSpawn = {
-    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI },
-    '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI }
+    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 4), rot: Math.PI },
+    '2bhk': { pos: new THREE.Vector3(24, 0.15, 5), rot: Math.PI }
 };
 
 // Indoor movement bounds (world coords)
 const indoorBounds = {
-    '1bhk': { xMin: -36, xMax: -8, zMin: -11, zMax: 10 },
-    '2bhk': { xMin: 10, xMax: 38, zMin: -12, zMax: 11 }
+    '1bhk': { xMin: -36, xMax: -8, zMin: -15, zMax: 6 },
+    '2bhk': { xMin: 10, xMax: 38, zMin: -16, zMax: 7 }
 };
 
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
@@ -391,6 +391,13 @@ if (typeof controls !== 'undefined') {
 // ═══════════════════════════════════════════════
 function enterHouse(houseId) {
     if (boyState.mode === 'transitioning') return; // prevent double-entry
+
+    // Lazy load interiors
+    if (houseId === '1bhk' && typeof window.load1BHKFurniture === 'function') {
+        window.load1BHKFurniture();
+    } else if (houseId === '2bhk' && typeof window.load2BHKFurniture === 'function') {
+        window.load2BHKFurniture();
+    }
 
     // Animate main door open
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
