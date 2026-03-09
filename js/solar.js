@@ -1,17 +1,17 @@
 // ═══════════════════════════════════════════════
-//  SOLAR PANELS (adjusted for enlarged 1BHK)
+//  SOLAR PANELS (enhanced with house selector + animations)
 // ═══════════════════════════════════════════════
 const solarPanels = [];
 const maxPanels = 10;
 
-const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.25, metalness: 0.8 });
+const panelMat = new THREE.MeshStandardMaterial({ color: 0x0d1b4b, roughness: 0.25, metalness: 0.8 });
 const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.3 });
 
 function createSolarPanel() {
     const g = new THREE.Group();
     const panel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.2), panelMat);
     g.add(panel);
-    const gridMat = new THREE.MeshBasicMaterial({ color: 0x283593 });
+    const gridMat = new THREE.MeshBasicMaterial({ color: 0x1a3366 });
     for (let i = -2; i <= 2; i++) {
         const hLine = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.01, 0.02), gridMat);
         hLine.position.set(0, 0.05, i * 0.24); g.add(hLine);
@@ -34,28 +34,162 @@ function createSolarPanel() {
 
 // Create 10 reusable panel objects initially
 for (let i = 0; i < maxPanels; i++) {
-    solarPanels.push({ group: createSolarPanel(), targetY: 0, animating: false });
+    solarPanels.push({ group: createSolarPanel(), targetY: 0, animating: false, frame: 0, delay: 0 });
 }
 
+// ═══════════════════════════════════════════════
+//  DAY / NIGHT TOGGLE
+// ═══════════════════════════════════════════════
+let isDayTime = true;
+
+function createDayNightToggle() {
+    let btn = document.getElementById('daynight-btn');
+    if (btn) return;
+    btn = document.createElement('button');
+    btn.id = 'daynight-btn';
+    btn.className = 'bottom-action-btn';
+    btn.innerHTML = '🌙 Night Mode';
+    btn.onclick = toggleDayNight;
+    btn.style.cssText = 'pointer-events:auto;';
+    const controls = document.getElementById('bottom-controls');
+    if (controls) controls.appendChild(btn);
+}
+
+function toggleDayNight() {
+    isDayTime = !isDayTime;
+    const btn = document.getElementById('daynight-btn');
+    if (btn) {
+        btn.innerHTML = isDayTime ? '🌙 Night Mode' : '☀️ Day Mode';
+    }
+    // Adjust ambient lighting
+    if (typeof ambientLight !== 'undefined') {
+        ambientLight.intensity = isDayTime ? 0.7 : 0.15;
+    }
+    if (typeof sunLight !== 'undefined') {
+        sunLight.intensity = isDayTime ? 1.4 : 0.1;
+    }
+    // Adjust sky
+    if (typeof scene !== 'undefined' && scene.background) {
+        if (!isDayTime) {
+            const nightCanvas = document.createElement('canvas');
+            nightCanvas.width = 2; nightCanvas.height = 512;
+            const ctx = nightCanvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 512);
+            grad.addColorStop(0, '#000011');
+            grad.addColorStop(0.5, '#0a1628');
+            grad.addColorStop(1, '#1a1a3e');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 2, 512);
+            scene.background = new THREE.CanvasTexture(nightCanvas);
+        } else {
+            const dayCanvas = document.createElement('canvas');
+            dayCanvas.width = 2; dayCanvas.height = 512;
+            const ctx = dayCanvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 512);
+            grad.addColorStop(0, '#0a1628');
+            grad.addColorStop(0.3, '#1a3a5c');
+            grad.addColorStop(0.5, '#3d7ab5');
+            grad.addColorStop(0.7, '#7ec8e3');
+            grad.addColorStop(0.85, '#c9e8f5');
+            grad.addColorStop(1, '#ffecd2');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 2, 512);
+            scene.background = new THREE.CanvasTexture(dayCanvas);
+        }
+    }
+    updateStats();
+}
+
+// Create button on load
+window.addEventListener('DOMContentLoaded', () => { setTimeout(createDayNightToggle, 200); });
+
+// ═══════════════════════════════════════════════
+//  ENERGY FLOW VISUALIZATION
+// ═══════════════════════════════════════════════
+let energyFlowLine = null;
+let energyFlowSphere = null;
+let energyFlowProgress = 0;
+
+function createEnergyFlow(targetHouse) {
+    removeEnergyFlow();
+
+    const houseX = targetHouse === '2bhk' ? 24 : -22;
+    const sunPos = new THREE.Vector3(houseX, 35, -5);
+    const roofPos = new THREE.Vector3(houseX, 8, 0);
+    const meterPos = new THREE.Vector3(houseX, 2, 12);
+
+    const points = [sunPos, roofPos, meterPos];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const lineMat = new THREE.LineBasicMaterial({
+        color: 0xFFD700,
+        transparent: true,
+        opacity: 0.6,
+        linewidth: 2
+    });
+    energyFlowLine = new THREE.Line(lineGeo, lineMat);
+    scene.add(energyFlowLine);
+
+    const sphereGeo = new THREE.SphereGeometry(0.3, 8, 8);
+    const sphereMat = new THREE.MeshStandardMaterial({
+        color: 0xFFD700,
+        emissive: 0xFFAA00,
+        emissiveIntensity: 1.5,
+        transparent: true,
+        opacity: 0.9
+    });
+    energyFlowSphere = new THREE.Mesh(sphereGeo, sphereMat);
+    energyFlowSphere.userData.points = points;
+    scene.add(energyFlowSphere);
+    energyFlowProgress = 0;
+}
+
+function removeEnergyFlow() {
+    if (energyFlowLine) { scene.remove(energyFlowLine); energyFlowLine = null; }
+    if (energyFlowSphere) { scene.remove(energyFlowSphere); energyFlowSphere = null; }
+}
+
+function updateEnergyFlow(delta) {
+    if (!energyFlowSphere || !energyFlowSphere.userData.points) return;
+    if (!isDayTime || !isSolarMode || currentPanelCount === 0) {
+        if (energyFlowLine) energyFlowLine.visible = false;
+        energyFlowSphere.visible = false;
+        return;
+    }
+    if (energyFlowLine) energyFlowLine.visible = true;
+    energyFlowSphere.visible = true;
+
+    energyFlowProgress += delta * 0.5;
+    if (energyFlowProgress > 1) energyFlowProgress = 0;
+
+    const pts = energyFlowSphere.userData.points;
+    const totalSegments = pts.length - 1;
+    const segProgress = energyFlowProgress * totalSegments;
+    const segIndex = Math.min(Math.floor(segProgress), totalSegments - 1);
+    const segT = segProgress - segIndex;
+
+    const p = new THREE.Vector3().lerpVectors(pts[segIndex], pts[segIndex + 1], segT);
+    energyFlowSphere.position.copy(p);
+    energyFlowSphere.scale.setScalar(0.8 + Math.sin(energyFlowProgress * Math.PI * 4) * 0.3);
+}
+
+// ═══════════════════════════════════════════════
+//  PANEL LAYOUT AND ANIMATION
+// ═══════════════════════════════════════════════
 function layoutSolarPanels(count) {
     if (count === 0) {
         solarPanels.forEach(p => {
             if (p.group.parent) p.group.parent.remove(p.group);
             p.group.visible = false;
         });
+        removeEnergyFlow();
         return;
     }
 
     const targetHouse = is2BHK ? roomGroups['Structure'] : houseGroup;
-    const houseW = is2BHK ? 20 : 20; // W2 = 20, W = 20
-    const roofBaseY = is2BHK ? 7 + 0.3 : 7 + 0.3; // H + 0.3
-    const peakH = 4.5; // roofH
+    const houseW = 20;
+    const roofBaseY = 7 + 0.3;
+    const peakH = 4.5;
     const slopeAngle = Math.atan2(peakH, houseW / 2 + 0.8);
-
-    // We'll distribute panels in a grid.
-    // For up to 10 panels, we can put 5 on the front-facing slope (z > 0)
-    // and 5 on the back-facing slope (z < 0), or just spread them across the X axis.
-    // The previous logic used X and Z grids. Let's arrange them dynamically starting from center.
 
     for (let i = 0; i < maxPanels; i++) {
         const p = solarPanels[i];
@@ -66,50 +200,38 @@ function layoutSolarPanels(count) {
                 targetHouse.add(p.group);
             }
 
-            // Grid layout: Up to 5 panels per row, 2 rows (front and back of the roof peak)
-            const col = i % 5;
-            const row = Math.floor(i / 5); // 0 = front slope (positive z), 1 = back slope (negative z)
+            const side = i % 2 === 0 ? 1 : -1;
+            const depthIndex = Math.floor(i / 2);
 
-            // Spread panels across the X axis (width of the roof)
-            const xOffset = (col - Math.min(count - row * 5, 5) / 2 + 0.5) * 2.2;
-
-            // Place on the positive or negative Z slope
-            const zSlopeScale = is2BHK ? 1.0 : 1.0;
-            const zStart = is2BHK ? (-16 / 2 - 0.8) : (-15 / 2 - 0.8); // Center point of roof in Z
-
-            // We want panels to be on the slope.
-            // X distance from center determines the Y height on the slope.
-            // Wait, the roof slope is along X. The peak is at X=0.
-            // So X determines the Y height. Z is just depth along the roof.
-
-            // X positions: Since the peak is at x=0, we should put panels on the left (x < 0) or right (x > 0) slope.
-            // Let's divide them: even index on left, odd on right, or distribute evenly.
-            const side = i % 2 === 0 ? 1 : -1; // 1 = right, -1 = left
-            const depthIndex = Math.floor(i / 2); // 0, 0, 1, 1, 2, 2...
-
-            const xPos = side * (1.8 + (depthIndex % 2) * 2.2); // Spread them outward from peak
+            const xPos = side * (1.8 + (depthIndex % 2) * 2.2);
+            const zStart = is2BHK ? (-16 / 2 - 0.8) : (-15 / 2 - 0.8);
             const zPos = zStart + 3 + Math.floor(depthIndex / 2) * 2.8;
 
             const roofY = roofBaseY + peakH - Math.abs(xPos) * (peakH / (houseW / 2 + 0.8));
-
             p.targetY = roofY + 0.15;
 
-            // Set rotation
             p.group.rotation.x = -slopeAngle * side * 0.5;
             p.group.rotation.z = side > 0 ? -slopeAngle * 0.3 : slopeAngle * 0.3;
 
-            p.group.position.set(xPos, p.targetY, zPos);
+            // Rise-up animation
+            p.group.position.set(xPos, p.targetY + 15, zPos);
             p.group.visible = true;
+            p.animating = true;
+            p.frame = 0;
+            p.delay = i * 8; // stagger each panel
 
         } else {
             if (p.group.parent) p.group.parent.remove(p.group);
             p.group.visible = false;
         }
     }
+
+    // Create energy flow for the selected house
+    createEnergyFlow(is2BHK ? '2bhk' : '1bhk');
 }
 
 // ═══════════════════════════════════════════════
-//  SOLAR / GRID TOGGLE
+//  SOLAR / GRID TOGGLE (with house selector)
 // ═══════════════════════════════════════════════
 const funFacts = [
     "The sun produces enough energy in 1 hour to power the entire Earth for a year!",
@@ -131,7 +253,10 @@ function updateStats() {
     if (statConsumption) statConsumption.textContent = total.toLocaleString() + ' W';
     const statPanels = document.getElementById('stat-panels');
     if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
+
+    // Solar only generates during day
+    const solarActive = isDayTime && isSolarMode && currentPanelCount > 0;
+    const coverageRatio = solarActive ? Math.min(currentPanelCount / panelsNeeded, 1) : 0;
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
     const statSavings = document.getElementById('stat-savings');
@@ -146,30 +271,27 @@ function updateStats() {
 }
 
 function toggleSolar() {
-    isSolarMode = !isSolarMode;
-    const btn = document.getElementById('solar-btn');
-    const btnText = document.getElementById('solar-btn-text');
-    const btnIcon = document.getElementById('solar-btn-icon');
-    const panelCounter = document.getElementById('panel-counter');
-
     if (isSolarMode) {
-        if (btn) btn.className = 'solar-mode bottom-action-btn';
-        if (btnText) btnText.textContent = 'Remove Solar';
-        if (btnIcon) btnIcon.textContent = '⚡';
-        if (panelCounter) panelCounter.classList.add('visible');
-        currentPanelCount = 0;
-        layoutSolarPanels(0);
-    } else {
+        // Remove solar
+        isSolarMode = false;
+        const btn = document.getElementById('solar-btn');
+        const btnText = document.getElementById('solar-btn-text');
+        const btnIcon = document.getElementById('solar-btn-icon');
+        const panelCounter = document.getElementById('panel-counter');
         if (btn) btn.className = 'grid-mode bottom-action-btn';
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
         if (panelCounter) panelCounter.classList.remove('visible');
         currentPanelCount = 0;
         layoutSolarPanels(0);
+        removeEnergyFlow();
         poleGroup.children.forEach(child => { if (child.material) child.material.opacity = 1; });
+        updatePowerLines();
+        updateStats();
+    } else {
+        // Show house selector modal
+        showSolarSelector();
     }
-    updatePowerLines();
-    updateStats();
 }
 
 function updatePowerLines() {

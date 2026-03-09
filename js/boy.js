@@ -6,17 +6,17 @@ const boyGroup = new THREE.Group();
 // ── MATERIALS ──
 const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDBCB4, roughness: 0.7 });
 const hairMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
-const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.65 });
-const pantsMat = new THREE.MeshStandardMaterial({ color: 0x37474F, roughness: 0.8 });
-const shoeMat = new THREE.MeshStandardMaterial({ color: 0xE53935, roughness: 0.6 });
-const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.5 });
+const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.65 });
+const pantsMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, roughness: 0.8 });
+const shoeMat = new THREE.MeshStandardMaterial({ color: 0x3d2b1f, roughness: 0.6 });
+const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xdddddd, roughness: 0.5 });
 const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 });
 const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
 const tshirtStripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.65 });
 
 // ── HEAD ──
 const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), skinMat);
-head.position.y = 2.1; head.castShadow = true; boyGroup.add(head);
+head.position.y = 2.1; head.castShadow = true; head.receiveShadow = true; boyGroup.add(head);
 
 // Hair (main cap + side tufts)
 const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 16), hairMat);
@@ -59,9 +59,21 @@ collar.position.y = 1.80; boyGroup.add(collar);
 const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.06, 0.29), tshirtStripeMat);
 stripe.position.set(0, 1.45, 0); boyGroup.add(stripe);
 
-// ── HIPS ──
+// Hips
 const hips = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.18, 0.25), pantsMat);
-hips.position.y = 1.08; boyGroup.add(hips);
+hips.position.y = 1.08; hips.castShadow = true; boyGroup.add(hips);
+
+// ── SCHOOL BACKPACK ──
+const backpackMat = new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.7 });
+const backpackStrapMat = new THREE.MeshStandardMaterial({ color: 0x111133, roughness: 0.6 });
+const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.45, 0.22), backpackMat);
+backpack.position.set(0, 1.45, -0.22); backpack.castShadow = true; boyGroup.add(backpack);
+const bpTop = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.08, 0.20), backpackStrapMat);
+bpTop.position.set(0, 1.70, -0.22); boyGroup.add(bpTop);
+const bpStrapL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.35, 0.06), backpackStrapMat);
+bpStrapL.position.set(-0.14, 1.55, -0.06); boyGroup.add(bpStrapL);
+const bpStrapR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.35, 0.06), backpackStrapMat);
+bpStrapR.position.set(0.14, 1.55, -0.06); boyGroup.add(bpStrapR);
 
 // ── ARMS (Cylinder-based with elbow pivots) ──
 const leftShoulderPivot = new THREE.Group();
@@ -501,7 +513,7 @@ function updateBoy(delta) {
         // Clamp based on mode
         if (boyState.mode === 'outdoor') {
             boyGroup.position.x = Math.max(-45, Math.min(48, boyGroup.position.x));
-            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
+            boyGroup.position.z = Math.max(8, Math.min(18, boyGroup.position.z));
         } else if (boyState.mode === 'indoor') {
             const bounds = indoorBounds[boyState.insideHouse];
             if (bounds) {
@@ -510,11 +522,11 @@ function updateBoy(delta) {
             }
         }
 
-        // Furniture collision check
-        if (typeof checkFurnitureCollision === 'function' &&
-            checkFurnitureCollision(boyGroup.position.x, boyGroup.position.z)) {
-            boyGroup.position.x = prevX;
-            boyGroup.position.z = prevZ;
+        // Furniture collision check — use sliding resolution
+        if (boyState.mode === 'indoor' && typeof resolveSliding === 'function') {
+            const resolved = resolveSliding(prevX, prevZ, boyGroup.position.x, boyGroup.position.z);
+            boyGroup.position.x = resolved.x;
+            boyGroup.position.z = resolved.z;
         }
 
         // Face movement direction
@@ -638,7 +650,7 @@ function updateBoy(delta) {
     }
 
     // ── Door animation + room transparency + main doors ──
-    if (typeof updateDoors === 'function') updateDoors();
+    if (typeof updateDoors === 'function') updateDoors(delta);
     if (typeof updateMainDoors === 'function') updateMainDoors();
     if (typeof updateRoomTransparency === 'function') updateRoomTransparency();
 }

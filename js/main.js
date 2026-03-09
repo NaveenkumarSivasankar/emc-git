@@ -192,6 +192,9 @@ function animate() {
     // Boy character animation
     updateBoy(delta);
 
+    // Energy flow sphere animation
+    if (typeof updateEnergyFlow === 'function') updateEnergyFlow(delta);
+
     // Entry circle pulse animation
     updateEntryCircles(elapsed);
 

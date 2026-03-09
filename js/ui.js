@@ -303,17 +303,28 @@ function toggleRoomNav() {
 }
 
 // ═══════════════════════════════════════════════
-//  FIX 4: ROOM ENTRY POPUP HUD
-//  Glassmorphism popup when character enters a room
+//  FIX 4: ROOM ENTRY POPUP — Clash of Clans Style
 // ═══════════════════════════════════════════════
 let roomPopupEl = null;
 let roomPopupTimeout = null;
 let roomPopupInterval = null;
 
+const energyTips = [
+    '💡 Switch to LED and save 85% on lighting!',
+    '❄️ Set AC to 24°C — each degree saves 6% energy!',
+    '🌀 Use a ceiling fan with AC to reduce cooling load!',
+    '🔌 Unplug chargers when not in use — they still draw power!',
+    '☀️ Solar panels can cut your bill by 70-90%!',
+    '🧊 Keep fridge away from heat sources — saves 15% energy!',
+    '📺 Turn off TV when nobody is watching!',
+    '💧 Fix leaky taps — saves water AND water-heater energy!'
+];
+
 function createRoomPopupElement() {
     if (roomPopupEl) return;
     roomPopupEl = document.createElement('div');
     roomPopupEl.id = 'room-popup';
+    roomPopupEl.className = 'coc-popup';
     roomPopupEl.innerHTML = '';
     document.body.appendChild(roomPopupEl);
 }
@@ -321,12 +332,12 @@ function createRoomPopupElement() {
 function showRoomPopup(roomName, houseId) {
     createRoomPopupElement();
 
-    // Clear previous timers
     if (roomPopupTimeout) clearTimeout(roomPopupTimeout);
     if (roomPopupInterval) clearInterval(roomPopupInterval);
 
     const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
     const icon = roomIcons[roomName] || '🏠';
+    const tip = energyTips[Math.floor(Math.random() * energyTips.length)];
 
     function renderPopup() {
         const appList = houseId === '2bhk' ? bhk2Appliances : simpleAppliances;
@@ -335,41 +346,36 @@ function showRoomPopup(roomName, houseId) {
         let totalWatts = 0;
         let appHtml = '';
         roomAppliances.forEach(a => {
-            const status = a.on ? '<span class="rp-on">ON</span>' : '<span class="rp-off">OFF</span>';
-            const wattDisplay = a.on ? a.watt : 0;
+            const statusIcon = a.on ? '✅' : '⬜';
+            const statusClass = a.on ? 'rp-on' : 'rp-off';
             if (a.on) totalWatts += a.watt;
-            appHtml += '<div class="rp-appliance">' +
-                '<span class="rp-emoji">' + (a.emoji || '') + '</span>' +
-                '<span class="rp-name">' + a.name + '</span>' +
-                status +
-                '<span class="rp-watt">' + wattDisplay + 'W</span>' +
+            appHtml += '<div class="coc-app-row">' +
+                '<span class="coc-status-icon">' + statusIcon + '</span>' +
+                '<span class="coc-app-name">' + (a.emoji || '') + ' ' + a.name + '</span>' +
+                '<span class="coc-app-watt ' + statusClass + '">' + a.watt + 'W (' + (a.on ? 'ON' : 'OFF') + ')</span>' +
                 '</div>';
         });
 
-        const hourlyCost = (totalWatts / 1000 * 8).toFixed(2); // ₹8 per unit approx
-
         roomPopupEl.innerHTML =
-            '<div class="rp-header">' +
-            '<span class="rp-title">' + icon + ' ' + roomName + '</span>' +
-            '<button class="rp-close" onclick="hideRoomPopup()">×</button>' +
+            '<div class="coc-ribbon">' +
+            '<span class="coc-ribbon-text">' + icon + ' ' + roomName + '</span>' +
             '</div>' +
-            '<div class="rp-appliances">' + appHtml + '</div>' +
-            '<div class="rp-footer">' +
-            '<div class="rp-total">⚡ Total: <strong>' + totalWatts + 'W</strong></div>' +
-            '<div class="rp-cost">💰 ~₹' + hourlyCost + '/hr</div>' +
+            '<div class="coc-body">' +
+            '<div class="coc-appliances">' + appHtml + '</div>' +
+            '<div class="coc-total">⚡ This room uses <strong>' + totalWatts + 'W</strong> right now</div>' +
+            '<div class="coc-tip">' + tip + '</div>' +
+            '<button class="coc-btn" onclick="hideRoomPopup()">EXPLORE! ✨</button>' +
             '</div>';
     }
 
     renderPopup();
     roomPopupEl.classList.add('visible');
 
-    // Live update every second
     roomPopupInterval = setInterval(renderPopup, 1000);
 
-    // Auto-dismiss after 5 seconds
     roomPopupTimeout = setTimeout(() => {
         hideRoomPopup();
-    }, 5000);
+    }, 4000);
 }
 
 function hideRoomPopup() {
@@ -423,6 +429,7 @@ function selectSolarHouse(target) {
 
 function performSolarToggle(target) {
     isSolarMode = true;
+    solarTarget = target;
     const btn = document.getElementById('solar-btn');
     const btnText = document.getElementById('solar-btn-text');
     const btnIcon = document.getElementById('solar-btn-icon');
@@ -433,8 +440,14 @@ function performSolarToggle(target) {
     if (btnIcon) btnIcon.textContent = '⚡';
     if (panelCounter) panelCounter.classList.add('visible');
 
-    currentPanelCount = 0;
-    solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
+    // Auto-add 6 panels for selected house
+    currentPanelCount = 6;
+    if (target === '1bhk') {
+        is2BHK = false;
+    } else if (target === '2bhk') {
+        is2BHK = true;
+    }
+    layoutSolarPanels(currentPanelCount);
 
     if (typeof updatePowerLines === 'function') updatePowerLines();
     if (typeof updateStats === 'function') updateStats();
