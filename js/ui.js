@@ -28,6 +28,8 @@ function toggleAppliance(idx, isOn) {
         waterStream.visible = isOn;
     }
     recalcWattage();
+    buildAppliancePanel();
+    updateDynamicEnergy();
 }
 
 function toggleSimpleAppliance(idx, isOn) {
@@ -55,6 +57,8 @@ function toggleSimpleAppliance(idx, isOn) {
         screen.material.needsUpdate = true;
     }
     recalcWattage();
+    buildAppliancePanel();
+    updateDynamicEnergy();
 }
 
 // ═══════════════════════════════════════════════
@@ -62,40 +66,53 @@ function toggleSimpleAppliance(idx, isOn) {
 // ═══════════════════════════════════════════════
 function recalcWattage() {
     let total = 0;
-    if (is2BHK) {
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    if (activeKey === '2bhk') {
         bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
     } else {
         simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
     }
-    const elConsumption = document.getElementById('stat-consumption');
-    if (elConsumption) elConsumption.textContent = total.toLocaleString() + ' W';
+
+    // Fallback if houseState isn't fully initialized yet
+    const currentCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    setText('stat-consumption', total.toLocaleString() + ' W');
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    const elPanels = document.getElementById('stat-panels');
-    if (elPanels) elPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
+    setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
+
+    const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    const elSavings = document.getElementById('stat-savings');
-    if (elSavings) elSavings.textContent = '₹' + monthlySaving.toLocaleString();
-    const elCo2 = document.getElementById('stat-co2');
-    if (elCo2) elCo2.textContent = co2Saved + ' kg/yr';
+
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved + ' kg/yr');
+
     updateBarChart(total, coverageRatio);
 }
 
 function updateBarChart(totalW, coverageRatio) {
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
+
     const solarPct = Math.round(coverageRatio * 100);
     const gridPct = 100 - solarPct;
-    document.getElementById('grid-bar').style.width = Math.max(gridPct, 5) + '%';
-    document.getElementById('grid-bar').textContent = gridPct + '%';
-    document.getElementById('solar-bar').style.width = Math.max(solarPct, 5) + '%';
-    document.getElementById('solar-bar').textContent = solarPct + '%';
+
+    setWidth('grid-bar', Math.max(gridPct, 5) + '%');
+    setText('grid-bar', gridPct + '%');
+
+    setWidth('solar-bar', Math.max(solarPct, 5) + '%');
+    setText('solar-bar', solarPct + '%');
+
     const dailyKwh = totalW * 8 / 1000;
     const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
     const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
     const monthlyBill = Math.round(gridCostDaily * 30);
-    document.getElementById('calc-grid').textContent = '₹' + gridCostDaily;
-    document.getElementById('calc-solar').textContent = '₹' + solarSavingsDaily;
-    document.getElementById('calc-monthly').textContent = '₹' + monthlyBill;
+
+    setText('calc-grid', '₹' + gridCostDaily);
+    setText('calc-solar', '₹' + solarSavingsDaily);
+    setText('calc-monthly', '₹' + monthlyBill);
 }
 
 // ═══════════════════════════════════════════════
@@ -139,7 +156,9 @@ const tvTextures = [createTvTexture('nature'), createTvTexture('city')];
 // ═══════════════════════════════════════════════
 function buildAppliancePanel() {
     const panel = document.getElementById('appliance-panel');
-    let html = '';
+    const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
+    let html = '<div class="panel-header"><span class="panel-header-icon">⚡</span> Appliances</div>';
+
     if (is2BHK) {
         const grouped = {};
         bhk2Appliances.forEach((a, i) => {
@@ -147,9 +166,10 @@ function buildAppliancePanel() {
             grouped[a.room].push({ ...a, idx: i });
         });
         for (const room in grouped) {
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             grouped[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
@@ -162,13 +182,21 @@ function buildAppliancePanel() {
         });
         for (const room in rooms) {
             if (rooms[room].length === 0) continue;
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             rooms[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
     }
+
+    // Total wattage footer
+    let totalOn = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) totalOn += a.watt; });
+    html += '<div class="panel-footer"><span class="footer-label">Total Active</span><span class="footer-value">' + totalOn.toLocaleString() + ' W</span></div>';
+
     panel.innerHTML = html;
 }
 
@@ -178,22 +206,18 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-14, 4, 0);
-        camera.position.set(-14, 16, 28);
+        controls.target.set(-22, 4, -4);
+        camera.position.set(-22, 20, 31);
     } else {
         is2BHK = true;
-        controls.target.set(16, 4, 0);
-        camera.position.set(16, 16, 28);
+        controls.target.set(24, 4, -4);
+        camera.position.set(24, 20, 31);
     }
     controls.update();
+    if (typeof positionSolarPanels === 'function') positionSolarPanels();
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
-    // Move solar panels to the newly focused house
-    if (typeof refreshSolarPanelsPlacement === 'function') {
-        refreshSolarPanelsPlacement();
-    }
-    // Hide back button when switching houses
     document.getElementById('back-btn').classList.remove('visible');
 }
 function toggleUpgrade() { focusHouse('2bhk'); }
@@ -201,19 +225,17 @@ function toggleUpgrade() { focusHouse('2bhk'); }
 // ═══════════════════════════════════════════════
 //  ROOM NAVIGATION PANEL
 // ═══════════════════════════════════════════════
-// 2BHK room zoom positions
 const bhk2RoomPositions = {
-    'Hall': { target: new THREE.Vector3(22, 3.5, 3), camera: new THREE.Vector3(22, 10, 16) },
-    'Bedroom 1': { target: new THREE.Vector3(11, 3.5, -6), camera: new THREE.Vector3(11, 10, 6) },
-    'Bedroom 2': { target: new THREE.Vector3(21, 3.5, -6), camera: new THREE.Vector3(21, 10, 6) },
-    'Kitchen': { target: new THREE.Vector3(8.5, 3.5, 0.75), camera: new THREE.Vector3(8.5, 10, 12) },
-    'Bathroom': { target: new THREE.Vector3(8.5, 3.5, 6), camera: new THREE.Vector3(8.5, 10, 16) }
+    'Hall': { target: new THREE.Vector3(29, 3.5, 4), camera: new THREE.Vector3(29, 12, 20) },
+    'Bedroom 1': { target: new THREE.Vector3(17, 3.5, -8.5), camera: new THREE.Vector3(17, 12, 4) },
+    'Bedroom 2': { target: new THREE.Vector3(31, 3.5, -8.5), camera: new THREE.Vector3(31, 12, 4) },
+    'Kitchen': { target: new THREE.Vector3(14.5, 3.5, -1), camera: new THREE.Vector3(14.5, 12, 12) },
+    'Bathroom': { target: new THREE.Vector3(14.5, 3.5, 7.5), camera: new THREE.Vector3(14.5, 12, 18) }
 };
 
 function buildRoomNavPanel() {
     const panel = document.getElementById('room-nav-panel');
-    let rooms;
-    let roomIcons;
+    let rooms, roomIcons;
 
     if (is2BHK) {
         rooms = ['Hall', 'Bedroom 1', 'Bedroom 2', 'Kitchen', 'Bathroom'];
@@ -241,36 +263,34 @@ function zoomToRoom(roomName) {
     const pos = positions[roomName];
     if (!pos) return;
 
-    // Smooth camera animation
     const startPos = camera.position.clone();
     const startTarget = controls.target.clone();
     const endPos = pos.camera;
     const endTarget = pos.target;
 
     let progress = 0;
-    const duration = 60; // frames
+    const duration = 60;
 
     function animateZoom() {
         progress++;
         const t = Math.min(progress / duration, 1);
-        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t; // ease in-out
+        const ease = t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
 
         camera.position.lerpVectors(startPos, endPos, ease);
         controls.target.lerpVectors(startTarget, endTarget, ease);
         controls.update();
 
-        if (t < 1) {
-            requestAnimationFrame(animateZoom);
-        }
+        if (t < 1) requestAnimationFrame(animateZoom);
     }
     animateZoom();
 
-    // Show back button
     document.getElementById('back-btn').classList.add('visible');
-
-    // Highlight active room button
     document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
-    event.target.closest('.room-nav-btn').classList.add('active');
+    const evt = (typeof event !== 'undefined') ? event : null;
+    if (evt && evt.target) {
+        const btn = evt.target.closest('.room-nav-btn');
+        if (btn) btn.classList.add('active');
+    }
 }
 
 function zoomOutToHouse() {
@@ -292,4 +312,331 @@ function toggleEnergyChart() {
 function toggleRoomNav() {
     const panel = document.getElementById('room-nav-panel');
     panel.classList.toggle('visible');
+}
+
+// ═══════════════════════════════════════════════
+//  STREET OVERVIEW RESET
+// ═══════════════════════════════════════════════
+function resetToStreetOverview() {
+    // Reset camera to standard overview
+    if (typeof camera !== 'undefined' && typeof controls !== 'undefined') {
+        camera.position.set(0, 20, 40);
+        controls.target.set(0, 4, 0);
+        controls.update();
+    }
+
+    // Hide house-specific UI elements
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) backBtn.classList.remove('visible');
+
+    const roomIndicator = document.getElementById('room-indicator');
+    if (roomIndicator) roomIndicator.classList.remove('visible');
+
+    const enterPrompt = document.getElementById('enter-prompt');
+    if (enterPrompt) enterPrompt.classList.remove('visible');
+
+    // Close panels if open
+    const roomNav = document.getElementById('room-nav-panel');
+    if (roomNav) roomNav.classList.remove('visible');
+
+    // Ensure all houses are visible and environment is visible
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = true;
+    if (typeof bhk2Group !== 'undefined') bhk2Group.visible = true;
+    if (typeof houseGroup !== 'undefined') houseGroup.visible = true;
+}
+
+// ═══════════════════════════════════════════════
+//  ROOM ENTRY POPUP HUD
+//  Glassmorphism popup when character enters a room
+// ═══════════════════════════════════════════════
+let roomPopupEl = null;
+let roomPopupTimeout = null;
+let roomPopupInterval = null;
+
+function createRoomPopupElement() {
+    if (roomPopupEl) return;
+    roomPopupEl = document.createElement('div');
+    roomPopupEl.id = 'room-popup';
+    roomPopupEl.innerHTML = '';
+    document.body.appendChild(roomPopupEl);
+}
+
+function showRoomPopup(roomName, houseId) {
+    createRoomPopupElement();
+
+    // Clear previous timers
+    if (roomPopupTimeout) clearTimeout(roomPopupTimeout);
+    if (roomPopupInterval) clearInterval(roomPopupInterval);
+
+    const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
+    const icon = roomIcons[roomName] || '🏠';
+
+    function renderPopup() {
+        const appList = houseId === '2bhk' ? bhk2Appliances : simpleAppliances;
+        const roomAppliances = appList.filter(a => a.room === roomName);
+
+        let totalWatts = 0;
+        let appHtml = '';
+        roomAppliances.forEach(a => {
+            const status = a.on ? '<span class="rp-on">ON</span>' : '<span class="rp-off">OFF</span>';
+            const wattDisplay = a.on ? a.watt : 0;
+            if (a.on) totalWatts += a.watt;
+            appHtml += '<div class="rp-appliance">' +
+                '<span class="rp-emoji">' + (a.emoji || '') + '</span>' +
+                '<span class="rp-name">' + a.name + '</span>' +
+                status +
+                '<span class="rp-watt">' + wattDisplay + 'W</span>' +
+                '</div>';
+        });
+
+        const hourlyCost = (totalWatts / 1000 * 8).toFixed(2); // ₹8 per unit approx
+
+        roomPopupEl.innerHTML =
+            '<div class="rp-header">' +
+            '<span class="rp-title">' + icon + ' ' + roomName + '</span>' +
+            '<button class="rp-close" onclick="hideRoomPopup()">×</button>' +
+            '</div>' +
+            '<div class="rp-appliances">' + appHtml + '</div>' +
+            '<div class="rp-footer">' +
+            '<div class="rp-total">⚡ Total: <strong>' + totalWatts + 'W</strong></div>' +
+            '<div class="rp-cost">💰 ~₹' + hourlyCost + '/hr</div>' +
+            '</div>';
+    }
+
+    renderPopup();
+    roomPopupEl.classList.add('visible');
+
+    // Live update every second
+    roomPopupInterval = setInterval(renderPopup, 1000);
+
+    // Auto-dismiss after 5 seconds
+    roomPopupTimeout = setTimeout(() => {
+        hideRoomPopup();
+    }, 5000);
+}
+
+function hideRoomPopup() {
+    if (roomPopupEl) roomPopupEl.classList.remove('visible');
+    if (roomPopupTimeout) { clearTimeout(roomPopupTimeout); roomPopupTimeout = null; }
+    if (roomPopupInterval) { clearInterval(roomPopupInterval); roomPopupInterval = null; }
+}
+
+// ═══════════════════════════════════════════════
+//  SOLAR PANEL HOUSE SELECTOR MODAL
+// ═══════════════════════════════════════════════
+let solarSelectorEl = null;
+
+function createSolarSelector() {
+    if (solarSelectorEl) return;
+    solarSelectorEl = document.createElement('div');
+    solarSelectorEl.id = 'solar-selector-modal';
+    solarSelectorEl.innerHTML =
+        '<div class="ssm-backdrop" onclick="closeSolarSelector()"></div>' +
+        '<div class="ssm-content">' +
+        '<button class="ssm-close" onclick="closeSolarSelector()">✕</button>' +
+        '<h2 class="ssm-title">☀️ Select Solar Installation</h2>' +
+        '<p class="ssm-subtitle">Choose which house to install solar panels on</p>' +
+        '<div class="ssm-buttons">' +
+        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouseUI(\'1bhk\')">🏠 1BHK House</button>' +
+        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouseUI(\'2bhk\')">🏢 2BHK House</button>' +
+        '<button class="ssm-btn ssm-both" onclick="selectSolarHouseUI(\'both\')">🏘️ Both Houses</button>' +
+        '</div>' +
+        '<button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>' +
+        '</div>';
+    document.body.appendChild(solarSelectorEl);
+}
+
+function showSolarSelector() {
+    createSolarSelector();
+    solarSelectorEl.classList.add('visible');
+}
+
+function closeSolarSelector() {
+    if (solarSelectorEl) solarSelectorEl.classList.remove('visible');
+}
+
+let solarTarget = null; // '1bhk', '2bhk', 'both'
+
+// NOTE: selectSolarHouse is defined in solar.js — do NOT redefine here
+// This was previously causing a conflict/freeze. The solar.js version
+// handles per-house solar state (houseState) correctly.
+function selectSolarHouseUI(target) {
+    solarTarget = target;
+    closeSolarSelector();
+    // Delegate to the solar.js selectSolarHouse
+    if (typeof selectSolarHouse === 'function') {
+        selectSolarHouse(target === 'both' ? '1bhk' : target);
+        if (target === 'both') selectSolarHouse('2bhk');
+    }
+}
+
+function performSolarToggle(target) {
+    isSolarMode = true;
+    const btn = document.getElementById('solar-btn');
+    const btnText = document.getElementById('solar-btn-text');
+    const btnIcon = document.getElementById('solar-btn-icon');
+    const panelCounter = document.getElementById('panel-counter');
+
+    if (btn) btn.className = 'solar-mode bottom-action-btn';
+    if (btnText) btnText.textContent = 'Remove Solar';
+    if (btnIcon) btnIcon.textContent = '⚡';
+    if (panelCounter) panelCounter.classList.add('visible');
+
+    currentPanelCount = 0;
+    solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
+
+    if (typeof updatePowerLines === 'function') updatePowerLines();
+    if (typeof updateStats === 'function') updateStats();
+}
+
+// ═══════════════════════════════════════════════
+//  DYNAMIC ENERGY DATA (live updating)
+// ═══════════════════════════════════════════════
+const dynamicEnergy = {
+    sessionStart: Date.now(),
+    cumulativeWh: 0,
+    lastTick: Date.now(),
+    perMinuteW: 0,
+    perHourW: 0,
+    intervalId: null
+};
+
+function startEnergyTracking() {
+    if (dynamicEnergy.intervalId) return;
+    dynamicEnergy.sessionStart = Date.now();
+    dynamicEnergy.cumulativeWh = 0;
+    dynamicEnergy.lastTick = Date.now();
+
+    dynamicEnergy.intervalId = setInterval(() => {
+        updateDynamicEnergy();
+    }, 1000);
+}
+
+function updateDynamicEnergy() {
+    const now = Date.now();
+    const dtHours = (now - dynamicEnergy.lastTick) / 3600000; // ms to hours
+    dynamicEnergy.lastTick = now;
+
+    // Calculate current active wattage
+    let activeWatts = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) activeWatts += a.watt; });
+
+    // Accumulate energy consumed in this interval
+    dynamicEnergy.cumulativeWh += activeWatts * dtHours;
+
+    // Per-minute = watts / 60 hours worth
+    dynamicEnergy.perMinuteW = activeWatts;
+    dynamicEnergy.perHourW = activeWatts;
+
+    // Update stat displays if they exist
+    const elMinute = document.getElementById('stat-per-minute');
+    if (elMinute) elMinute.textContent = (activeWatts / 60).toFixed(2) + ' Wh/min';
+    const elHour = document.getElementById('stat-per-hour');
+    if (elHour) elHour.textContent = (activeWatts).toFixed(0) + ' W/hr';
+    const elCumulative = document.getElementById('stat-cumulative');
+    if (elCumulative) elCumulative.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
+
+    // Track per-appliance duration for analytics
+    if (typeof trackApplianceDuration === 'function') trackApplianceDuration();
+}
+
+// Start tracking on load
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(startEnergyTracking, 500);
+});
+
+// ═══════════════════════════════════════════════
+//  FLOOR SELECTOR FOR 2BHK
+// ═══════════════════════════════════════════════
+let current2BHKFloor = 1;
+
+function showFloorSelector() {
+    let el = document.getElementById('floor-selector');
+    if (!el) {
+        el = document.createElement('div');
+        el.id = 'floor-selector';
+        el.innerHTML =
+            '<span class="fs-label">🏢 Floor:</span>' +
+            '<button class="fs-btn active" id="fs-btn-1" onclick="selectFloor(1)">1st Floor</button>' +
+            '<button class="fs-btn" id="fs-btn-2" onclick="selectFloor(2)">2nd Floor</button>';
+        document.body.appendChild(el);
+    }
+    el.classList.add('visible');
+}
+
+function hideFloorSelector() {
+    const el = document.getElementById('floor-selector');
+    if (el) el.classList.remove('visible');
+}
+
+function selectFloor(floorNum) {
+    current2BHKFloor = floorNum;
+
+    // Update button states
+    document.getElementById('fs-btn-1').classList.toggle('active', floorNum === 1);
+    document.getElementById('fs-btn-2').classList.toggle('active', floorNum === 2);
+
+    // Show/hide floor groups if they exist
+    if (typeof floor1Group !== 'undefined' && typeof floor2Group !== 'undefined') {
+        floor1Group.visible = (floorNum === 1);
+        floor2Group.visible = (floorNum === 2);
+    }
+
+    // Fade transition effect
+    if (boyState.mode === 'indoor' && boyState.insideHouse === '2bhk') {
+        const yOffset = (floorNum - 1) * (H + 0.3);
+        boyGroup.position.y = 0.15 + yOffset;
+        camera.position.y = boyGroup.position.y + 6;
+        controls.target.y = boyGroup.position.y + 1.5;
+        controls.update();
+    }
+
+    buildAppliancePanel();
+    recalcWattage();
+}
+
+// ═══════════════════════════════════════════════
+//  GAMIFIED TASK LIST & SAVINGS MODE
+// ═══════════════════════════════════════════════
+const savingsBaseline = {
+    totalWatts: 3500,
+    dailyCost: 224 // approx ₹ for 3500W
+};
+
+const gameTasks = [
+    { id: 'ac_off', text: 'Turn off AC when leaving room', done: false, icon: '❄️' },
+    { id: 'solar_peak', text: 'Use solar during peak hours', done: false, icon: '☀️' },
+    { id: 'led_switch', text: 'Switch to LED lights', done: true, icon: '💡' },
+    { id: 'fan_off', text: 'Turn off fan when not needed', done: false, icon: '🌀' },
+    { id: 'unplug', text: 'Unplug unused chargers', done: false, icon: '🔌' }
+];
+
+function buildSavingsPanel() {
+    let activeW = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) activeW += a.watt; });
+
+    const currentDailyCost = Math.round(activeW * 8 / 1000 * 8);
+    const saved = Math.max(0, savingsBaseline.dailyCost - currentDailyCost);
+    const weeklySaved = saved * 7;
+
+    let html = '<div class="savings-header">🌱 Savings Mode</div>';
+    html += '<div class="savings-compare">';
+    html += '<div class="sc-item"><span class="sc-label">Baseline</span><span class="sc-value">₹' + savingsBaseline.dailyCost + '/day</span></div>';
+    html += '<div class="sc-item"><span class="sc-label">Current</span><span class="sc-value sc-current">₹' + currentDailyCost + '/day</span></div>';
+    html += '<div class="sc-item sc-saved"><span class="sc-label">Weekly Saved</span><span class="sc-value">₹' + weeklySaved + '</span></div>';
+    html += '</div>';
+
+    // Gamified tasks
+    html += '<div class="game-tasks-header">🎮 Energy Challenges</div>';
+    gameTasks.forEach(t => {
+        html += '<div class="game-task ' + (t.done ? 'done' : '') + '">' +
+            '<span class="gt-icon">' + t.icon + '</span>' +
+            '<span class="gt-text">' + t.text + '</span>' +
+            '<span class="gt-check">' + (t.done ? '✓' : '○') + '</span>' +
+            '</div>';
+    });
+
+    return html;
 }

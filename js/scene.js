@@ -31,7 +31,7 @@ camera.position.set(0, 20, 40);
 // Renderer
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -51,8 +51,9 @@ const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 1.5;
-controls.maxDistance = 70;
-controls.maxPolarAngle = Math.PI / 2; // Allow ground level view
+controls.maxDistance = 120;
+controls.minPolarAngle = 0;          // allow looking straight down
+controls.maxPolarAngle = Math.PI;    // allow looking from below (full rotation)
 controls.target.set(0, 4, 0);
 controls.update();
 
@@ -72,8 +73,8 @@ scene.add(ambientLight);
 const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
 sunLight.position.set(15, 25, 10);
 sunLight.castShadow = true;
-sunLight.shadow.mapSize.width = 2048;
-sunLight.shadow.mapSize.height = 2048;
+sunLight.shadow.mapSize.width = 1024;
+sunLight.shadow.mapSize.height = 1024;
 sunLight.shadow.camera.left = -25;
 sunLight.shadow.camera.right = 25;
 sunLight.shadow.camera.top = 25;

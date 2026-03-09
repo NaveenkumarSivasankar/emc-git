@@ -1,10 +1,51 @@
-// ═══════════════════════════════════════════════
-//  WALL + ROOF TRANSPARENCY
-// ═══════════════════════════════════════════════
 function updateWallTransparency() {
     const camPos = camera.position.clone();
-    const distSimple = camPos.distanceTo(new THREE.Vector3(-14, 4, 0));
+
+    // When indoor, make outer walls fully transparent so interior is visible
+    // Room partition transparency is handled by updateRoomTransparency() in interiors.js
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        if (boyState.insideHouse === '1bhk') {
+            transparentWalls.forEach(wall => {
+                wall.material.opacity = 0;
+                wall.material.transparent = true;
+                wall.material.needsUpdate = true;
+            });
+            roofMat.opacity = 0; roofMat.needsUpdate = true;
+            doorMat.opacity = 0; doorMat.needsUpdate = true;
+            labels.forEach(label => {
+                label.element.style.opacity = 1;
+                label.element.style.display = 'block';
+            });
+            environmentGroup.visible = false;
+            bhk2Group.visible = false;
+        } else if (boyState.insideHouse === '2bhk') {
+            bhk2TransWalls.forEach(wall => {
+                wall.material.opacity = 0;
+                wall.material.transparent = true;
+                wall.material.needsUpdate = true;
+            });
+            bhk2RoofMat.opacity = 0; bhk2RoofMat.needsUpdate = true;
+            bhk2DoorMat.opacity = 0; bhk2DoorMat.needsUpdate = true;
+            bhk2WallMat.opacity = 0; bhk2WallMat.needsUpdate = true;
+            roomLabels.forEach(label => {
+                label.element.style.opacity = 1;
+                label.element.style.display = 'block';
+            });
+            environmentGroup.visible = false;
+            houseGroup.visible = false;
+        }
+        return;
+    }
+
+    // Outdoor: restore visibility
+    houseGroup.visible = true;
+    bhk2Group.visible = true;
+    environmentGroup.visible = true;
+
+    // Camera-distance-based transparency for 1BHK
+    const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, -4));
     const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
+    if (tSimple < 1.0 && typeof window.load1BHKFurniture === 'function') window.load1BHKFurniture();
 
     transparentWalls.forEach(wall => {
         wall.material.opacity = tSimple;
@@ -18,8 +59,10 @@ function updateWallTransparency() {
         label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
     });
 
-    const dist2BHK = camPos.distanceTo(new THREE.Vector3(16, 4, 0));
+    // Camera-distance-based transparency for 2BHK
+    const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, -4));
     const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
+    if (t2BHK < 1.0 && typeof window.load2BHKFurniture === 'function') window.load2BHKFurniture();
 
     bhk2TransWalls.forEach(wall => {
         wall.material.opacity = t2BHK;
@@ -33,36 +76,21 @@ function updateWallTransparency() {
         label.element.style.opacity = 1 - t2BHK;
         label.element.style.display = (1 - t2BHK) > 0.2 ? 'block' : 'none';
     });
-
-    // Hide environment & other house when inside a house
-    const insideSimple = tSimple < 0.3;
-    const inside2BHK = t2BHK < 0.3;
-    environmentGroup.visible = !insideSimple && !inside2BHK;
-    bhk2Group.visible = !insideSimple;   // hide 2BHK when inside 1BHK
-    houseGroup.visible = !inside2BHK;    // hide 1BHK when inside 2BHK
 }
 
-// ═══════════════════════════════════════════════
-//  ZOOM HINT
-// ═══════════════════════════════════════════════
-let hintTimeout;
-controls.addEventListener('change', () => {
-    const hint = document.getElementById('zoom-hint');
-    if (camera.position.distanceTo(controls.target) < 15) {
-        hint.classList.add('hidden');
-    }
-    clearTimeout(hintTimeout);
-});
+
 
 // ═══════════════════════════════════════════════
-//  ANIMATION LOOP
+//  ANIMATION LOOP (optimized)
 // ═══════════════════════════════════════════════
 const clock = new THREE.Clock();
+let frameCount = 0;
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     const elapsed = clock.getElapsedTime();
+    frameCount++;
 
     controls.update();
 
@@ -96,8 +124,13 @@ function animate() {
         bird.group.rotation.y = Math.atan2(dx, dz);
     });
 
-    // 1BHK appliances
-    if (!is2BHK) {
+    // Determine which house to animate (skip inactive house for performance)
+    const activeHouse = (typeof boyState !== 'undefined' && boyState.mode === 'indoor')
+        ? boyState.insideHouse
+        : (typeof currentFocusedHouse !== 'undefined' ? currentFocusedHouse : 'simple');
+
+    // 1BHK appliances (only if active)
+    if (activeHouse === 'simple' || activeHouse === '1bhk') {
         const sa = simpleAppliances;
         if (sa[1].on) fan1.blades.rotation.y += delta * 5;
         if (sa[5].on) tableFan.blades.rotation.z += delta * 8;
@@ -124,8 +157,8 @@ function animate() {
         } else { light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0; }
     }
 
-    // 2BHK appliances
-    if (is2BHK) {
+    // 2BHK appliances (only if active)
+    if (activeHouse === '2bhk') {
         bhk2AnimData.fans.forEach(f => { if (f.on) f.mesh.blades.rotation.y += delta * 5; });
         bhk2AnimData.tableFans.forEach(tf => { if (tf.on) tf.mesh.blades.rotation.z += delta * 8; });
         bhk2AnimData.acs.forEach(a2 => {
@@ -171,10 +204,14 @@ function animate() {
     // Entry circle pulse animation
     updateEntryCircles(elapsed);
 
-    updateWallTransparency();
+    // Wall transparency — throttle to every 3rd frame for performance
+    if (frameCount % 3 === 0) {
+        updateWallTransparency();
+    }
 
-    // TV flicker
-    [...simpleAppliances, ...bhk2Appliances].forEach(a => {
+    // TV flicker (only for active house)
+    const tvList = activeHouse === '2bhk' ? bhk2Appliances : simpleAppliances;
+    tvList.forEach(a => {
         if (a.kind === 'tv' && a.on && a.mesh && a.mesh.screen) {
             const noise = 0.8 + Math.random() * 0.4;
             a.mesh.screen.material.emissiveIntensity = noise;
@@ -185,7 +222,7 @@ function animate() {
     });
 
     // Water animation
-    if (waterStream.visible) {
+    if (typeof waterStream !== 'undefined' && waterStream && waterStream.visible) {
         waterStream.scale.y = 1 + Math.sin(elapsed * 20) * 0.05;
         waterStream.material.opacity = 0.5 + Math.sin(elapsed * 15) * 0.1;
     }
