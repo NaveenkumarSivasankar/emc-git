@@ -19,7 +19,7 @@ Object.values(roomGroups).forEach(g => bhk2Group.add(g));
 
 // Enlarged Dimensions
 const W2 = 28, D2 = 24;
-const bhk2WallMat = new THREE.MeshStandardMaterial({ color: 0xe0d0b8, roughness: 0.8, transparent: true, opacity: 1 });
+const bhk2WallMat = new THREE.MeshStandardMaterial({ color: 0xe0d0b8, roughness: 0.8, transparent: true, opacity: 1, side: THREE.DoubleSide });
 const bhk2RoofMat = new THREE.MeshStandardMaterial({ color: 0x6B3410, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 1 });
 const bhk2DoorMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7, transparent: true, opacity: 1 });
 const bhk2TransWalls = [];
@@ -69,13 +69,7 @@ addBhk2Window(-7, 4, D2 / 2 + 0.15, 0); addBhk2Window(7, 4, D2 / 2 + 0.15, 0);
 addBhk2Window(-W2 / 2 - 0.15, 4, -4, Math.PI / 2); addBhk2Window(W2 / 2 + 0.15, 4, -4, Math.PI / 2);
 addBhk2Window(-W2 / 2 - 0.15, 4, 5, Math.PI / 2); addBhk2Window(W2 / 2 + 0.15, 4, 5, Math.PI / 2);
 
-// 2BHK label
-const bhk2LabelDiv = document.createElement('div');
-bhk2LabelDiv.className = 'appliance-label';
-bhk2LabelDiv.innerHTML = '<span class="name" style="font-size:1.1rem;">🏢 2BHK House</span>';
-const bhk2Label = new THREE.CSS2DObject(bhk2LabelDiv);
-bhk2Label.position.set(0, H + roofH + 4, 0);
-bhk2Group.add(bhk2Label);
+
 
 // ═══════════════════════════════════════════════
 //  PARTITION WALLS
@@ -86,7 +80,7 @@ bhk2Group.add(bhk2Label);
 //    Bedroom1:  x=-14 to 0,  z=-12 to -5 (left-back, 14×7)
 //    Bedroom2:  x=0 to 14,   z=-12 to -5 (right-back, 14×7)
 // ═══════════════════════════════════════════════
-const partWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85 });
+const partWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
 const bhk2PartWalls = [];
 function addPartWall(w, h, d, x, y, z, room) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), partWallMat.clone());

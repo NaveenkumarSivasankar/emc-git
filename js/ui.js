@@ -437,9 +437,9 @@ function createSolarSelector() {
         '<h2 class="ssm-title">☀️ Select Solar Installation</h2>' +
         '<p class="ssm-subtitle">Choose which house to install solar panels on</p>' +
         '<div class="ssm-buttons">' +
-        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse(\'1bhk\')">🏠 1BHK House</button>' +
-        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse(\'2bhk\')">🏢 2BHK House</button>' +
-        '<button class="ssm-btn ssm-both" onclick="selectSolarHouse(\'both\')">🏘️ Both Houses</button>' +
+        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouseUI(\'1bhk\')">🏠 1BHK House</button>' +
+        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouseUI(\'2bhk\')">🏢 2BHK House</button>' +
+        '<button class="ssm-btn ssm-both" onclick="selectSolarHouseUI(\'both\')">🏘️ Both Houses</button>' +
         '</div>' +
         '<button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>' +
         '</div>';
@@ -457,11 +457,17 @@ function closeSolarSelector() {
 
 let solarTarget = null; // '1bhk', '2bhk', 'both'
 
-function selectSolarHouse(target) {
+// NOTE: selectSolarHouse is defined in solar.js — do NOT redefine here
+// This was previously causing a conflict/freeze. The solar.js version
+// handles per-house solar state (houseState) correctly.
+function selectSolarHouseUI(target) {
     solarTarget = target;
     closeSolarSelector();
-    // Now actually toggle solar with the selected target
-    performSolarToggle(target);
+    // Delegate to the solar.js selectSolarHouse
+    if (typeof selectSolarHouse === 'function') {
+        selectSolarHouse(target === 'both' ? '1bhk' : target);
+        if (target === 'both') selectSolarHouse('2bhk');
+    }
 }
 
 function performSolarToggle(target) {

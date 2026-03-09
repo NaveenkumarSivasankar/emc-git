@@ -43,6 +43,24 @@ const mouthMat = new THREE.MeshStandardMaterial({ color: 0xCC6666, roughness: 0.
 const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.025, 0.03), mouthMat);
 mouth.position.set(0, 1.97, 0.30); boyGroup.add(mouth);
 
+// Nose
+const nose = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 6), skinMat);
+nose.position.set(0, 2.04, 0.33); nose.rotation.x = -Math.PI / 2; boyGroup.add(nose);
+
+// Ears (small, natural)
+const earGeo = new THREE.SphereGeometry(0.04, 8, 8);
+const leftEar = new THREE.Mesh(earGeo, skinMat);
+leftEar.position.set(-0.30, 2.10, 0.05); leftEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(leftEar);
+const rightEar = new THREE.Mesh(earGeo, skinMat);
+rightEar.position.set(0.30, 2.10, 0.05); rightEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(rightEar);
+
+// Eyebrows
+const browMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
+const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
+leftBrow.position.set(-0.11, 2.19, 0.29); boyGroup.add(leftBrow);
+const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
+rightBrow.position.set(0.11, 2.19, 0.29); boyGroup.add(rightBrow);
+
 // ── NECK ──
 const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.18, 8), skinMat);
 neck.position.y = 1.85; boyGroup.add(neck);
@@ -62,6 +80,16 @@ stripe.position.set(0, 1.45, 0); boyGroup.add(stripe);
 // ── HIPS ──
 const hips = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.18, 0.25), pantsMat);
 hips.position.y = 1.08; boyGroup.add(hips);
+
+// ── BELT ──
+const beltMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.5, metalness: 0.3 });
+const belt = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.27), beltMat);
+belt.position.y = 1.15; boyGroup.add(belt);
+const buckleMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.8, roughness: 0.2 });
+const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.28), buckleMat);
+buckle.position.set(0, 1.15, 0.01); boyGroup.add(buckle);
+
+// (backpack removed for a cleaner look)
 
 // ── ARMS (Cylinder-based with elbow pivots) ──
 const leftShoulderPivot = new THREE.Group();
@@ -154,7 +182,7 @@ const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow1.position.set(0, 1.5, 0);
 arrow1.rotation.x = Math.PI;
 entry1BHK.add(arrow1);
-entry1BHK.position.set(-22, 0, 12);
+entry1BHK.position.set(-22, 0, 8);
 scene.add(entry1BHK);
 
 // 2BHK entry circle
@@ -171,44 +199,9 @@ const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow2.position.set(0, 1.5, 0);
 arrow2.rotation.x = Math.PI;
 entry2BHK.add(arrow2);
-entry2BHK.position.set(24, 0, 13);
+entry2BHK.position.set(24, 0, 9);
 scene.add(entry2BHK);
 
-// ═══════════════════════════════════════════════
-//  EXIT BUTTONS ABOVE DOORS
-// ═══════════════════════════════════════════════
-function createExitButton(houseId) {
-    const btn = document.createElement('button');
-    btn.className = 'exit-scene-btn';
-    btn.textContent = 'Exit House';
-    btn.onclick = (e) => {
-        e.stopPropagation();
-        exitHouse();
-    };
-
-    const obj = new THREE.CSS2DObject(btn);
-    // Position above the door (Door height is ~4-5, so 6 is good)
-    obj.position.set(0, 6, -1); // Slightly retracted to avoid clipping with front door frame
-    return obj;
-}
-
-// Add Exit button to 1BHK
-if (typeof houseGroup !== 'undefined') {
-    const exitBtn1 = createExitButton('1bhk');
-    // Align with 1BHK door at x=0 in its local space
-    exitBtn1.position.set(0, 6.5, 7.8);
-    houseGroup.add(exitBtn1);
-    window.exitBtn1 = exitBtn1; // expose for visibility control if needed
-}
-
-// Add Exit button to 2BHK
-if (typeof bhk2Group !== 'undefined') {
-    const exitBtn2 = createExitButton('2bhk');
-    // Align with 2BHK door at x=0 in its local space
-    exitBtn2.position.set(0, 6.5, 8.3);
-    bhk2Group.add(exitBtn2);
-    window.exitBtn2 = exitBtn2;
-}
 
 // ═══════════════════════════════════════════════
 //  COLLISION SYSTEM — SOLID OBJECTS
@@ -268,29 +261,7 @@ function checkCollision(testX, testZ) {
     return false;
 }
 
-// ═══════════════════════════════════════════════
-//  DOOR PUSH/PULL ANIMATION
-// ═══════════════════════════════════════════════
-const DOOR_OPEN_ANGLE = Math.PI / 2.2;  // ~80 degrees swing
-const DOOR_PROXIMITY = 1.5;             // distance to trigger open (touch)
-const DOOR_ANIM_SPEED = 5;              // animation speed
-
-function updateDoors(delta) {
-    if (boyState.mode !== 'indoor') return;
-    const bx = boyGroup.position.x;
-    const bz = boyGroup.position.z;
-    const doors = boyState.insideHouse === '1bhk' ? bhk1Doors : bhk2Doors;
-    doors.forEach(door => {
-        const dx = bx - door.wx;
-        const dz = bz - door.wz;
-        const dist = Math.sqrt(dx * dx + dz * dz);
-        const targetAngle = dist < DOOR_PROXIMITY ? DOOR_OPEN_ANGLE : 0;
-        // Smoothly animate toward target
-        door.openAngle += (targetAngle - door.openAngle) * DOOR_ANIM_SPEED * delta;
-        if (Math.abs(door.openAngle) < 0.01) door.openAngle = 0;
-        door.pivot.rotation.y = door.baseRy + door.openAngle;
-    });
-}
+// Door animation is handled by interiors.js updateDoors()
 
 // Room regions for detecting which room the boy is in
 const roomRegions = [
@@ -341,10 +312,12 @@ const indoorSpawn = {
     '2bhk': { pos: new THREE.Vector3(24, 0.15, 5), rot: Math.PI }
 };
 
-// Indoor movement bounds (world coords)
+// Indoor movement bounds (world coords) — matches wall positions exactly
+// 1BHK: houseGroup at (-22,0,-4), W=28, D=22 → walls at x[-36,-8] z[-15,7]
+// 2BHK: bhk2Group at (24,0,-4), W2=28, D2=24 → walls at x[10,38] z[-16,8]
 const indoorBounds = {
-    '1bhk': { xMin: -36, xMax: -8, zMin: -15, zMax: 6 },
-    '2bhk': { xMin: 10, xMax: 38, zMin: -16, zMax: 7 }
+    '1bhk': { xMin: -35.5, xMax: -8.5, zMin: -14.5, zMax: 6.5 },
+    '2bhk': { xMin: 10.5, xMax: 37.5, zMin: -15.5, zMax: 7.5 }
 };
 
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
@@ -365,8 +338,8 @@ document.addEventListener('keydown', (e) => {
         }
     }
 
-    // ESCAPE — exit house back to road
-    if (e.key === 'Escape' && boyState.mode === 'indoor' && boyState.nearExit) {
+    // ESCAPE — exit house back to road (works from anywhere inside)
+    if (e.key === 'Escape' && boyState.mode === 'indoor') {
         exitHouse();
         e.preventDefault();
     }
@@ -477,9 +450,13 @@ function exitHouse() {
 
     boyState.currentRoom = null;
 
-    // Reset all doors to closed
-    bhk1Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
-    bhk2Doors.forEach(d => { d.openAngle = 0; d.pivot.rotation.y = d.baseRy; });
+    // Reset all interactive doors to closed
+    if (typeof interactiveDoors !== 'undefined') {
+        interactiveDoors.forEach(d => {
+            d.currentAngle = 0;
+            d.pivot.rotation.y = d.baseRY;
+        });
+    }
 
     // Hide prompts
     const prompt = document.getElementById('interaction-popup');
@@ -542,27 +519,58 @@ function updateBoy(delta) {
         const prevX = boyGroup.position.x;
         const prevZ = boyGroup.position.z;
 
-        boyGroup.position.x += moveDir.x * boyState.speed * delta;
-        boyGroup.position.z += moveDir.z * boyState.speed * delta;
+        const dx = moveDir.x * boyState.speed * delta;
+        const dz = moveDir.z * boyState.speed * delta;
 
-        // Clamp based on mode
-        if (boyState.mode === 'outdoor') {
-            boyGroup.position.x = Math.max(-45, Math.min(48, boyGroup.position.x));
-            boyGroup.position.z = Math.max(9, Math.min(17, boyGroup.position.z));
-        } else if (boyState.mode === 'indoor') {
-            const bounds = indoorBounds[boyState.insideHouse];
-            if (bounds) {
-                boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
-                boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+        // Clamp helper
+        function clampPos(x, z) {
+            if (boyState.mode === 'outdoor') {
+                x = Math.max(-45, Math.min(48, x));
+                z = Math.max(9, Math.min(17, z));
+            } else if (boyState.mode === 'indoor') {
+                const bounds = indoorBounds[boyState.insideHouse];
+                if (bounds) {
+                    x = Math.max(bounds.xMin, Math.min(bounds.xMax, x));
+                    z = Math.max(bounds.zMin, Math.min(bounds.zMax, z));
+                }
+            }
+            return { x, z };
+        }
+
+        const collides = typeof checkFurnitureCollision === 'function'
+            ? checkFurnitureCollision : () => false;
+
+        // Axis-separated sliding collision:
+        // Try moving both axes first
+        let newX = prevX + dx;
+        let newZ = prevZ + dz;
+        let clamped = clampPos(newX, newZ);
+        newX = clamped.x; newZ = clamped.z;
+
+        if (collides(newX, newZ)) {
+            // Both blocked — try X-only movement (slide along Z wall)
+            newX = prevX + dx;
+            newZ = prevZ;
+            clamped = clampPos(newX, newZ);
+            newX = clamped.x; newZ = clamped.z;
+
+            if (collides(newX, newZ)) {
+                // X also blocked — try Z-only movement (slide along X wall)
+                newX = prevX;
+                newZ = prevZ + dz;
+                clamped = clampPos(newX, newZ);
+                newX = clamped.x; newZ = clamped.z;
+
+                if (collides(newX, newZ)) {
+                    // Fully stuck — no movement possible
+                    newX = prevX;
+                    newZ = prevZ;
+                }
             }
         }
 
-        // Furniture collision check — revert if colliding
-        if (typeof checkFurnitureCollision === 'function' &&
-            checkFurnitureCollision(boyGroup.position.x, boyGroup.position.z)) {
-            boyGroup.position.x = prevX;
-            boyGroup.position.z = prevZ;
-        }
+        boyGroup.position.x = newX;
+        boyGroup.position.z = newZ;
 
         // Face movement direction
         const targetAngle = Math.atan2(moveDir.x, moveDir.z);
@@ -714,3 +722,29 @@ function updateEntryCircles(elapsed) {
     entry2Circle.scale.set(scale2, scale2, 1);
     arrow2.position.y = 1.5 + arrowBob;
 }
+
+// ═══════════════════════════════════════════════
+//  CONTROLS HINT OVERLAY
+// ═══════════════════════════════════════════════
+(function createControlsOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'controls-overlay';
+    overlay.innerHTML = `
+        <div class="controls-title">Controls</div>
+        <div class="controls-arrows">
+            <div class="key-row"><span class="key">↑</span></div>
+            <div class="key-row">
+                <span class="key">←</span>
+                <span class="key">↓</span>
+                <span class="key">→</span>
+            </div>
+        </div>
+        <div class="controls-actions">
+            <span class="key wide">Enter</span> <span class="key-label">Enter House</span>
+        </div>
+        <div class="controls-actions">
+            <span class="key wide">ESC</span> <span class="key-label">Exit House</span>
+        </div>
+    `;
+    document.body.appendChild(overlay);
+})();

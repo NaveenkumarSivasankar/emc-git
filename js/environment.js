@@ -301,9 +301,7 @@ createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 
 // NOTE: Trees behind houses REMOVED for clearer view
 
-// Side trees (far from houses — varied)
-createTallTree(-35, 0, 5, 1.1); createRoundTree(38, 0, 6, 1.2);
-createPineTree(-38, 0, -5, 1.0); createBushyTree(40, 0, -6, 1.3);
+// Side trees beside houses REMOVED per user request
 
 // Bushes along far side of road only
 createBush(-25, 0, 18, 1.2); createBush(-16, 0, 19, 1.0); createBush(-5, 0, 18, 0.9);

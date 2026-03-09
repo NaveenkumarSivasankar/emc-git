@@ -12,26 +12,43 @@ const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalnes
 
 function createSolarPanel() {
     const g = new THREE.Group();
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.08, 1.2), panelMat);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.10, 1.8), panelMat);
     g.add(panel);
     const gridMat = new THREE.MeshBasicMaterial({ color: 0x283593 });
-    for (let i = -2; i <= 2; i++) {
-        const hLine = new THREE.Mesh(new THREE.BoxGeometry(1.75, 0.01, 0.02), gridMat);
-        hLine.position.set(0, 0.05, i * 0.24); g.add(hLine);
-    }
     for (let i = -3; i <= 3; i++) {
-        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.01, 1.15), gridMat);
-        vLine.position.set(i * 0.25, 0.05, 0); g.add(vLine);
+        const hLine = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.01, 0.02), gridMat);
+        hLine.position.set(0, 0.06, i * 0.25); g.add(hLine);
+    }
+    for (let i = -4; i <= 4; i++) {
+        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.01, 1.75), gridMat);
+        vLine.position.set(i * 0.29, 0.06, 0); g.add(vLine);
     }
     const frameParts = [
-        new THREE.BoxGeometry(1.85, 0.12, 0.06), new THREE.BoxGeometry(1.85, 0.12, 0.06),
-        new THREE.BoxGeometry(0.06, 0.12, 1.2), new THREE.BoxGeometry(0.06, 0.12, 1.2)
+        new THREE.BoxGeometry(2.65, 0.14, 0.06), new THREE.BoxGeometry(2.65, 0.14, 0.06),
+        new THREE.BoxGeometry(0.06, 0.14, 1.8), new THREE.BoxGeometry(0.06, 0.14, 1.8)
     ];
-    const framePositions = [[0, 0, 0.6], [0, 0, -0.6], [-0.9, 0, 0], [0.9, 0, 0]];
+    const framePositions = [[0, 0, 0.9], [0, 0, -0.9], [-1.3, 0, 0], [1.3, 0, 0]];
     frameParts.forEach((geo, i) => {
         const mesh = new THREE.Mesh(geo, panelFrameMat);
         mesh.position.set(...framePositions[i]); g.add(mesh);
     });
+
+    // ── MOUNTING STAND (two support legs) ──
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.4 });
+    // Front leg (shorter — panel tilts toward sun)
+    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.08), standMat);
+    frontLeg.position.set(0, -0.22, 0.6); g.add(frontLeg);
+    // Back leg (taller — supports the high side)
+    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.08), standMat);
+    backLeg.position.set(0, -0.32, -0.6); g.add(backLeg);
+    // Cross rail connecting both legs at the base
+    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.4), standMat);
+    crossRail.position.set(0, -0.45, 0); g.add(crossRail);
+    // Two additional side supports for stability
+    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
+    sideLegL.position.set(-0.9, -0.25, 0); g.add(sideLegL);
+    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
+    sideLegR.position.set(0.9, -0.25, 0); g.add(sideLegR);
 
     g.visible = false;
     return g;
@@ -79,6 +96,34 @@ setTimeout(() => {
     initializeHouseSolar('1bhk');
     initializeHouseSolar('2bhk');
 }, 500);
+
+// ═══════════════════════════════════════════════
+//  ADD SOLAR PANEL BUTTONS ON HOUSES
+// ═══════════════════════════════════════════════
+(function createSolarButtons() {
+    function makeSolarBtn(houseKey, targetGroup, yPos) {
+        const btn = document.createElement('button');
+        btn.className = 'add-solar-btn';
+        btn.innerHTML = '☀️ Add Solar';
+        btn.onclick = (e) => {
+            e.stopPropagation();
+            selectSolarHouse(houseKey);
+        };
+        const obj = new THREE.CSS2DObject(btn);
+        obj.position.set(0, yPos, 0);
+        targetGroup.add(obj);
+        return obj;
+    }
+
+    setTimeout(() => {
+        if (typeof houseGroup !== 'undefined') {
+            makeSolarBtn('1bhk', houseGroup, H + roofH + 1.5);
+        }
+        if (typeof bhk2Group !== 'undefined') {
+            makeSolarBtn('2bhk', bhk2Group, H + roofH + 2);
+        }
+    }, 600);
+})();
 
 
 
@@ -162,9 +207,17 @@ function selectSolarHouse(houseKey) {
     closeSolarModal();
     const state = houseState[houseKey];
 
-    // Switch view to the house being installed on
-    if (typeof focusHouse === 'function') {
-        focusHouse(houseKey === '2bhk' ? '2bhk' : 'simple');
+    // Set the active house flag without camera manipulation
+    // This avoids freezing when the boy is indoors or mid-transition
+    if (typeof is2BHK !== 'undefined') {
+        is2BHK = (houseKey === '2bhk');
+    }
+
+    // Only reposition camera if boy is NOT indoors (avoid disrupting indoor navigation)
+    if (typeof boyState === 'undefined' || boyState.mode !== 'indoor') {
+        if (typeof focusHouse === 'function') {
+            focusHouse(houseKey === '2bhk' ? '2bhk' : 'simple');
+        }
     }
 
     state.isSolarMode = true;
@@ -177,8 +230,10 @@ function selectSolarHouse(houseKey) {
     state.panels = [];
     state.count = 0; // Initialize roof as purely empty
 
-    updatePowerLines();
-    updateStats();
+    if (typeof updatePowerLines === 'function') updatePowerLines();
+    if (typeof updateStats === 'function') updateStats();
+    if (typeof buildAppliancePanel === 'function') buildAppliancePanel();
+    if (typeof recalcWattage === 'function') recalcWattage();
 }
 
 // Override original toggleSolar directly for our new button
@@ -203,17 +258,33 @@ function toggleSolar() {
 }
 
 function updatePowerLines() {
-    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
-    const state = houseState[activeKey];
+    if (typeof poleGroup === 'undefined') return;
 
-    // Total watt assumes active house for now like original behavior
-    let total = 0;
-    const list = activeKey === '2bhk' ? bhk2Appliances : simpleAppliances;
-    list.forEach(a => { if (a.on) total += a.watt; });
+    // Check BOTH houses for solar mode — grid should only fade based on combined coverage
+    const state1 = houseState['1bhk'];
+    const state2 = houseState['2bhk'];
+    const anySolarMode = state1.isSolarMode || state2.isSolarMode;
 
-    const panelsNeeded = Math.ceil(total / 350);
-    const coverage = panelsNeeded > 0 ? Math.min(state.count / panelsNeeded, 1) : 0;
-    const poleOpacity = state.isSolarMode ? Math.max(0.1, 1 - coverage) : 1;
+    if (!anySolarMode) {
+        // No solar on either house — grid fully visible
+        poleGroup.children.forEach(child => {
+            if (child.material) { child.material.transparent = true; child.material.opacity = 1; }
+        });
+        return;
+    }
+
+    // Calculate combined coverage from both houses
+    let total1 = 0, total2 = 0;
+    simpleAppliances.forEach(a => { if (a.on) total1 += a.watt; });
+    bhk2Appliances.forEach(a => { if (a.on) total2 += a.watt; });
+    const totalWatt = total1 + total2;
+
+    const totalPanelsNeeded = Math.max(1, Math.ceil(totalWatt / 350));
+    const totalPanels = state1.count + state2.count;
+    const overallCoverage = Math.min(totalPanels / totalPanelsNeeded, 1);
+
+    // Grid fades proportionally to overall solar coverage, minimum 0.3 so it stays visible
+    const poleOpacity = Math.max(0.3, 1 - overallCoverage * 0.7);
 
     poleGroup.children.forEach(child => {
         if (child.material) { child.material.transparent = true; child.material.opacity = poleOpacity; }

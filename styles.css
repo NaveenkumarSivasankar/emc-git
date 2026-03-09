@@ -1733,3 +1733,105 @@ canvas {
         display: block;
     }
 }
+
+/* ═══════════════════════════════════════════════
+   CONTROLS HINT OVERLAY
+   ═══════════════════════════════════════════════ */
+#controls-overlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
+    padding: 14px 18px;
+    background: rgba(10, 10, 30, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    user-select: none;
+}
+
+#controls-overlay .controls-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #FFD700;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+#controls-overlay .controls-arrows {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+#controls-overlay .key-row {
+    display: flex;
+    gap: 4px;
+}
+
+#controls-overlay .key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#controls-overlay .key.wide {
+    min-width: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+#controls-overlay .controls-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+#controls-overlay .key-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════
+   ADD SOLAR BUTTON ON HOUSE
+   ═══════════════════════════════════════════════ */
+.add-solar-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: #1a1a2e;
+    box-shadow: 0 4px 16px rgba(241, 196, 15, 0.4);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.add-solar-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 6px 24px rgba(241, 196, 15, 0.6);
+}
