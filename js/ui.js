@@ -27,7 +27,9 @@ function toggleAppliance(idx, isOn) {
     } else if (a.kind === 'tap') {
         waterStream.visible = isOn;
     }
+    // 'generic', 'fridge', 'tablefan' kinds: no mesh toggle needed
     recalcWattage();
+    buildAppliancePanel();
 }
 
 function toggleSimpleAppliance(idx, isOn) {
@@ -54,7 +56,9 @@ function toggleSimpleAppliance(idx, isOn) {
         }
         screen.material.needsUpdate = true;
     }
+    // 'generic' kind: no mesh toggle needed
     recalcWattage();
+    buildAppliancePanel();
 }
 
 // ═══════════════════════════════════════════════
@@ -62,36 +66,53 @@ function toggleSimpleAppliance(idx, isOn) {
 // ═══════════════════════════════════════════════
 function recalcWattage() {
     let total = 0;
-    if (is2BHK) {
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    if (activeKey === '2bhk') {
         bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
     } else {
         simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
     }
-    document.getElementById('stat-consumption').textContent = total.toLocaleString() + ' W';
+
+    // Fallback if houseState isn't fully initialized yet
+    const currentCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    setText('stat-consumption', total.toLocaleString() + ' W');
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    document.getElementById('stat-panels').textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
+    setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
+
+    const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    document.getElementById('stat-savings').textContent = '₹' + monthlySaving.toLocaleString();
-    document.getElementById('stat-co2').textContent = co2Saved + ' kg/yr';
+
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved + ' kg/yr');
+
     updateBarChart(total, coverageRatio);
 }
 
 function updateBarChart(totalW, coverageRatio) {
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
+
     const solarPct = Math.round(coverageRatio * 100);
     const gridPct = 100 - solarPct;
-    document.getElementById('grid-bar').style.width = Math.max(gridPct, 5) + '%';
-    document.getElementById('grid-bar').textContent = gridPct + '%';
-    document.getElementById('solar-bar').style.width = Math.max(solarPct, 5) + '%';
-    document.getElementById('solar-bar').textContent = solarPct + '%';
+
+    setWidth('grid-bar', Math.max(gridPct, 5) + '%');
+    setText('grid-bar', gridPct + '%');
+
+    setWidth('solar-bar', Math.max(solarPct, 5) + '%');
+    setText('solar-bar', solarPct + '%');
+
     const dailyKwh = totalW * 8 / 1000;
     const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
     const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
     const monthlyBill = Math.round(gridCostDaily * 30);
-    document.getElementById('calc-grid').textContent = '₹' + gridCostDaily;
-    document.getElementById('calc-solar').textContent = '₹' + solarSavingsDaily;
-    document.getElementById('calc-monthly').textContent = '₹' + monthlyBill;
+
+    setText('calc-grid', '₹' + gridCostDaily);
+    setText('calc-solar', '₹' + solarSavingsDaily);
+    setText('calc-monthly', '₹' + monthlyBill);
 }
 
 // ═══════════════════════════════════════════════
@@ -135,7 +156,9 @@ const tvTextures = [createTvTexture('nature'), createTvTexture('city')];
 // ═══════════════════════════════════════════════
 function buildAppliancePanel() {
     const panel = document.getElementById('appliance-panel');
-    let html = '';
+    const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
+    let html = '<div class="panel-header"><span class="panel-header-icon">⚡</span> Appliances</div>';
+
     if (is2BHK) {
         const grouped = {};
         bhk2Appliances.forEach((a, i) => {
@@ -143,9 +166,10 @@ function buildAppliancePanel() {
             grouped[a.room].push({ ...a, idx: i });
         });
         for (const room in grouped) {
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             grouped[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
@@ -158,13 +182,21 @@ function buildAppliancePanel() {
         });
         for (const room in rooms) {
             if (rooms[room].length === 0) continue;
-            html += '<div class="room-section"><div class="room-header">' + room + '</div>';
+            html += '<div class="room-section"><div class="room-header"><span class="room-header-icon">' + (roomIcons[room] || '🏠') + '</span>' + room + '</div>';
             rooms[room].forEach(a => {
-                html += '<div class="appliance-row"><div><span class="app-name">' + a.name + '</span><br><span class="app-watt">' + a.watt + 'W</span></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
+                const emoji = a.emoji || '';
+                html += '<div class="appliance-row"><div class="app-info"><span class="app-emoji">' + emoji + '</span><div><span class="app-name">' + a.name + '</span><span class="app-watt">' + a.watt + 'W</span></div></div><label class="toggle"><input type="checkbox" ' + (a.on ? 'checked' : '') + ' onchange="toggleSimpleAppliance(' + a.idx + ',this.checked)"><span class="slider"></span></label></div>';
             });
             html += '</div>';
         }
     }
+
+    // Total wattage footer
+    let totalOn = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) totalOn += a.watt; });
+    html += '<div class="panel-footer"><span class="footer-label">Total Active</span><span class="footer-value">' + totalOn.toLocaleString() + ' W</span></div>';
+
     panel.innerHTML = html;
 }
 
@@ -174,14 +206,15 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-14, 4, 0);
-        camera.position.set(-14, 16, 28);
+        controls.target.set(-22, 4, 0);
+        camera.position.set(-22, 20, 35);
     } else {
         is2BHK = true;
-        controls.target.set(16, 4, 0);
-        camera.position.set(16, 16, 28);
+        controls.target.set(24, 4, 0);
+        camera.position.set(24, 20, 35);
     }
     controls.update();
+    if (typeof positionSolarPanels === 'function') positionSolarPanels();
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
@@ -195,11 +228,11 @@ function toggleUpgrade() { focusHouse('2bhk'); }
 // ═══════════════════════════════════════════════
 // 2BHK room zoom positions
 const bhk2RoomPositions = {
-    'Hall': { target: new THREE.Vector3(22, 3.5, 3), camera: new THREE.Vector3(22, 10, 16) },
-    'Bedroom 1': { target: new THREE.Vector3(11, 3.5, -6), camera: new THREE.Vector3(11, 10, 6) },
-    'Bedroom 2': { target: new THREE.Vector3(21, 3.5, -6), camera: new THREE.Vector3(21, 10, 6) },
-    'Kitchen': { target: new THREE.Vector3(8.5, 3.5, 0.75), camera: new THREE.Vector3(8.5, 10, 12) },
-    'Bathroom': { target: new THREE.Vector3(8.5, 3.5, 6), camera: new THREE.Vector3(8.5, 10, 16) }
+    'Hall': { target: new THREE.Vector3(29, 3.5, 4), camera: new THREE.Vector3(29, 12, 20) },
+    'Bedroom 1': { target: new THREE.Vector3(17, 3.5, -8.5), camera: new THREE.Vector3(17, 12, 4) },
+    'Bedroom 2': { target: new THREE.Vector3(31, 3.5, -8.5), camera: new THREE.Vector3(31, 12, 4) },
+    'Kitchen': { target: new THREE.Vector3(14.5, 3.5, -1), camera: new THREE.Vector3(14.5, 12, 12) },
+    'Bathroom': { target: new THREE.Vector3(14.5, 3.5, 7.5), camera: new THREE.Vector3(14.5, 12, 18) }
 };
 
 function buildRoomNavPanel() {
