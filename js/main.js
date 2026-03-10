@@ -33,6 +33,16 @@ let currentHouseId = null;
 window.cameraMode = 'firstperson';
 
 // ═══════════════════════════════════════════════
+//  ORBITAL CAMERA VARIABLES (Watch Boy mode)
+// ═══════════════════════════════════════════════
+let orbitYaw = 0;
+let orbitPitch = 0.35;
+let orbitDist = 5.5;
+let isOrbiting = false;
+let lastMouseX = 0;
+let lastMouseY = 0;
+
+// ═══════════════════════════════════════════════
 //  BOY INSTANTIATION
 // ═══════════════════════════════════════════════
 const boy = new Boy(scene);
@@ -123,10 +133,64 @@ document.addEventListener('pointerlockchange', () => {
 });
 document.addEventListener('mousemove', (e) => {
     if (!pointerLocked || gameState !== STATE.INSIDE) return;
+    if (window.cameraMode !== 'firstperson') return;
     yaw -= e.movementX * 0.002;
     pitch -= e.movementY * 0.002;
     pitch = Math.max(-0.4, Math.min(0.6, pitch));
 });
+
+// ═══════════════════════════════════════════════
+//  ORBITAL CAMERA — Mouse/Touch Controls
+// ═══════════════════════════════════════════════
+renderer.domElement.addEventListener('mousedown', e => {
+    if (window.cameraMode !== 'thirdperson') return;
+    if (gameState !== STATE.INSIDE) return;
+    isOrbiting = true;
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+});
+window.addEventListener('mousemove', e => {
+    if (!isOrbiting) return;
+    if (window.cameraMode !== 'thirdperson') return;
+    const dx = e.clientX - lastMouseX;
+    const dy = e.clientY - lastMouseY;
+    orbitYaw -= dx * 0.008;
+    orbitPitch -= dy * 0.006;
+    orbitPitch = Math.max(0.05, Math.min(1.2, orbitPitch));
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
+});
+window.addEventListener('mouseup', () => { isOrbiting = false; });
+
+// Mouse wheel zoom
+renderer.domElement.addEventListener('wheel', e => {
+    if (window.cameraMode !== 'thirdperson') return;
+    if (gameState !== STATE.INSIDE) return;
+    orbitDist += e.deltaY * 0.01;
+    orbitDist = Math.max(2.5, Math.min(12, orbitDist));
+});
+
+// Touch orbit for mobile
+let touchOrbit = { active: false, lastX: 0, lastY: 0 };
+renderer.domElement.addEventListener('touchstart', e => {
+    if (window.cameraMode !== 'thirdperson') return;
+    if (gameState !== STATE.INSIDE) return;
+    if (e.touches.length === 1) {
+        touchOrbit = { active: true, lastX: e.touches[0].clientX, lastY: e.touches[0].clientY };
+    }
+}, { passive: true });
+renderer.domElement.addEventListener('touchmove', e => {
+    if (!touchOrbit.active) return;
+    if (window.cameraMode !== 'thirdperson') return;
+    const dx = e.touches[0].clientX - touchOrbit.lastX;
+    const dy = e.touches[0].clientY - touchOrbit.lastY;
+    orbitYaw -= dx * 0.008;
+    orbitPitch -= dy * 0.006;
+    orbitPitch = Math.max(0.05, Math.min(1.2, orbitPitch));
+    touchOrbit.lastX = e.touches[0].clientX;
+    touchOrbit.lastY = e.touches[0].clientY;
+}, { passive: true });
+renderer.domElement.addEventListener('touchend', () => { touchOrbit.active = false; });
 
 // ═══════════════════════════════════════════════
 //  KEY LISTENERS
@@ -139,6 +203,10 @@ window.addEventListener('keydown', (e) => {
     }
     if (e.code === 'Escape' && gameState === STATE.INSIDE) {
         exitHouse(); e.preventDefault();
+    }
+    // Energy Vision toggle
+    if (e.code === 'KeyV' && typeof toggleEnergyVision === 'function') {
+        toggleEnergyVision();
     }
     if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.code)) e.preventDefault();
 }, { passive: false });
@@ -196,7 +264,7 @@ function showCameraModeModal() {
 }
 
 // ═══════════════════════════════════════════════
-//  ENTER / EXIT HOUSE (Bug #1 fix: setTimeout chain + safety fallback)
+//  ENTER / EXIT HOUSE
 // ═══════════════════════════════════════════════
 function enterHouse(houseId) {
     if (gameState === STATE.TRANSITIONING) return;
@@ -228,6 +296,9 @@ function enterHouse(houseId) {
             const spawn = indoorSpawn[houseId];
             boyGroup.position.copy(spawn.pos); boyGroup.rotation.y = spawn.rot;
             yaw = spawn.rot; pitch = 0;
+            orbitYaw = spawn.rot; // Reset orbit yaw to match boy facing
+            orbitPitch = 0.35;
+            orbitDist = 5.5;
             boy.groundY = spawn.pos.y;
 
             // Visibility — show correct interior, hide rest
@@ -252,6 +323,7 @@ function enterHouse(houseId) {
                 collisionSystem.setupInterior(houseId);
 
             currentHouseId = houseId; lastRoomId = null;
+            lastTriggeredRoom = null; popupCooldown = false;
             boyState.currentRoom = null;
 
             // Fix camera clipping
@@ -276,6 +348,7 @@ function enterHouse(houseId) {
             } else {
                 boy.setFirstPerson(false);
                 if (typeof controls !== 'undefined') controls.enabled = false;
+                if (typeof showToast === 'function') showToast('🖱️ Drag to rotate camera | Scroll to zoom');
             }
 
             camera.position.set(boyGroup.position.x, boyGroup.position.y + EYE_HEIGHT, boyGroup.position.z);
@@ -332,6 +405,11 @@ async function exitHouse() {
     boy.setFirstPerson(false);
     if (typeof showViewModeBadge === 'function') showViewModeBadge(false);
 
+    // Turn off Energy Vision if active
+    if (typeof energyVisionActive !== 'undefined' && energyVisionActive && typeof toggleEnergyVision === 'function') {
+        toggleEnergyVision();
+    }
+
     await fadeOverlay(1, 400);
     const ep = entryPositions[houseId];
     boyGroup.position.set(ep.x, 0.15, ep.z + 0.5); boyGroup.rotation.y = 0;
@@ -347,6 +425,7 @@ async function exitHouse() {
         controls.update();
     }
     currentHouseId = null; lastRoomId = null;
+    lastTriggeredRoom = null; popupCooldown = false;
     boyState.currentRoom = null; boyState.insideHouse = null;
     const backBtn = document.getElementById('back-btn');
     if (backBtn) backBtn.classList.remove('visible');
@@ -370,14 +449,19 @@ window.setCameraMode = function (mode) {
     } else {
         boy.setFirstPerson(false);
         if (document.pointerLockElement) document.exitPointerLock();
+        // Reset orbit camera
+        orbitYaw = boyGroup.rotation.y;
+        orbitPitch = 0.35;
+        orbitDist = 5.5;
+        if (typeof showToast === 'function') showToast('🖱️ Drag to rotate camera | Scroll to zoom');
     }
     if (typeof updateViewModeBadge === 'function') updateViewModeBadge(mode);
     if (typeof showToast === 'function')
-        showToast(mode === 'firstperson' ? '👁️ First Person — move mouse to look' : '🎮 Third Person — camera follows boy');
+        showToast(mode === 'firstperson' ? '👁️ First Person — move mouse to look' : '🎮 Watch Boy — drag to orbit camera');
 };
 
 // ═══════════════════════════════════════════════
-//  MOVEMENT (Bug #2 fix: correct camera-relative direction)
+//  MOVEMENT (camera-relative direction)
 // ═══════════════════════════════════════════════
 function processMovement(delta) {
     if (gameState === STATE.TRANSITIONING) return;
@@ -414,20 +498,22 @@ function processMovement(delta) {
         if (cm.lengthSq() > 0) cm.normalize();
         moveX = cm.x * speed * delta;
         moveZ = cm.z * speed * delta;
+    } else if (gameState === STATE.INSIDE && window.cameraMode === 'thirdperson') {
+        // Watch Boy mode: movement relative to orbitYaw (camera facing direction)
+        const sinY = Math.sin(orbitYaw);
+        const cosY = Math.cos(orbitYaw);
+        const fwdX = -sinY, fwdZ = -cosY;
+        const rgtX = cosY, rgtZ = -sinY;
+        moveX = (fwdX * mz + rgtX * mx) * speed * delta;
+        moveZ = (fwdZ * mz + rgtZ * mx) * speed * delta;
     } else {
         // First-person / inside: yaw-relative movement
         const sinY = Math.sin(yaw);
         const cosY = Math.cos(yaw);
-
-        // Forward direction (W key = move in direction camera faces)
         const fwdX = -sinY;
         const fwdZ = -cosY;
-
-        // Right direction (D key = move right relative to camera)
         const rgtX = cosY;
         const rgtZ = -sinY;
-
-        // Combine
         moveX = (fwdX * mz + rgtX * mx) * speed * delta;
         moveZ = (fwdZ * mz + rgtZ * mx) * speed * delta;
     }
@@ -484,17 +570,32 @@ function updateCamera() {
         camera.position.copy(eye);
         camera.lookAt(eye.clone().add(fwd));
     } else {
-        const offset = new THREE.Vector3(Math.sin(yaw) * 4, 2.5, Math.cos(yaw) * 4);
-        const targetPos = boyGroup.position.clone().add(offset);
-        camera.position.lerp(targetPos, 0.10);
-        const lookAt = boyGroup.position.clone(); lookAt.y += 1.0;
-        camera.lookAt(lookAt);
+        // Orbital third-person camera
+        updateThirdPersonCamera();
     }
 }
 
+function updateThirdPersonCamera() {
+    if (window.cameraMode !== 'thirdperson') return;
+
+    // Camera position orbits around boy
+    const boyPos = boyGroup.position.clone();
+    boyPos.y += 0.8; // look at boy's chest, not feet
+
+    const camX = boyPos.x + orbitDist * Math.sin(orbitYaw) * Math.cos(orbitPitch);
+    const camY = boyPos.y + orbitDist * Math.sin(orbitPitch);
+    const camZ = boyPos.z + orbitDist * Math.cos(orbitYaw) * Math.cos(orbitPitch);
+
+    camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.08);
+    camera.lookAt(boyPos);
+}
+
 // ═══════════════════════════════════════════════
-//  PROXIMITY CHECKS
+//  PROXIMITY CHECKS (with popup cooldown fix)
 // ═══════════════════════════════════════════════
+let lastTriggeredRoom = null;
+let popupCooldown = false;
+
 function checkDoorProximity() {
     if (gameState !== STATE.OUTSIDE) return;
     nearDoor = null;
@@ -510,14 +611,39 @@ function checkDoorProximity() {
 
 function checkRoomProximity() {
     if (gameState !== STATE.INSIDE || !currentHouseId) return;
+    if (popupCooldown) return;
+
+    const boyPos = boyGroup.position;
     const zones = ROOM_ZONES[currentHouseId] || [];
-    for (const z of zones) {
-        if (boyGroup.position.distanceTo(z.center) < z.radius && lastRoomId !== z.id) {
-            lastRoomId = z.id; boyState.currentRoom = z.id;
-            if (typeof showRoomPopup === 'function') showRoomPopup(z.id, currentHouseId);
-            console.log('[ROOM] Entered:', z.id);
+
+    for (const zone of zones) {
+        const dist = new THREE.Vector2(
+            boyPos.x - zone.center.x,
+            boyPos.z - zone.center.z
+        ).length();
+
+        if (dist < zone.radius) {
+            // Only trigger if this is a NEW room
+            if (lastTriggeredRoom !== zone.id) {
+                lastTriggeredRoom = zone.id;
+                lastRoomId = zone.id;
+                boyState.currentRoom = zone.id;
+                popupCooldown = true;
+
+                // Show popup for THIS room only
+                if (typeof showRoomPopup === 'function') showRoomPopup(zone.id, currentHouseId);
+                console.log('[ROOM] Entered:', zone.id);
+
+                // Cooldown prevents re-triggering for 4 seconds
+                setTimeout(() => { popupCooldown = false; }, 4000);
+            }
             return;
         }
+    }
+
+    // Boy left all room zones — reset so can re-trigger
+    if (lastTriggeredRoom !== null) {
+        lastTriggeredRoom = null;
     }
 }
 
@@ -682,6 +808,12 @@ function animate() {
     });
 
     if (typeof waterStream !== 'undefined' && waterStream.visible) { waterStream.scale.y = 1 + Math.sin(elapsed * 20) * 0.05; waterStream.material.opacity = 0.5 + Math.sin(elapsed * 15) * 0.1; }
+
+    // Energy Vision animations
+    if (typeof energyVisionActive !== 'undefined' && energyVisionActive) {
+        if (typeof animatePowerLines === 'function') animatePowerLines(elapsed);
+        if (typeof animateOrbs === 'function') animateOrbs(delta);
+    }
 
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);

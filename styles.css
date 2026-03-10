@@ -44,9 +44,61 @@ canvas {
     display: flex;
     align-items: center;
     gap: 10px;
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.3rem;
     letter-spacing: -0.02em;
+    font-family: 'Nunito', sans-serif;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.logo-text>span {
+    display: inline;
+}
+
+.logo-sustain {
+    color: #FFE066;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+}
+
+.logo-ed {
+    color: #66FF88;
+    font-weight: 800;
+    font-family: 'Nunito', sans-serif;
+}
+
+.logo-subtitle {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+/* Energy Vision Button */
+#vision-btn.active {
+    background: linear-gradient(135deg, #FF6B35, #FF4500) !important;
+    color: #fff !important;
+    border-color: #FF6B35 !important;
+    box-shadow: 0 0 20px rgba(255, 100, 0, 0.6);
+    animation: btnPulse 1s infinite;
+}
+
+@keyframes btnPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 20px rgba(255, 100, 0, 0.6);
+    }
+
+    50% {
+        box-shadow: 0 0 35px rgba(255, 100, 0, 0.9);
+    }
 }
 
 .logo-icon {
