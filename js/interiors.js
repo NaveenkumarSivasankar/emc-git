@@ -201,16 +201,29 @@ function checkFurnitureCollision(newX, newZ) {
     if (boyState.mode !== 'indoor') return false;
 
     const boxes = boyState.insideHouse === '1bhk' ? furnitureBoxes1BHK : furnitureBoxes2BHK;
-    const boyRadius = 0.20; // slimmed down for easier navigation through doors/furniture
+    const boyRadius = 0.22; // slimmed for easier navigation through doors
 
     for (const box of boxes) {
-        // Expanded box by boy radius
         if (newX > box.xMin - boyRadius && newX < box.xMax + boyRadius &&
             newZ > box.zMin - boyRadius && newZ < box.zMax + boyRadius) {
-            return true; // collision!
+            return true;
         }
     }
     return false;
+}
+
+// Sliding collision: try to move on each axis independently
+// Returns { x, z } of the best valid position
+function resolveSliding(oldX, oldZ, newX, newZ) {
+    if (boyState.mode !== 'indoor') return { x: newX, z: newZ };
+    // Both axes OK
+    if (!checkFurnitureCollision(newX, newZ)) return { x: newX, z: newZ };
+    // Try X only
+    if (!checkFurnitureCollision(newX, oldZ)) return { x: newX, z: oldZ };
+    // Try Z only
+    if (!checkFurnitureCollision(oldX, newZ)) return { x: oldX, z: newZ };
+    // Fully blocked
+    return { x: oldX, z: oldZ };
 }
 
 // ═══════════════════════════════════════════════
@@ -266,8 +279,9 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
     return pivot;
 }
 
-function updateDoors() {
+function updateDoors(delta) {
     if (boyState.mode !== 'indoor') return;
+    if (!delta) delta = 0.016; // fallback ~60fps
 
     const bx = boyGroup.position.x;
     const bz = boyGroup.position.z;
