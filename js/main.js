@@ -89,7 +89,10 @@ function animate() {
     const delta = clock.getDelta();
     const elapsed = clock.getElapsedTime();
 
-    controls.update();
+    // ✅ OrbitControls only when NOT in first-person mode
+    if (gameState !== STATE.INSIDE && typeof controls !== 'undefined') {
+        controls.update();
+    }
 
     // Clouds
     clouds.forEach((cloud, i) => {
@@ -102,19 +105,17 @@ function animate() {
     sunGlow.position.copy(sunMesh.position);
     sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
-    // ─── BIRDS ANIMATION ───
+    // Birds
     birds.forEach(bird => {
         const angle = bird.startAngle + elapsed * bird.circleSpeed;
         bird.group.position.x = bird.circleRadius * Math.cos(angle);
         bird.group.position.z = -10 + bird.circleRadius * Math.sin(angle) * 0.5;
         bird.group.position.y = bird.baseY + Math.sin(elapsed * 0.5 + bird.flapPhase) * bird.bobAmount;
 
-        // Wing flapping
         const flapAngle = Math.sin(elapsed * bird.flapSpeed + bird.flapPhase) * 0.5;
         bird.leftWing.rotation.z = flapAngle;
         bird.rightWing.rotation.z = -flapAngle;
 
-        // Face movement direction
         const nextAngle = angle + 0.01;
         const dx = Math.cos(nextAngle) - Math.cos(angle);
         const dz = Math.sin(nextAngle) - Math.sin(angle);
@@ -175,7 +176,7 @@ function animate() {
         });
     }
 
-    // Solar panels animation (with sparkles on landing)
+    // Solar panels animation
     solarPanels.forEach(p => {
         if (p.animating) {
             p.frame++;
@@ -185,7 +186,6 @@ function animate() {
                 if (Math.abs(p.group.position.y - p.targetY) < 0.05) {
                     p.group.position.y = p.targetY;
                     p.animating = false;
-                    // Spawn golden sparkles on panel landing
                     if (typeof spawnSparkles === 'function') {
                         spawnSparkles(p.group.position);
                     }
@@ -194,13 +194,13 @@ function animate() {
         }
     });
 
-    // Boy character animation — works in EXTERIOR and INTERIOR states
+    // ✅ Boy character movement + state checks — works in OUTSIDE AND INSIDE
     updateBoy(delta);
 
-    // Energy flow sphere animation
+    // Energy flow
     if (typeof updateEnergyFlow === 'function') updateEnergyFlow(delta);
 
-    // Entry circle pulse animation
+    // Entry circle pulse (outside only)
     updateEntryCircles(elapsed);
 
     updateWallTransparency();
