@@ -391,275 +391,111 @@ function normalizeRoomName(roomName) {
 function showRoomPopup(roomName, houseId) {
     const normalizedName = normalizeRoomName(roomName);
     const data = ROOM_DATA[normalizedName];
-
     console.log('[UI] Room popup triggered: ' + roomName + ' → ' + normalizedName);
 
-    const popup = document.getElementById('room-popup');
-    if (!popup) return;
-
+    let popup = document.getElementById('room-popup');
+    if (!popup) { popup = document.createElement('div'); popup.id = 'room-popup'; document.body.appendChild(popup); }
     popup.classList.remove('hidden');
 
-    // Use actual appliance data from the game if available
-    let applianceList = [];
-    let totalWatts = 0;
-    let tip = '';
-
+    let applianceList = [], totalWatts = 0, tip = '';
     if (data) {
-        // Try to use live appliance data
         const gameAppliances = houseId === '2bhk' ? bhk2Appliances : simpleAppliances;
-        const roomAppliances = gameAppliances.filter(a => {
-            const aRoom = normalizeRoomName(a.room);
-            return aRoom === normalizedName;
-        });
-
+        const roomAppliances = gameAppliances.filter(a => normalizeRoomName(a.room) === normalizedName);
         if (roomAppliances.length > 0) {
-            roomAppliances.forEach(a => {
-                const watts = a.on ? a.watt : 0;
-                totalWatts += watts;
-                applianceList.push({ name: a.name, watts: a.watt, isOn: a.on });
-            });
+            roomAppliances.forEach(a => { totalWatts += a.on ? a.watt : 0; applianceList.push({ name: a.name, watts: a.watt, isOn: a.on }); });
         } else {
-            // Fall back to static data
-            data.appliances.forEach(a => {
-                const watts = a.isOn ? a.watts : 0;
-                totalWatts += watts;
-                applianceList.push(a);
-            });
+            data.appliances.forEach(a => { totalWatts += a.isOn ? a.watts : 0; applianceList.push(a); });
         }
         tip = data.tip;
-    } else {
-        tip = '💡 Every watt saved helps the planet!';
-    }
+    } else { tip = '💡 Every watt saved helps the planet!'; }
 
-    // Set icon and title
-    const iconEl = popup.querySelector('.popup-icon');
-    const titleEl = popup.querySelector('.popup-title');
-    if (iconEl) iconEl.textContent = data ? data.icon : '🏠';
-    if (titleEl) titleEl.textContent = data ? data.name : normalizedName;
+    const appHTML = applianceList.map(a => {
+        const isOn = a.isOn !== undefined ? a.isOn : a.on;
+        const watts = a.watts !== undefined ? a.watts : a.watt;
+        return '<div class="appliance-item"><span>' + a.name + '</span><span class="' + (isOn ? 'status-on' : 'status-off') + '">' + (isOn ? '✅ ' + watts + 'W' : '⬜ OFF') + '</span></div>';
+    }).join('');
 
-    // Build appliance list
-    const listEl = popup.querySelector('.appliance-list');
-    if (listEl) {
-        listEl.innerHTML = '';
-        applianceList.forEach(a => {
-            const item = document.createElement('div');
-            item.className = 'appliance-item';
-            const isOn = a.isOn !== undefined ? a.isOn : a.on;
-            const watts = a.watts !== undefined ? a.watts : a.watt;
-            item.innerHTML =
-                '<span>' + (a.name || '') + '</span>' +
-                '<span class="' + (isOn ? 'status-on' : 'status-off') + '">' +
-                (isOn ? '✅ ' + watts + 'W' : '⬜ OFF') +
-                '</span>';
-            listEl.appendChild(item);
-        });
-    }
+    popup.innerHTML = '<div class="popup-banner"><span class="popup-icon">' + (data ? data.icon : '🏠') + '</span><span class="popup-title">' + (data ? data.name : normalizedName) + '</span></div>' +
+        '<div class="popup-body">' + appHTML + '<div class="total-watts">⚡ ' + totalWatts + 'W active</div><div class="energy-tip">💡 ' + tip + '</div></div>' +
+        '<button class="popup-explore-btn" onclick="closeRoomPopup()">✨ EXPLORE!</button>';
 
-    // Total consumption
-    const totalEl = popup.querySelector('.total-consumption');
-    if (totalEl) totalEl.textContent = '⚡ Room consuming: ' + totalWatts + 'W right now';
-
-    // Energy tip
-    const tipEl = popup.querySelector('.energy-tip');
-    if (tipEl) tipEl.textContent = tip;
-
-    // Trigger slide-up animation
-    requestAnimationFrame(() => {
-        popup.classList.add('visible');
-    });
-
-    console.log('[UI] Popup shown for ' + normalizedName);
-
-    // Auto-dismiss after 6 seconds
+    requestAnimationFrame(() => popup.classList.add('visible'));
     clearTimeout(window.popupTimer);
     window.popupTimer = setTimeout(closeRoomPopup, 6000);
 }
 
 function closeRoomPopup() {
-    const popup = document.getElementById('room-popup');
-    if (!popup) return;
-    popup.classList.remove('visible');
-    setTimeout(() => popup.classList.add('hidden'), 400);
+    const p = document.getElementById('room-popup'); if (!p) return;
+    p.classList.remove('visible'); setTimeout(() => p.classList.add('hidden'), 350);
     clearTimeout(window.popupTimer);
 }
-
-// Legacy alias
-function hideRoomPopup() {
-    closeRoomPopup();
-}
+window.closeRoomPopup = closeRoomPopup;
+function hideRoomPopup() { closeRoomPopup(); }
 
 // ═══════════════════════════════════════════════
-//  SOLAR PANEL HOUSE SELECTOR MODAL
+//  SOLAR SELECTOR
 // ═══════════════════════════════════════════════
 let solarSelectorEl = null;
-
 function createSolarSelector() {
     if (solarSelectorEl) return;
-    solarSelectorEl = document.createElement('div');
-    solarSelectorEl.id = 'solar-selector-modal';
-    solarSelectorEl.innerHTML =
-        '<div class="ssm-backdrop" onclick="closeSolarSelector()"></div>' +
-        '<div class="ssm-content">' +
-        '<button class="ssm-close" onclick="closeSolarSelector()">✕</button>' +
-        '<h2 class="ssm-title">☀️ Select Solar Installation</h2>' +
-        '<p class="ssm-subtitle">Choose which house to install solar panels on</p>' +
-        '<div class="ssm-buttons">' +
-        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse(\'1bhk\')">🏠 1BHK House</button>' +
-        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse(\'2bhk\')">🏢 2BHK House</button>' +
-        '<button class="ssm-btn ssm-both" onclick="selectSolarHouse(\'both\')">🏘️ Both Houses</button>' +
-        '</div>' +
-        '<button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>' +
-        '</div>';
+    solarSelectorEl = document.createElement('div'); solarSelectorEl.id = 'solar-selector-modal';
+    solarSelectorEl.innerHTML = '<div class="ssm-backdrop" onclick="closeSolarSelector()"></div><div class="ssm-content"><button class="ssm-close" onclick="closeSolarSelector()">✕</button><h2 class="ssm-title">☀️ Select Solar Installation</h2><p class="ssm-subtitle">Choose which house</p><div class="ssm-buttons"><button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse(\'1bhk\')">🏠 1BHK</button><button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse(\'2bhk\')">🏢 2BHK</button><button class="ssm-btn ssm-both" onclick="selectSolarHouse(\'both\')">🏘️ Both</button></div><button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button></div>';
     document.body.appendChild(solarSelectorEl);
 }
-
-function showSolarSelector() {
-    createSolarSelector();
-    solarSelectorEl.classList.add('visible');
-}
-
-function closeSolarSelector() {
-    if (solarSelectorEl) solarSelectorEl.classList.remove('visible');
-}
-
+function showSolarSelector() { createSolarSelector(); solarSelectorEl.classList.add('visible'); }
+function closeSolarSelector() { if (solarSelectorEl) solarSelectorEl.classList.remove('visible'); }
 let solarTarget = null;
-
-function selectSolarHouse(target) {
-    solarTarget = target;
-    closeSolarSelector();
-    performSolarToggle(target);
-}
-
+function selectSolarHouse(target) { solarTarget = target; closeSolarSelector(); performSolarToggle(target); }
 function performSolarToggle(target) {
-    isSolarMode = true;
-    solarTarget = target;
-    const btn = document.getElementById('solar-btn');
-    const btnText = document.getElementById('solar-btn-text');
-    const btnIcon = document.getElementById('solar-btn-icon');
-    const panelCounter = document.getElementById('panel-counter');
-
-    if (btn) btn.className = 'solar-mode bottom-action-btn';
-    if (btnText) btnText.textContent = 'Remove Solar';
-    if (btnIcon) btnIcon.textContent = '⚡';
-    if (panelCounter) panelCounter.classList.add('visible');
-
-    currentPanelCount = 6;
-    if (target === '1bhk') {
-        is2BHK = false;
-    } else if (target === '2bhk') {
-        is2BHK = true;
-    }
+    isSolarMode = true; solarTarget = target;
+    const btn = document.getElementById('solar-btn'), btnText = document.getElementById('solar-btn-text'), btnIcon = document.getElementById('solar-btn-icon'), pc = document.getElementById('panel-counter');
+    if (btn) btn.className = 'solar-mode bottom-action-btn'; if (btnText) btnText.textContent = 'Remove Solar'; if (btnIcon) btnIcon.textContent = '⚡'; if (pc) pc.classList.add('visible');
+    currentPanelCount = 6; if (target === '1bhk') is2BHK = false; else if (target === '2bhk') is2BHK = true;
     layoutSolarPanels(currentPanelCount);
-
-    if (typeof updatePowerLines === 'function') updatePowerLines();
-    if (typeof updateStats === 'function') updateStats();
+    if (typeof updatePowerLines === 'function') updatePowerLines(); if (typeof updateStats === 'function') updateStats();
 }
 
 // ═══════════════════════════════════════════════
-//  DYNAMIC ENERGY DATA (live updating)
+//  DYNAMIC ENERGY
 // ═══════════════════════════════════════════════
-const dynamicEnergy = {
-    sessionStart: Date.now(),
-    cumulativeWh: 0,
-    lastTick: Date.now(),
-    perMinuteW: 0,
-    perHourW: 0,
-    intervalId: null
-};
-
+const dynamicEnergy = { sessionStart: Date.now(), cumulativeWh: 0, lastTick: Date.now(), intervalId: null };
 function startEnergyTracking() {
-    if (dynamicEnergy.intervalId) return;
-    dynamicEnergy.sessionStart = Date.now();
-    dynamicEnergy.cumulativeWh = 0;
-    dynamicEnergy.lastTick = Date.now();
-
-    dynamicEnergy.intervalId = setInterval(() => {
-        updateDynamicEnergy();
-    }, 1000);
+    if (dynamicEnergy.intervalId) return; dynamicEnergy.sessionStart = Date.now(); dynamicEnergy.cumulativeWh = 0; dynamicEnergy.lastTick = Date.now();
+    dynamicEnergy.intervalId = setInterval(updateDynamicEnergy, 1000);
 }
-
 function updateDynamicEnergy() {
-    const now = Date.now();
-    const dtHours = (now - dynamicEnergy.lastTick) / 3600000;
-    dynamicEnergy.lastTick = now;
-
-    let activeWatts = 0;
-    const list = is2BHK ? bhk2Appliances : simpleAppliances;
-    list.forEach(a => { if (a.on) activeWatts += a.watt; });
-
-    dynamicEnergy.cumulativeWh += activeWatts * dtHours;
-    dynamicEnergy.perMinuteW = activeWatts;
-    dynamicEnergy.perHourW = activeWatts;
-
-    const elMinute = document.getElementById('stat-per-minute');
-    if (elMinute) elMinute.textContent = (activeWatts / 60).toFixed(2) + ' Wh/min';
-    const elHour = document.getElementById('stat-per-hour');
-    if (elHour) elHour.textContent = (activeWatts).toFixed(0) + ' W/hr';
-    const elCumulative = document.getElementById('stat-cumulative');
-    if (elCumulative) elCumulative.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
-
+    const now = Date.now(), dtH = (now - dynamicEnergy.lastTick) / 3600000; dynamicEnergy.lastTick = now;
+    let aw = 0; (is2BHK ? bhk2Appliances : simpleAppliances).forEach(a => { if (a.on) aw += a.watt; });
+    dynamicEnergy.cumulativeWh += aw * dtH;
+    const em = document.getElementById('stat-per-minute'); if (em) em.textContent = (aw / 60).toFixed(2) + ' Wh/min';
+    const eh = document.getElementById('stat-per-hour'); if (eh) eh.textContent = aw.toFixed(0) + ' W/hr';
+    const ec = document.getElementById('stat-cumulative'); if (ec) ec.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
     if (typeof trackApplianceDuration === 'function') trackApplianceDuration();
 }
-
-// Start tracking on load
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(startEnergyTracking, 500);
-});
+window.addEventListener('DOMContentLoaded', () => { setTimeout(startEnergyTracking, 500); });
 
 // ═══════════════════════════════════════════════
-//  FLOOR SELECTOR FOR 2BHK
+//  FLOOR SELECTOR
 // ═══════════════════════════════════════════════
 let current2BHKFloor = 1;
-
 function showFloorSelector() {
     let el = document.getElementById('floor-selector');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'floor-selector';
-        el.innerHTML =
-            '<span class="fs-label">🏢 Floor:</span>' +
-            '<button class="fs-btn active" id="fs-btn-1" onclick="selectFloor(1)">1st Floor</button>' +
-            '<button class="fs-btn" id="fs-btn-2" onclick="selectFloor(2)">2nd Floor</button>';
-        document.body.appendChild(el);
-    }
+    if (!el) { el = document.createElement('div'); el.id = 'floor-selector'; el.innerHTML = '<span class="fs-label">🏢 Floor:</span><button class="fs-btn active" id="fs-btn-1" onclick="selectFloor(1)">1st</button><button class="fs-btn" id="fs-btn-2" onclick="selectFloor(2)">2nd</button>'; document.body.appendChild(el); }
     el.classList.add('visible');
 }
-
-function hideFloorSelector() {
-    const el = document.getElementById('floor-selector');
-    if (el) el.classList.remove('visible');
-}
-
-function selectFloor(floorNum) {
-    current2BHKFloor = floorNum;
-    document.getElementById('fs-btn-1').classList.toggle('active', floorNum === 1);
-    document.getElementById('fs-btn-2').classList.toggle('active', floorNum === 2);
-
-    if (typeof floor1Group !== 'undefined' && typeof floor2Group !== 'undefined') {
-        floor1Group.visible = (floorNum === 1);
-        floor2Group.visible = (floorNum === 2);
-    }
-
-    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor' && boyState.insideHouse === '2bhk') {
-        const yOffset = (floorNum - 1) * (H + 0.3);
-        boyGroup.position.y = 0.15 + yOffset;
-        camera.position.y = boyGroup.position.y + 6;
-        controls.target.y = boyGroup.position.y + 1.5;
-        controls.update();
-    }
-
-    buildAppliancePanel();
-    recalcWattage();
+function hideFloorSelector() { const el = document.getElementById('floor-selector'); if (el) el.classList.remove('visible'); }
+function selectFloor(n) {
+    current2BHKFloor = n;
+    document.getElementById('fs-btn-1').classList.toggle('active', n === 1); document.getElementById('fs-btn-2').classList.toggle('active', n === 2);
+    if (typeof floor1Group !== 'undefined' && typeof floor2Group !== 'undefined') { floor1Group.visible = (n === 1); floor2Group.visible = (n === 2); }
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor' && boyState.insideHouse === '2bhk') { const yo = (n - 1) * (H + 0.3); boyGroup.position.y = 0.15 + yo; camera.position.y = boyGroup.position.y + 6; controls.target.y = boyGroup.position.y + 1.5; controls.update(); }
+    buildAppliancePanel(); recalcWattage();
 }
 
 // ═══════════════════════════════════════════════
-//  GAMIFIED TASK LIST & SAVINGS MODE
+//  GAMIFIED SAVINGS
 // ═══════════════════════════════════════════════
-const savingsBaseline = {
-    totalWatts: 3500,
-    dailyCost: 224
-};
-
+const savingsBaseline = { totalWatts: 3500, dailyCost: 224 };
 const gameTasks = [
     { id: 'ac_off', text: 'Turn off AC when leaving room', done: false, icon: '❄️' },
     { id: 'solar_peak', text: 'Use solar during peak hours', done: false, icon: '☀️' },
@@ -667,38 +503,81 @@ const gameTasks = [
     { id: 'fan_off', text: 'Turn off fan when not needed', done: false, icon: '🌀' },
     { id: 'unplug', text: 'Unplug unused chargers', done: false, icon: '🔌' }
 ];
-
 function buildSavingsPanel() {
-    let activeW = 0;
-    const list = is2BHK ? bhk2Appliances : simpleAppliances;
-    list.forEach(a => { if (a.on) activeW += a.watt; });
+    let aw = 0; (is2BHK ? bhk2Appliances : simpleAppliances).forEach(a => { if (a.on) aw += a.watt; });
+    const dc = Math.round(aw * 8 / 1000 * 8), saved = Math.max(0, savingsBaseline.dailyCost - dc);
+    let h = '<div class="savings-header">🌱 Savings Mode</div><div class="savings-compare"><div class="sc-item"><span class="sc-label">Baseline</span><span class="sc-value">₹' + savingsBaseline.dailyCost + '/day</span></div><div class="sc-item"><span class="sc-label">Current</span><span class="sc-value sc-current">₹' + dc + '/day</span></div><div class="sc-item sc-saved"><span class="sc-label">Weekly Saved</span><span class="sc-value">₹' + (saved * 7) + '</span></div></div><div class="game-tasks-header">🎮 Energy Challenges</div>';
+    gameTasks.forEach(t => { h += '<div class="game-task ' + (t.done ? 'done' : '') + '"><span class="gt-icon">' + t.icon + '</span><span class="gt-text">' + t.text + '</span><span class="gt-check">' + (t.done ? '✓' : '○') + '</span></div>'; });
+    return h;
+}
+function updateStats() { recalcWattage(); }
 
-    const currentDailyCost = Math.round(activeW * 8 / 1000 * 8);
-    const saved = Math.max(0, savingsBaseline.dailyCost - currentDailyCost);
-    const weeklySaved = saved * 7;
+// ═══════════════════════════════════════════════
+//  DOOR HINT
+// ═══════════════════════════════════════════════
+function showDoorHint(show, houseId) {
+    let h = document.getElementById('door-hint');
+    if (!h) { h = document.createElement('div'); h.id = 'door-hint'; h.innerHTML = '<span class="hint-key">E</span><span id="hint-text">Enter House</span>'; document.body.appendChild(h); }
+    if (show && houseId) { const t = document.getElementById('hint-text'); if (t) t.textContent = houseId === '1bhk' ? 'Enter 1BHK House' : 'Enter 2BHK House'; h.className = ''; }
+    else { h.className = 'hidden'; }
+}
 
-    let html = '<div class="savings-header">🌱 Savings Mode</div>';
-    html += '<div class="savings-compare">';
-    html += '<div class="sc-item"><span class="sc-label">Baseline</span><span class="sc-value">₹' + savingsBaseline.dailyCost + '/day</span></div>';
-    html += '<div class="sc-item"><span class="sc-label">Current</span><span class="sc-value sc-current">₹' + currentDailyCost + '/day</span></div>';
-    html += '<div class="sc-item sc-saved"><span class="sc-label">Weekly Saved</span><span class="sc-value">₹' + weeklySaved + '</span></div>';
-    html += '</div>';
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, dur) {
+    dur = dur || 3000;
+    let t = document.getElementById('toast');
+    if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
 
-    html += '<div class="game-tasks-header">🎮 Energy Challenges</div>';
-    gameTasks.forEach(t => {
-        html += '<div class="game-task ' + (t.done ? 'done' : '') + '">' +
-            '<span class="gt-icon">' + t.icon + '</span>' +
-            '<span class="gt-text">' + t.text + '</span>' +
-            '<span class="gt-check">' + (t.done ? '✓' : '○') + '</span>' +
-            '</div>';
+// ═══════════════════════════════════════════════
+//  VIEW MODE BADGE
+// ═══════════════════════════════════════════════
+function createViewModeBadge() {
+    const b = document.createElement('div'); b.id = 'view-mode-badge';
+    b.innerHTML = '<span id="view-mode-icon">👁️</span><span id="view-mode-label">First Person</span><span class="view-mode-switch">⇄ Switch</span>';
+    document.body.appendChild(b);
+    b.addEventListener('click', () => {
+        if (typeof window.gameState === 'undefined' || typeof window.STATE === 'undefined') return;
+        if (window.gameState !== window.STATE.INSIDE) return;
+        const next = window.cameraMode === 'firstperson' ? 'thirdperson' : 'firstperson';
+        if (typeof window.setCameraMode === 'function') window.setCameraMode(next);
     });
+}
+function updateViewModeBadge(mode) {
+    const i = document.getElementById('view-mode-icon'), l = document.getElementById('view-mode-label');
+    if (!i || !l) return;
+    i.textContent = mode === 'firstperson' ? '👁️' : '🎮';
+    l.textContent = mode === 'firstperson' ? 'First Person' : 'Watch Boy';
+    const b = document.getElementById('view-mode-badge');
+    if (b) { b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 400); }
+}
+function showViewModeBadge(v) { const b = document.getElementById('view-mode-badge'); if (b) b.style.display = v ? 'flex' : 'none'; }
 
-    return html;
+// ═══════════════════════════════════════════════
+//  ENERGY PANEL (Chart.js)
+// ═══════════════════════════════════════════════
+function showEnergyPanel() {
+    let p = document.getElementById('energy-panel');
+    if (p) { p.classList.toggle('open'); return; }
+    p = document.createElement('div'); p.id = 'energy-panel';
+    p.innerHTML = '<div class="ep-header">📊 Energy Report<button onclick="document.getElementById(\'energy-panel\').classList.toggle(\'open\')">✕</button></div><div class="ep-charts"><div class="ep-chart-wrap"><div class="ep-chart-title">🏠 1BHK</div><canvas id="chart1bhk" width="220" height="180"></canvas></div><div class="ep-chart-wrap"><div class="ep-chart-title">🏘️ 2BHK</div><canvas id="chart2bhk" width="220" height="180"></canvas></div></div>';
+    document.body.appendChild(p); setTimeout(() => p.classList.add('open'), 10);
+    if (typeof Chart !== 'undefined') {
+        const o = { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#FFE066', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { ticks: { color: '#FFE066', font: { size: 10 } }, grid: { display: false } } } };
+        new Chart(document.getElementById('chart1bhk'), { type: 'bar', data: { labels: ['Hall', 'Bedroom', 'Kitchen', 'Bath'], datasets: [{ label: 'W', data: [95, 90, 230, 10], backgroundColor: ['#FF6B35', '#F7C948', '#4ECDC4', '#45B7D1'], borderRadius: 6 }] }, options: o });
+        new Chart(document.getElementById('chart2bhk'), { type: 'bar', data: { labels: ['Hall', 'Bed1', 'Bed2', 'Kitchen', 'Bath'], datasets: [{ label: 'W', data: [95, 90, 75, 230, 10], backgroundColor: ['#FF6B35', '#F7C948', '#96CEB4', '#4ECDC4', '#45B7D1'], borderRadius: 6 }] }, options: o });
+    }
 }
 
 // ═══════════════════════════════════════════════
-//  UPDATE STATS (safe wrapper)
+//  INJECT CSS
 // ═══════════════════════════════════════════════
-function updateStats() {
-    recalcWattage();
-}
+(function () {
+    const s = document.createElement('style');
+    s.textContent = '#room-popup{position:fixed;bottom:20px;left:20px;width:280px;background:linear-gradient(160deg,#3E2004,#6B3A0A);border:3px solid #C8860A;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.7);padding:0;transform:translateY(120%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:1000;font-family:Georgia,serif}#room-popup.visible{transform:translateY(0)}#room-popup.hidden{display:none}.popup-banner{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border-radius:11px 11px 0 0;padding:10px 14px;display:flex;align-items:center;gap:8px}.popup-icon{font-size:1.4rem}.popup-title{font-size:1rem;font-weight:bold;color:#FFE066}.popup-body{padding:10px 14px}.appliance-item{display:flex;justify-content:space-between;font-size:.78rem;color:#F5DEB3;padding:3px 0;border-bottom:1px solid rgba(200,134,10,.2)}.status-on{color:#66FF88;font-weight:bold}.status-off{color:#888}.total-watts,.total-consumption{margin-top:8px;font-size:.85rem;color:#FFD700;font-weight:bold;text-align:center}.energy-tip{margin-top:6px;font-size:.72rem;color:#A8FFB0;font-style:italic;padding:5px 8px;background:rgba(0,100,0,.25);border-radius:6px}.popup-explore-btn{display:block;width:calc(100% - 20px);margin:8px 10px;padding:8px;background:linear-gradient(180deg,#FF9800,#E65100);border:2px solid #BF360C;border-radius:8px;color:#fff;font-size:.85rem;font-weight:bold;cursor:pointer;box-shadow:0 3px 0 #8B2000}#fade-overlay{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:1500;transition:opacity .4s ease}#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:rgba(0,0,0,.82);color:#FFE066;padding:9px 22px;border-radius:20px;font-family:Georgia,serif;font-size:.9rem;transition:transform .35s ease;z-index:1800;border:1px solid rgba(255,224,102,.3)}#toast.show{transform:translateX(-50%) translateY(0)}#view-mode-badge{position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#1a2a1a,#2d4a2d);border:2px solid #4CAF50;border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:8px;cursor:pointer;z-index:800;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .2s;user-select:none}#view-mode-badge:hover{border-color:#81C784;transform:scale(1.04)}#view-mode-icon{font-size:1.1rem}#view-mode-label{color:#FFE066;font-size:.82rem;font-weight:bold}.view-mode-switch{color:#81C784;font-size:.72rem;padding:2px 8px;border:1px solid #4CAF50;border-radius:10px}#view-mode-badge.flash{animation:badgeFlash .4s}@keyframes badgeFlash{0%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}50%{background:linear-gradient(135deg,#2E7D32,#388E3C)}100%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}}#energy-panel{position:fixed;right:-520px;top:50%;transform:translateY(-50%);width:500px;background:linear-gradient(160deg,#0d1f0d,#1a3a1a);border:2px solid #4CAF50;border-radius:16px 0 0 16px;padding:16px;transition:right .4s;z-index:900;box-shadow:-4px 0 30px rgba(0,0,0,.6)}#energy-panel.open{right:0}.ep-header{color:#FFE066;font-family:Georgia,serif;font-size:1rem;font-weight:bold;display:flex;justify-content:space-between;margin-bottom:12px}.ep-header button{background:none;border:none;color:#FFE066;font-size:1rem;cursor:pointer}.ep-charts{display:flex;gap:12px}.ep-chart-wrap{flex:1}.ep-chart-title{color:#A8D5A2;font-size:.8rem;text-align:center;margin-bottom:6px;font-family:Georgia,serif}';
+    document.head.appendChild(s);
+})();
