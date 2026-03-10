@@ -282,7 +282,8 @@ function createBush(x, y, z, scale) {
 }
 
 // Far side trees (across the road — varied types)
-createPineTree(-30, 0, 19, 1.3); createRoundTree(-22, 0, 18, 1.1); createBushyTree(-12, 0, 20, 1.4);
+// NOTE: Tree at (-22, 0, 18) REMOVED — was blocking front view of 1BHK house
+createPineTree(-30, 0, 19, 1.3); createBushyTree(-15, 0, 21, 1.4);
 createTallTree(-2, 0, 19, 1.0); createTallTree(8, 0, 20, 1.5); createPineTree(18, 0, 18, 1.2);
 createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 

@@ -154,13 +154,13 @@ function createSolarPanel() {
         g.add(mesh);
     });
 
-    // Mounting legs
-    const legGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.12, 6);
-    const legMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
+    // Mounting brackets — 2 small cylinders per panel
+    const bracketGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.06, 6);
+    const bracketMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
     [-0.5, 0.5].forEach(lx => {
-        const leg = new THREE.Mesh(legGeo, legMat);
-        leg.position.set(lx, -PANEL_THICKNESS / 2 - 0.06, 0);
-        g.add(leg);
+        const bracket = new THREE.Mesh(bracketGeo, bracketMat);
+        bracket.position.set(lx, -PANEL_THICKNESS / 2 - 0.03, 0);
+        g.add(bracket);
     });
 
     return g;
@@ -393,9 +393,9 @@ function spawnSparkles(position) {
 }
 
 // ═══════════════════════════════════════════════
-//  PANEL LAYOUT — ROOF-ACCURATE PLACEMENT
+//  PANEL LAYOUT — ROOF-FLUSH PLACEMENT (Bug #5 fix)
 // ═══════════════════════════════════════════════
-function layoutSolarPanels(count) {
+function layoutSolarPanelsOnRoof(count, roof, targetHouse, houseLabel) {
     if (count === 0) {
         solarPanels.forEach(p => {
             if (p.group.parent) p.group.parent.remove(p.group);
@@ -405,15 +405,16 @@ function layoutSolarPanels(count) {
         return;
     }
 
-    const roof = is2BHK ? ROOF_2BHK : ROOF_1BHK;
-    const targetHouse = is2BHK ? roomGroups['Structure'] : houseGroup;
+    // Calculate grid layout: 3 columns x 4 rows = 12 max panels
+    const cols = 3;
+    const rows = Math.ceil(count / cols);
 
-    // Calculate grid layout
-    const cols = Math.floor((roof.width * 0.6) / (PANEL_W + GAP));
-    const rows = Math.floor((roof.depth * 0.35) / (PANEL_H + GAP));
+    // Total array dimensions
+    const totalWidth = cols * PANEL_W + (cols - 1) * GAP;
+    const totalDepth = rows * PANEL_H + (rows - 1) * GAP;
 
-    const offsetX = -(Math.min(cols, count) * (PANEL_W + GAP)) / 2 + PANEL_W / 2;
-    const offsetZ = -(Math.min(rows, Math.ceil(count / cols)) * (PANEL_H + GAP)) / 2 + PANEL_H / 2;
+    const offsetX = -totalWidth / 2 + PANEL_W / 2;
+    const offsetZ = -totalDepth / 2 + PANEL_H / 2;
 
     let placed = 0;
     for (let i = 0; i < maxPanels; i++) {
@@ -431,14 +432,16 @@ function layoutSolarPanels(count) {
             const px = offsetX + col * (PANEL_W + GAP);
             const pz = offsetZ + row * (PANEL_H + GAP);
 
-            // Y position based on roof slope
-            const roofSlope = Math.sin(roof.slopeAngle);
-            const distFromCenter = Math.abs(px);
-            const localY = roof.y + 0.15 - distFromCenter * roofSlope * 0.15;
+            // Y position: sit flush on roof surface
+            // Panel sits at roofY + half panel thickness (accounting for slope)
+            const slopeOffset = Math.sin(roof.slopeAngle) * pz;
+            const localY = roof.y + PANEL_THICKNESS / 2 * Math.cos(roof.slopeAngle) + slopeOffset * 0.1;
 
             p.targetY = localY;
-            p.group.rotation.x = -roof.slopeAngle * 0.6;
-            p.group.rotation.z = px > 0 ? -roof.slopeAngle * 0.3 : roof.slopeAngle * 0.3;
+
+            // Tilt panel to match roof slope
+            p.group.rotation.x = -roof.slopeAngle;
+            p.group.rotation.z = 0;
 
             // Rise-up animation
             p.group.position.set(px, p.targetY + 15, pz);
@@ -455,9 +458,18 @@ function layoutSolarPanels(count) {
     }
 
     // Create energy flow
-    createEnergyFlow(is2BHK ? '2bhk' : '1bhk');
+    createEnergyFlow(houseLabel);
 
-    console.log(`[SOLAR] Panels placed on ${is2BHK ? '2BHK' : '1BHK'}: ${count} panels`);
+    console.log(`[SOLAR] Panels placed on ${houseLabel}: ${count} panels (flush on roof)`);
+}
+
+function layoutSolarPanels(count) {
+    const roof = is2BHK ? ROOF_2BHK : ROOF_1BHK;
+    const targetHouse = is2BHK
+        ? (typeof roomGroups !== 'undefined' && roomGroups['Structure'] ? roomGroups['Structure'] : (typeof bhk2Group !== 'undefined' ? bhk2Group : scene))
+        : (typeof houseGroup !== 'undefined' ? houseGroup : scene);
+    const label = is2BHK ? '2bhk' : '1bhk';
+    layoutSolarPanelsOnRoof(count, roof, targetHouse, label);
 }
 
 // ═══════════════════════════════════════════════
@@ -497,6 +509,113 @@ function updateStats() {
     const panelNum = document.getElementById('panel-num');
     if (panelNum) panelNum.textContent = currentPanelCount;
     updateBarChart(total, coverageRatio);
+}
+
+let solarSelectorEl = null;
+let solarHouseState = { '1bhk': false, '2bhk': false }; // track which houses have panels
+
+function createSolarSelector() {
+    if (solarSelectorEl) { solarSelectorEl.remove(); solarSelectorEl = null; }
+
+    solarSelectorEl = document.createElement('div');
+    solarSelectorEl.id = 'solar-selector-modal';
+
+    // Determine button labels based on current state (toggle)
+    const label1 = solarHouseState['1bhk'] ? '❌ Remove from 1BHK' : '🏠 1BHK House';
+    const label2 = solarHouseState['2bhk'] ? '❌ Remove from 2BHK' : '🏨 2BHK House';
+    const labelBoth = (solarHouseState['1bhk'] && solarHouseState['2bhk']) ? '❌ Remove from Both' : '🏠🏨 Both Houses';
+
+    solarSelectorEl.innerHTML = `
+    <div class="ssm-backdrop" onclick="closeSolarSelector()"></div>
+    <div class="ssm-content">
+        <button class="ssm-close" onclick="closeSolarSelector()">✕</button>
+        <h2 class="ssm-title">☀️ Select Solar Installation</h2>
+        <p class="ssm-subtitle">Choose which house to add (or remove) panels</p>
+        <div class="ssm-buttons">
+            <button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse('1bhk')">${label1}</button>
+            <button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse('2bhk')">${label2}</button>
+            <button class="ssm-btn ssm-both" onclick="selectSolarHouse('both')">${labelBoth}</button>
+        </div>
+        <button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>
+    </div>`;
+    document.body.appendChild(solarSelectorEl);
+}
+
+function showSolarSelector() { createSolarSelector(); setTimeout(() => solarSelectorEl.classList.add('visible'), 10); }
+function closeSolarSelector() { if (solarSelectorEl) solarSelectorEl.classList.remove('visible'); }
+let solarTarget = null;
+
+function selectSolarHouse(target) {
+    solarTarget = target;
+    closeSolarSelector();
+    performSolarToggle(target);
+}
+
+function performSolarToggle(target) {
+    if (target === '1bhk') {
+        solarHouseState['1bhk'] = !solarHouseState['1bhk'];
+        is2BHK = false;
+        if (solarHouseState['1bhk']) {
+            isSolarMode = true;
+            currentPanelCount = 6;
+            layoutSolarPanels(currentPanelCount);
+            if (typeof showToast === 'function') showToast('☀️ Solar panels added to 1BHK!');
+        } else {
+            currentPanelCount = 0;
+            layoutSolarPanels(0);
+            if (typeof showToast === 'function') showToast('❌ Solar panels removed from 1BHK');
+        }
+    } else if (target === '2bhk') {
+        solarHouseState['2bhk'] = !solarHouseState['2bhk'];
+        is2BHK = true;
+        if (solarHouseState['2bhk']) {
+            isSolarMode = true;
+            currentPanelCount = 6;
+            layoutSolarPanels(currentPanelCount);
+            if (typeof showToast === 'function') showToast('☀️ Solar panels added to 2BHK!');
+        } else {
+            currentPanelCount = 0;
+            layoutSolarPanels(0);
+            if (typeof showToast === 'function') showToast('❌ Solar panels removed from 2BHK');
+        }
+    } else if (target === 'both') {
+        const bothOn = solarHouseState['1bhk'] && solarHouseState['2bhk'];
+        if (bothOn) {
+            // Remove from both
+            solarHouseState['1bhk'] = false; solarHouseState['2bhk'] = false;
+            is2BHK = false; currentPanelCount = 0; layoutSolarPanels(0);
+            is2BHK = true; layoutSolarPanels(0);
+            isSolarMode = false;
+            if (typeof showToast === 'function') showToast('❌ Solar panels removed from both houses');
+        } else {
+            // Add to both
+            isSolarMode = true;
+            solarHouseState['1bhk'] = true; solarHouseState['2bhk'] = true;
+            is2BHK = false; currentPanelCount = 6; layoutSolarPanels(6);
+            is2BHK = true; layoutSolarPanels(6);
+            if (typeof showToast === 'function') showToast('☀️ Solar panels added to both houses!');
+        }
+    }
+
+    // Update button state
+    isSolarMode = solarHouseState['1bhk'] || solarHouseState['2bhk'];
+    const btn = document.getElementById('solar-btn');
+    const btnText = document.getElementById('solar-btn-text');
+    const btnIcon = document.getElementById('solar-btn-icon');
+    const pc = document.getElementById('panel-counter');
+    if (isSolarMode) {
+        if (btn) btn.className = 'solar-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Remove Solar';
+        if (btnIcon) btnIcon.textContent = '⚡';
+        if (pc) pc.classList.add('visible');
+    } else {
+        if (btn) btn.className = 'grid-mode bottom-action-btn';
+        if (btnText) btnText.textContent = 'Add Solar Panels';
+        if (btnIcon) btnIcon.textContent = '☀️';
+        if (pc) pc.classList.remove('visible');
+    }
+    if (typeof updatePowerLines === 'function') updatePowerLines();
+    if (typeof updateStats === 'function') updateStats();
 }
 
 function toggleSolar() {

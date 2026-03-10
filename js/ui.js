@@ -292,10 +292,86 @@ function zoomOutToHouse() {
 }
 
 // ═══════════════════════════════════════════════
-//  ENERGY CHART TOGGLE
+//  ENERGY CHART TOGGLE (Bug #3: Side-by-side 1BHK / 2BHK)
 // ═══════════════════════════════════════════════
 function toggleEnergyChart() {
     openEnergyModal();
+}
+
+function openEnergyModal() {
+    // Remove existing if present
+    let existing = document.getElementById('energy-compare-panel');
+    if (existing) { existing.remove(); return; }
+
+    const panel = document.createElement('div');
+    panel.id = 'energy-compare-panel';
+
+    // 1BHK room data
+    const rooms1 = [
+        { name: 'Hall', watts: 95, color: '#6C5CE7' },
+        { name: 'Bedroom', watts: 90, color: '#A29BFE' },
+        { name: 'Kitchen', watts: 230, color: '#0984E3' },
+        { name: 'Bathroom', watts: 10, color: '#74B9FF' },
+    ];
+    const total1 = rooms1.reduce((s, r) => s + r.watts, 0);
+    const daily1 = (total1 * 8 / 1000 * 8).toFixed(2);
+
+    // 2BHK room data
+    const rooms2 = [
+        { name: 'Hall', watts: 95, color: '#00B894' },
+        { name: 'Bedroom 1', watts: 90, color: '#55EFC4' },
+        { name: 'Bedroom 2', watts: 75, color: '#81ECEC' },
+        { name: 'Kitchen', watts: 230, color: '#00CEC9' },
+        { name: 'Bathroom', watts: 10, color: '#FFEAA7' },
+    ];
+    const total2 = rooms2.reduce((s, r) => s + r.watts, 0);
+    const daily2 = (total2 * 8 / 1000 * 8).toFixed(2);
+
+    const maxW = Math.max(...rooms1.map(r => r.watts), ...rooms2.map(r => r.watts));
+    const savings = total2 - total1;
+    const yearlySavings = Math.round(savings * 8 / 1000 * 8 * 365);
+
+    function makeBarChart(rooms, maxVal) {
+        return rooms.map(r => {
+            const pct = Math.round((r.watts / maxVal) * 100);
+            return `<div class="ecp-bar-row">
+                <span class="ecp-bar-label">${r.name}</span>
+                <div class="ecp-bar-track">
+                    <div class="ecp-bar-fill" style="width:${pct}%;background:${r.color}">${r.watts}W</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    panel.innerHTML = `
+    <div class="ecp-close" onclick="document.getElementById('energy-compare-panel').remove()">✕</div>
+    <div class="ecp-title">⚡ Energy Comparison</div>
+    <div class="ecp-body">
+        <div class="ecp-section ecp-1bhk">
+            <div class="ecp-section-header ecp-header-1bhk">🏠 1BHK House</div>
+            <div class="ecp-bars">${makeBarChart(rooms1, maxW)}</div>
+            <div class="ecp-total">Total: <strong>${total1}W</strong></div>
+            <div class="ecp-daily">≈ ₹${daily1} / day</div>
+        </div>
+        <div class="ecp-divider">
+            <div class="ecp-vs-line"></div>
+            <div class="ecp-vs-badge">VS</div>
+            <div class="ecp-vs-line"></div>
+        </div>
+        <div class="ecp-section ecp-2bhk">
+            <div class="ecp-section-header ecp-header-2bhk">🏘️ 2BHK House</div>
+            <div class="ecp-bars">${makeBarChart(rooms2, maxW)}</div>
+            <div class="ecp-total">Total: <strong>${total2}W</strong></div>
+            <div class="ecp-daily">≈ ₹${daily2} / day</div>
+        </div>
+    </div>
+    <div class="ecp-comparison">
+        💡 1BHK saves <strong>${savings}W</strong> more than 2BHK — that's <strong>₹${yearlySavings.toLocaleString()}/year!</strong>
+    </div>`;
+
+    document.body.appendChild(panel);
+    // Slide-in animation
+    requestAnimationFrame(() => panel.classList.add('open'));
 }
 
 function toggleRoomNav() {
@@ -432,28 +508,9 @@ function closeRoomPopup() {
 window.closeRoomPopup = closeRoomPopup;
 function hideRoomPopup() { closeRoomPopup(); }
 
-// ═══════════════════════════════════════════════
-//  SOLAR SELECTOR
-// ═══════════════════════════════════════════════
-let solarSelectorEl = null;
-function createSolarSelector() {
-    if (solarSelectorEl) return;
-    solarSelectorEl = document.createElement('div'); solarSelectorEl.id = 'solar-selector-modal';
-    solarSelectorEl.innerHTML = '<div class="ssm-backdrop" onclick="closeSolarSelector()"></div><div class="ssm-content"><button class="ssm-close" onclick="closeSolarSelector()">✕</button><h2 class="ssm-title">☀️ Select Solar Installation</h2><p class="ssm-subtitle">Choose which house</p><div class="ssm-buttons"><button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse(\'1bhk\')">🏠 1BHK</button><button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse(\'2bhk\')">🏢 2BHK</button><button class="ssm-btn ssm-both" onclick="selectSolarHouse(\'both\')">🏘️ Both</button></div><button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button></div>';
-    document.body.appendChild(solarSelectorEl);
-}
-function showSolarSelector() { createSolarSelector(); solarSelectorEl.classList.add('visible'); }
-function closeSolarSelector() { if (solarSelectorEl) solarSelectorEl.classList.remove('visible'); }
-let solarTarget = null;
-function selectSolarHouse(target) { solarTarget = target; closeSolarSelector(); performSolarToggle(target); }
-function performSolarToggle(target) {
-    isSolarMode = true; solarTarget = target;
-    const btn = document.getElementById('solar-btn'), btnText = document.getElementById('solar-btn-text'), btnIcon = document.getElementById('solar-btn-icon'), pc = document.getElementById('panel-counter');
-    if (btn) btn.className = 'solar-mode bottom-action-btn'; if (btnText) btnText.textContent = 'Remove Solar'; if (btnIcon) btnIcon.textContent = '⚡'; if (pc) pc.classList.add('visible');
-    currentPanelCount = 6; if (target === '1bhk') is2BHK = false; else if (target === '2bhk') is2BHK = true;
-    layoutSolarPanels(currentPanelCount);
-    if (typeof updatePowerLines === 'function') updatePowerLines(); if (typeof updateStats === 'function') updateStats();
-}
+// NOTE: Solar selector functions moved to solar.js (no duplicates)
+// These are stubs in case legacy code calls them
+// The actual implementations are in solar.js
 
 // ═══════════════════════════════════════════════
 //  DYNAMIC ENERGY
@@ -558,19 +615,10 @@ function updateViewModeBadge(mode) {
 function showViewModeBadge(v) { const b = document.getElementById('view-mode-badge'); if (b) b.style.display = v ? 'flex' : 'none'; }
 
 // ═══════════════════════════════════════════════
-//  ENERGY PANEL (Chart.js)
+//  ENERGY PANEL (legacy — kept for reference only)
 // ═══════════════════════════════════════════════
 function showEnergyPanel() {
-    let p = document.getElementById('energy-panel');
-    if (p) { p.classList.toggle('open'); return; }
-    p = document.createElement('div'); p.id = 'energy-panel';
-    p.innerHTML = '<div class="ep-header">📊 Energy Report<button onclick="document.getElementById(\'energy-panel\').classList.toggle(\'open\')">✕</button></div><div class="ep-charts"><div class="ep-chart-wrap"><div class="ep-chart-title">🏠 1BHK</div><canvas id="chart1bhk" width="220" height="180"></canvas></div><div class="ep-chart-wrap"><div class="ep-chart-title">🏘️ 2BHK</div><canvas id="chart2bhk" width="220" height="180"></canvas></div></div>';
-    document.body.appendChild(p); setTimeout(() => p.classList.add('open'), 10);
-    if (typeof Chart !== 'undefined') {
-        const o = { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { color: '#FFE066', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.1)' } }, x: { ticks: { color: '#FFE066', font: { size: 10 } }, grid: { display: false } } } };
-        new Chart(document.getElementById('chart1bhk'), { type: 'bar', data: { labels: ['Hall', 'Bedroom', 'Kitchen', 'Bath'], datasets: [{ label: 'W', data: [95, 90, 230, 10], backgroundColor: ['#FF6B35', '#F7C948', '#4ECDC4', '#45B7D1'], borderRadius: 6 }] }, options: o });
-        new Chart(document.getElementById('chart2bhk'), { type: 'bar', data: { labels: ['Hall', 'Bed1', 'Bed2', 'Kitchen', 'Bath'], datasets: [{ label: 'W', data: [95, 90, 75, 230, 10], backgroundColor: ['#FF6B35', '#F7C948', '#96CEB4', '#4ECDC4', '#45B7D1'], borderRadius: 6 }] }, options: o });
-    }
+    openEnergyModal();
 }
 
 // ═══════════════════════════════════════════════
@@ -578,6 +626,27 @@ function showEnergyPanel() {
 // ═══════════════════════════════════════════════
 (function () {
     const s = document.createElement('style');
-    s.textContent = '#room-popup{position:fixed;bottom:20px;left:20px;width:280px;background:linear-gradient(160deg,#3E2004,#6B3A0A);border:3px solid #C8860A;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.7);padding:0;transform:translateY(120%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:1000;font-family:Georgia,serif}#room-popup.visible{transform:translateY(0)}#room-popup.hidden{display:none}.popup-banner{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border-radius:11px 11px 0 0;padding:10px 14px;display:flex;align-items:center;gap:8px}.popup-icon{font-size:1.4rem}.popup-title{font-size:1rem;font-weight:bold;color:#FFE066}.popup-body{padding:10px 14px}.appliance-item{display:flex;justify-content:space-between;font-size:.78rem;color:#F5DEB3;padding:3px 0;border-bottom:1px solid rgba(200,134,10,.2)}.status-on{color:#66FF88;font-weight:bold}.status-off{color:#888}.total-watts,.total-consumption{margin-top:8px;font-size:.85rem;color:#FFD700;font-weight:bold;text-align:center}.energy-tip{margin-top:6px;font-size:.72rem;color:#A8FFB0;font-style:italic;padding:5px 8px;background:rgba(0,100,0,.25);border-radius:6px}.popup-explore-btn{display:block;width:calc(100% - 20px);margin:8px 10px;padding:8px;background:linear-gradient(180deg,#FF9800,#E65100);border:2px solid #BF360C;border-radius:8px;color:#fff;font-size:.85rem;font-weight:bold;cursor:pointer;box-shadow:0 3px 0 #8B2000}#fade-overlay{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:1500;transition:opacity .4s ease}#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:rgba(0,0,0,.82);color:#FFE066;padding:9px 22px;border-radius:20px;font-family:Georgia,serif;font-size:.9rem;transition:transform .35s ease;z-index:1800;border:1px solid rgba(255,224,102,.3)}#toast.show{transform:translateX(-50%) translateY(0)}#view-mode-badge{position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#1a2a1a,#2d4a2d);border:2px solid #4CAF50;border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:8px;cursor:pointer;z-index:800;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .2s;user-select:none}#view-mode-badge:hover{border-color:#81C784;transform:scale(1.04)}#view-mode-icon{font-size:1.1rem}#view-mode-label{color:#FFE066;font-size:.82rem;font-weight:bold}.view-mode-switch{color:#81C784;font-size:.72rem;padding:2px 8px;border:1px solid #4CAF50;border-radius:10px}#view-mode-badge.flash{animation:badgeFlash .4s}@keyframes badgeFlash{0%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}50%{background:linear-gradient(135deg,#2E7D32,#388E3C)}100%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}}#energy-panel{position:fixed;right:-520px;top:50%;transform:translateY(-50%);width:500px;background:linear-gradient(160deg,#0d1f0d,#1a3a1a);border:2px solid #4CAF50;border-radius:16px 0 0 16px;padding:16px;transition:right .4s;z-index:900;box-shadow:-4px 0 30px rgba(0,0,0,.6)}#energy-panel.open{right:0}.ep-header{color:#FFE066;font-family:Georgia,serif;font-size:1rem;font-weight:bold;display:flex;justify-content:space-between;margin-bottom:12px}.ep-header button{background:none;border:none;color:#FFE066;font-size:1rem;cursor:pointer}.ep-charts{display:flex;gap:12px}.ep-chart-wrap{flex:1}.ep-chart-title{color:#A8D5A2;font-size:.8rem;text-align:center;margin-bottom:6px;font-family:Georgia,serif}';
+    s.textContent = '#room-popup{position:fixed;bottom:20px;left:20px;width:280px;background:linear-gradient(160deg,#3E2004,#6B3A0A);border:3px solid #C8860A;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.7);padding:0;transform:translateY(120%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:1000;font-family:Georgia,serif}#room-popup.visible{transform:translateY(0)}#room-popup.hidden{display:none}.popup-banner{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border-radius:11px 11px 0 0;padding:10px 14px;display:flex;align-items:center;gap:8px}.popup-icon{font-size:1.4rem}.popup-title{font-size:1rem;font-weight:bold;color:#FFE066}.popup-body{padding:10px 14px}.appliance-item{display:flex;justify-content:space-between;font-size:.78rem;color:#F5DEB3;padding:3px 0;border-bottom:1px solid rgba(200,134,10,.2)}.status-on{color:#66FF88;font-weight:bold}.status-off{color:#888}.total-watts,.total-consumption{margin-top:8px;font-size:.85rem;color:#FFD700;font-weight:bold;text-align:center}.energy-tip{margin-top:6px;font-size:.72rem;color:#A8FFB0;font-style:italic;padding:5px 8px;background:rgba(0,100,0,.25);border-radius:6px}.popup-explore-btn{display:block;width:calc(100% - 20px);margin:8px 10px;padding:8px;background:linear-gradient(180deg,#FF9800,#E65100);border:2px solid #BF360C;border-radius:8px;color:#fff;font-size:.85rem;font-weight:bold;cursor:pointer;box-shadow:0 3px 0 #8B2000}#fade-overlay{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:1500;transition:opacity .4s ease}#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:rgba(0,0,0,.82);color:#FFE066;padding:9px 22px;border-radius:20px;font-family:Georgia,serif;font-size:.9rem;transition:transform .35s ease;z-index:1800;border:1px solid rgba(255,224,102,.3)}#toast.show{transform:translateX(-50%) translateY(0)}#view-mode-badge{position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#1a2a1a,#2d4a2d);border:2px solid #4CAF50;border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:8px;cursor:pointer;z-index:800;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .2s;user-select:none}#view-mode-badge:hover{border-color:#81C784;transform:scale(1.04)}#view-mode-icon{font-size:1.1rem}#view-mode-label{color:#FFE066;font-size:.82rem;font-weight:bold}.view-mode-switch{color:#81C784;font-size:.72rem;padding:2px 8px;border:1px solid #4CAF50;border-radius:10px}#view-mode-badge.flash{animation:badgeFlash .4s}@keyframes badgeFlash{0%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}50%{background:linear-gradient(135deg,#2E7D32,#388E3C)}100%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}}#energy-panel{position:fixed;right:-520px;top:50%;transform:translateY(-50%);width:500px;background:linear-gradient(160deg,#0d1f0d,#1a3a1a);border:2px solid #4CAF50;border-radius:16px 0 0 16px;padding:16px;transition:right .4s;z-index:900;box-shadow:-4px 0 30px rgba(0,0,0,.6)}#energy-panel.open{right:0}.ep-header{color:#FFE066;font-family:Georgia,serif;font-size:1rem;font-weight:bold;display:flex;justify-content:space-between;margin-bottom:12px}.ep-header button{background:none;border:none;color:#FFE066;font-size:1rem;cursor:pointer}.ep-charts{display:flex;gap:12px}.ep-chart-wrap{flex:1}.ep-chart-title{color:#A8D5A2;font-size:.8rem;text-align:center;margin-bottom:6px;font-family:Georgia,serif}' +
+        /* Energy Comparison Panel (Bug #3) */
+        '#energy-compare-panel{position:fixed;right:-660px;top:50%;transform:translateY(-50%);width:620px;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#0d1a2e,#1a2d4a);border:2px solid #6C5CE7;border-radius:18px 0 0 18px;padding:20px 22px;transition:right .45s cubic-bezier(.4,0,.2,1);z-index:1100;box-shadow:-6px 0 40px rgba(0,0,0,.7);font-family:Georgia,serif}' +
+        '#energy-compare-panel.open{right:0}' +
+        '.ecp-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#FFE066;font-size:1.3rem;cursor:pointer;z-index:10}' +
+        '.ecp-title{text-align:center;color:#FFE066;font-size:1.15rem;font-weight:bold;margin-bottom:14px}' +
+        '.ecp-body{display:flex;gap:8px;align-items:flex-start}' +
+        '.ecp-section{flex:1;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 12px}' +
+        '.ecp-section-header{padding:8px 12px;border-radius:8px;text-align:center;font-size:.9rem;font-weight:bold;margin-bottom:10px}' +
+        '.ecp-header-1bhk{background:linear-gradient(135deg,#6C5CE7,#A29BFE);color:#fff}' +
+        '.ecp-header-2bhk{background:linear-gradient(135deg,#00B894,#55EFC4);color:#1a1a2e}' +
+        '.ecp-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}' +
+        '.ecp-bar-label{width:70px;font-size:.72rem;color:#ccc;text-align:right;flex-shrink:0}' +
+        '.ecp-bar-track{flex:1;height:20px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}' +
+        '.ecp-bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:.65rem;color:#fff;font-weight:bold;transition:width .5s ease}' +
+        '.ecp-total{text-align:center;color:#FFE066;font-size:.85rem;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1)}' +
+        '.ecp-daily{text-align:center;color:#A8D5A2;font-size:.75rem;margin-top:4px}' +
+        '.ecp-divider{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px;gap:6px}' +
+        '.ecp-vs-line{width:2px;height:40px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.3),transparent)}' +
+        '.ecp-vs-badge{background:linear-gradient(135deg,#FF6B35,#F7C948);color:#1a1a2e;font-size:.7rem;font-weight:bold;padding:4px 8px;border-radius:10px}' +
+        '.ecp-comparison{margin-top:14px;text-align:center;color:#A8FFB0;font-size:.8rem;padding:10px;background:rgba(0,100,0,.2);border-radius:10px;border:1px solid rgba(76,175,80,.3)}' +
+        '.ecp-comparison strong{color:#FFE066}';
     document.head.appendChild(s);
 })();

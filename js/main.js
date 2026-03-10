@@ -196,74 +196,128 @@ function showCameraModeModal() {
 }
 
 // ═══════════════════════════════════════════════
-//  ENTER / EXIT HOUSE
+//  ENTER / EXIT HOUSE (Bug #1 fix: setTimeout chain + safety fallback)
 // ═══════════════════════════════════════════════
-async function enterHouse(houseId) {
+function enterHouse(houseId) {
     if (gameState === STATE.TRANSITIONING) return;
-    console.log('[ENTER] Entering', houseId);
+    console.log('[ENTER] Starting house entry:', houseId);
     gameState = STATE.TRANSITIONING; window.gameState = gameState;
     boyState.mode = 'transitioning'; boyState.insideHouse = houseId;
     nearDoor = null;
     if (typeof showDoorHint === 'function') showDoorHint(false, null);
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
-    await fadeOverlay(1, 400);
-
-    // Camera mode selection during black screen
-    const camMode = await showCameraModeModal();
-    window.cameraMode = camMode;
-
-    // Clear exterior collisions
-    if (typeof collisionSystem !== 'undefined') { collisionSystem.walls = []; collisionSystem.doors = []; }
-
-    // Teleport boy
-    const spawn = indoorSpawn[houseId];
-    boyGroup.position.copy(spawn.pos); boyGroup.rotation.y = spawn.rot;
-    yaw = spawn.rot; pitch = 0;
-    boy.groundY = spawn.pos.y;
-
-    // Visibility
-    environmentGroup.visible = false;
-    if (houseId === '1bhk') bhk2Group.visible = false;
-    else houseGroup.visible = false;
-
-    // Panels
-    is2BHK = (houseId === '2bhk');
-    if (typeof buildAppliancePanel === 'function') buildAppliancePanel();
-    if (typeof buildRoomNavPanel === 'function') buildRoomNavPanel();
-    if (typeof recalcWattage === 'function') recalcWattage();
-
-    // Interior collision
-    if (typeof collisionSystem !== 'undefined' && typeof collisionSystem.setupInterior === 'function')
-        collisionSystem.setupInterior(houseId);
-
-    currentHouseId = houseId; lastRoomId = null;
-    boyState.currentRoom = null;
-
-    // Camera mode setup
-    if (camMode === 'firstperson') {
-        boy.setFirstPerson(true);
-        if (typeof controls !== 'undefined') controls.enabled = false;
-        renderer.domElement.requestPointerLock();
-    } else {
-        boy.setFirstPerson(false);
-        if (typeof controls !== 'undefined') controls.enabled = false;
+    // Step 1: Fade out
+    console.log('[FADE] Overlay opacity set to 1');
+    const overlay = document.getElementById('fade-overlay');
+    if (overlay) {
+        overlay.style.transition = 'opacity 0.5s ease';
+        overlay.style.opacity = '1';
+        overlay.style.pointerEvents = 'auto';
     }
 
-    camera.position.set(boyGroup.position.x, boyGroup.position.y + EYE_HEIGHT, boyGroup.position.z);
-    const backBtn = document.getElementById('back-btn');
-    if (backBtn) backBtn.classList.add('visible');
+    setTimeout(() => {
+        // Step 2: Camera mode selection during black screen
+        showCameraModeModal().then(camMode => {
+            window.cameraMode = camMode;
 
-    if (typeof showViewModeBadge === 'function') showViewModeBadge(true);
-    if (typeof updateViewModeBadge === 'function') updateViewModeBadge(camMode);
+            // Clear exterior collisions
+            if (typeof collisionSystem !== 'undefined') { collisionSystem.walls = []; collisionSystem.doors = []; }
 
-    await fadeOverlay(0, 400);
-    gameState = STATE.INSIDE; window.gameState = gameState;
-    boyState.mode = 'indoor';
-    if (typeof showToast === 'function') showToast('🏠 You are inside! Walk to explore rooms.');
-    console.log('[STATE] INSIDE', houseId, '— movement enabled');
+            // Teleport boy
+            const spawn = indoorSpawn[houseId];
+            boyGroup.position.copy(spawn.pos); boyGroup.rotation.y = spawn.rot;
+            yaw = spawn.rot; pitch = 0;
+            boy.groundY = spawn.pos.y;
 
-    setTimeout(() => { if (typeof closeMainDoor === 'function') closeMainDoor(houseId); }, 1500);
+            // Visibility — show correct interior, hide rest
+            environmentGroup.visible = false;
+            if (houseId === '1bhk') {
+                bhk2Group.visible = false;
+                houseGroup.visible = true;
+            } else {
+                houseGroup.visible = false;
+                bhk2Group.visible = true;
+            }
+            console.log('[INTERIOR] Showing interior for:', houseId);
+
+            // Panels
+            is2BHK = (houseId === '2bhk');
+            if (typeof buildAppliancePanel === 'function') buildAppliancePanel();
+            if (typeof buildRoomNavPanel === 'function') buildRoomNavPanel();
+            if (typeof recalcWattage === 'function') recalcWattage();
+
+            // Interior collision
+            if (typeof collisionSystem !== 'undefined' && typeof collisionSystem.setupInterior === 'function')
+                collisionSystem.setupInterior(houseId);
+
+            currentHouseId = houseId; lastRoomId = null;
+            boyState.currentRoom = null;
+
+            // Fix camera clipping
+            camera.near = 0.01; camera.far = 1000;
+            camera.updateProjectionMatrix();
+
+            // Emergency ambient light for interior
+            let eLight = scene.getObjectByName('emergencyLight');
+            if (!eLight) {
+                eLight = new THREE.AmbientLight(0xffffff, 1.5);
+                eLight.name = 'emergencyLight';
+                scene.add(eLight);
+            } else {
+                eLight.intensity = 1.5;
+            }
+
+            // Camera mode setup
+            if (camMode === 'firstperson') {
+                boy.setFirstPerson(true);
+                if (typeof controls !== 'undefined') controls.enabled = false;
+                renderer.domElement.requestPointerLock();
+            } else {
+                boy.setFirstPerson(false);
+                if (typeof controls !== 'undefined') controls.enabled = false;
+            }
+
+            camera.position.set(boyGroup.position.x, boyGroup.position.y + EYE_HEIGHT, boyGroup.position.z);
+            camera.lookAt(boyGroup.position.x, boyGroup.position.y + 1, boyGroup.position.z - 2);
+            console.log('[RENDER] camera pos:', camera.position);
+
+            const backBtn = document.getElementById('back-btn');
+            if (backBtn) backBtn.classList.add('visible');
+
+            if (typeof showViewModeBadge === 'function') showViewModeBadge(true);
+            if (typeof updateViewModeBadge === 'function') updateViewModeBadge(camMode);
+
+            // Step 3: Fade in
+            console.log('[FADE] Overlay opacity set to 0');
+            if (overlay) {
+                overlay.style.transition = 'opacity 0.5s ease';
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+            }
+
+            setTimeout(() => {
+                // Step 4: Enable movement
+                gameState = STATE.INSIDE; window.gameState = gameState;
+                boyState.mode = 'indoor';
+                console.log('[INSIDE] gameState = INSIDE, movement enabled');
+                if (typeof showToast === 'function') showToast('🏠 You are inside! Walk to explore rooms.');
+                console.log('[SUCCESS] Inside house:', houseId);
+            }, 600);
+
+            setTimeout(() => { if (typeof closeMainDoor === 'function') closeMainDoor(houseId); }, 1500);
+        });
+    }, 600);
+
+    // Safety fallback — force overlay off after 5 seconds no matter what
+    setTimeout(() => {
+        const o = document.getElementById('fade-overlay');
+        if (o && parseFloat(o.style.opacity) > 0.5) {
+            console.warn('[SAFETY] Forcing fade overlay to 0');
+            o.style.opacity = '0';
+            o.style.pointerEvents = 'none';
+        }
+    }, 5000);
 }
 
 async function exitHouse() {
@@ -323,70 +377,94 @@ window.setCameraMode = function (mode) {
 };
 
 // ═══════════════════════════════════════════════
-//  MOVEMENT (FIX: correct direction)
+//  MOVEMENT (Bug #2 fix: correct camera-relative direction)
 // ═══════════════════════════════════════════════
 function processMovement(delta) {
     if (gameState === STATE.TRANSITIONING) return;
-    const speed = (gameState === STATE.INSIDE) ? 3.5 : 8;
 
-    // ✅ FIX: NEGATIVE sin/cos for correct forward direction
-    const forward = new THREE.Vector3(-Math.sin(yaw), 0, -Math.cos(yaw));
-    const right = new THREE.Vector3(Math.cos(yaw), 0, -Math.sin(yaw));
+    const speed = (gameState === STATE.INSIDE) ? 4.0 : 8;
+    let mx = 0, mz = 0;
 
-    const moveVec = new THREE.Vector3();
-    if (keys['KeyW'] || keys['ArrowUp']) moveVec.add(forward);
-    if (keys['KeyS'] || keys['ArrowDown']) moveVec.sub(forward);
-    if (keys['KeyA'] || keys['ArrowLeft']) moveVec.sub(right);
-    if (keys['KeyD'] || keys['ArrowRight']) moveVec.add(right);
+    // Read keys — simple and explicit
+    if (keys['KeyW'] || keys['ArrowUp']) mz = -1;
+    if (keys['KeyS'] || keys['ArrowDown']) mz = 1;
+    if (keys['KeyA'] || keys['ArrowLeft']) mx = -1;
+    if (keys['KeyD'] || keys['ArrowRight']) mx = 1;
 
-    const isMoving = moveVec.lengthSq() > 0;
-
-    if (isMoving) {
-        moveVec.normalize();
-
-        if (gameState === STATE.OUTSIDE && typeof controls !== 'undefined' && controls.enabled) {
-            // Third-person: camera-relative movement
-            const camFwd = new THREE.Vector3();
-            camFwd.subVectors(controls.target, camera.position); camFwd.y = 0;
-            if (camFwd.lengthSq() > 0.0001) camFwd.normalize(); else camFwd.set(0, 0, -1);
-            const camRight = new THREE.Vector3().crossVectors(camFwd, new THREE.Vector3(0, 1, 0)).normalize();
-            const cm = new THREE.Vector3();
-            if (keys['KeyW'] || keys['ArrowUp']) cm.add(camFwd);
-            if (keys['KeyS'] || keys['ArrowDown']) cm.sub(camFwd);
-            if (keys['KeyA'] || keys['ArrowLeft']) cm.sub(camRight);
-            if (keys['KeyD'] || keys['ArrowRight']) cm.add(camRight);
-            if (cm.lengthSq() > 0) cm.normalize();
-            moveVec.copy(cm);
-        }
-
-        moveVec.multiplyScalar(speed * delta);
-        const newPos = boyGroup.position.clone().add(moveVec);
-
-        if (gameState === STATE.INSIDE && currentHouseId) clampToBounds(newPos, currentHouseId);
-        else if (gameState === STATE.OUTSIDE) {
-            newPos.x = Math.max(-45, Math.min(48, newPos.x));
-            newPos.z = Math.max(8, Math.min(18, newPos.z));
-        }
-
-        // Collision
-        if (gameState === STATE.INSIDE && typeof resolveSliding === 'function') {
-            const r = resolveSliding(boyGroup.position.x, boyGroup.position.z, newPos.x, newPos.z);
-            boyGroup.position.x = r.x; boyGroup.position.z = r.z;
-        } else if (typeof collisionSystem !== 'undefined' && collisionSystem.walls && collisionSystem.walls.length > 0) {
-            const res = collisionSystem.resolveCollision(boyGroup, newPos);
-            boyGroup.position.copy(res.position);
-        } else {
-            boyGroup.position.x = newPos.x; boyGroup.position.z = newPos.z;
-        }
-
-        boyGroup.rotation.y = yaw;
-        boy.isWalking = true;
-    } else {
+    if (mx === 0 && mz === 0) {
         boy.isWalking = false;
+        return;
     }
 
+    boy.isWalking = true;
+
+    let moveX, moveZ;
+
+    if (gameState === STATE.OUTSIDE && typeof controls !== 'undefined' && controls.enabled) {
+        // Third-person outside: camera-relative movement
+        const camFwd = new THREE.Vector3();
+        camFwd.subVectors(controls.target, camera.position); camFwd.y = 0;
+        if (camFwd.lengthSq() > 0.0001) camFwd.normalize(); else camFwd.set(0, 0, -1);
+        const camRight = new THREE.Vector3().crossVectors(camFwd, new THREE.Vector3(0, 1, 0)).normalize();
+        const cm = new THREE.Vector3();
+        if (keys['KeyW'] || keys['ArrowUp']) cm.add(camFwd);
+        if (keys['KeyS'] || keys['ArrowDown']) cm.sub(camFwd);
+        if (keys['KeyA'] || keys['ArrowLeft']) cm.sub(camRight);
+        if (keys['KeyD'] || keys['ArrowRight']) cm.add(camRight);
+        if (cm.lengthSq() > 0) cm.normalize();
+        moveX = cm.x * speed * delta;
+        moveZ = cm.z * speed * delta;
+    } else {
+        // First-person / inside: yaw-relative movement
+        const sinY = Math.sin(yaw);
+        const cosY = Math.cos(yaw);
+
+        // Forward direction (W key = move in direction camera faces)
+        const fwdX = -sinY;
+        const fwdZ = -cosY;
+
+        // Right direction (D key = move right relative to camera)
+        const rgtX = cosY;
+        const rgtZ = -sinY;
+
+        // Combine
+        moveX = (fwdX * mz + rgtX * mx) * speed * delta;
+        moveZ = (fwdZ * mz + rgtZ * mx) * speed * delta;
+    }
+
+    const newX = boyGroup.position.x + moveX;
+    const newZ = boyGroup.position.z + moveZ;
+    const newPos = new THREE.Vector3(newX, boyGroup.position.y, newZ);
+
+    // Apply bounds
+    if (gameState === STATE.INSIDE && currentHouseId) {
+        const b = INTERIOR_BOUNDS[currentHouseId];
+        if (b) {
+            newPos.x = Math.max(b.minX, Math.min(b.maxX, newPos.x));
+            newPos.z = Math.max(b.minZ, Math.min(b.maxZ, newPos.z));
+        }
+    } else if (gameState === STATE.OUTSIDE) {
+        newPos.x = Math.max(-45, Math.min(48, newPos.x));
+        newPos.z = Math.max(8, Math.min(18, newPos.z));
+    }
+
+    // Collision
+    if (gameState === STATE.INSIDE && typeof resolveSliding === 'function') {
+        const r = resolveSliding(boyGroup.position.x, boyGroup.position.z, newPos.x, newPos.z);
+        boyGroup.position.x = r.x; boyGroup.position.z = r.z;
+    } else if (typeof collisionSystem !== 'undefined' && collisionSystem.walls && collisionSystem.walls.length > 0) {
+        const res = collisionSystem.resolveCollision(boyGroup, newPos);
+        boyGroup.position.copy(res.position);
+    } else {
+        boyGroup.position.x = newPos.x; boyGroup.position.z = newPos.z;
+    }
+
+    // Rotate boy to face movement direction
+    const angle = Math.atan2(moveX, moveZ);
+    boyGroup.rotation.y = THREE.MathUtils.lerp(boyGroup.rotation.y, angle, 0.12);
+
     // Third-person camera follow outside
-    if (gameState === STATE.OUTSIDE && isMoving && typeof controls !== 'undefined' && controls.enabled) {
+    if (gameState === STATE.OUTSIDE && typeof controls !== 'undefined' && controls.enabled) {
         const dt = new THREE.Vector3(boyGroup.position.x, boyGroup.position.y + 1.5, boyGroup.position.z);
         const pt = controls.target.clone();
         controls.target.lerp(dt, 0.08);
@@ -617,6 +695,7 @@ buildRoomNavPanel();
 if (typeof updateStats === 'function') updateStats();
 if (typeof createViewModeBadge === 'function') createViewModeBadge();
 animate();
+console.log('[BOOT] Scene ready');
 console.log('[Main] EnergyWorld initialized — all systems active');
 
 window.addEventListener('resize', () => {
