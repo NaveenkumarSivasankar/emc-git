@@ -2,24 +2,18 @@
 //  1BHK HOUSE STRUCTURE (ENLARGED & SPACIOUS)
 // ═══════════════════════════════════════════════
 const houseGroup = new THREE.Group();
-houseGroup.position.set(-22, 0, 0);
+houseGroup.position.set(-22, 0, -4);
 scene.add(houseGroup);
 
 // Enlarged Dimensions
 const W = 28, D = 22, H = 7, roofH = 4.5;
 
-// House label
-const simpleLabelDiv = document.createElement('div');
-simpleLabelDiv.className = 'appliance-label';
-simpleLabelDiv.innerHTML = '<span class="name" style="font-size:1.1rem;">🏠 1BHK House</span>';
-const simpleLabel = new THREE.CSS2DObject(simpleLabelDiv);
-simpleLabel.position.set(0, H + roofH + 3, 0);
-houseGroup.add(simpleLabel);
+
 
 // Materials
 const wallColor = 0xe8d5b7;
 const wallMat = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.8, metalness: 0.05 });
-const wallMatTransparent = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.8, metalness: 0.05, transparent: true, opacity: 1 });
+const wallMatTransparent = new THREE.MeshStandardMaterial({ color: wallColor, roughness: 0.8, metalness: 0.05, transparent: true, opacity: 1, side: THREE.DoubleSide });
 const roofMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 1 });
 const floorMat = new THREE.MeshStandardMaterial({ color: 0xc9a96e, roughness: 0.85 });
 const doorMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7, transparent: true, opacity: 1 });

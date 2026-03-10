@@ -70,25 +70,19 @@ function initPartitionRefs() {
 }
 
 function updateRoomTransparency() {
-    const currentRoom = getBoyRoom();
-
     if (boyState.insideHouse === '1bhk') {
-        // Make outer walls transparent (they're already handled by camera distance)
-        // Handle partition walls: transparent only if boy is in adjacent room
+        // Make ALL partition walls transparent so rooms are clearly visible
         bhk1PartitionRooms.forEach(p => {
             if (!p.mesh) return;
-            const shouldBeTransparent = currentRoom && p.rooms.includes(currentRoom);
-            const targetOpacity = shouldBeTransparent ? 0.15 : 0.9;
+            const targetOpacity = 0.1;
             p.mesh.material.transparent = true;
             p.mesh.material.opacity += (targetOpacity - p.mesh.material.opacity) * 0.1;
             p.mesh.material.needsUpdate = true;
         });
     } else if (boyState.insideHouse === '2bhk') {
-        // 2BHK partitions
+        // Make ALL 2BHK partition walls transparent so rooms are clearly visible
         bhk2PartWalls.forEach((mesh, i) => {
-            if (i >= bhk2PartitionRooms.length) return;
-            const shouldBeTransparent = currentRoom && bhk2PartitionRooms[i].rooms.includes(currentRoom);
-            const targetOpacity = shouldBeTransparent ? 0.15 : 0.9;
+            const targetOpacity = 0.1;
             mesh.material.transparent = true;
             mesh.material.opacity += (targetOpacity - mesh.material.opacity) * 0.1;
             mesh.material.needsUpdate = true;
@@ -139,34 +133,34 @@ function initFurnitureCollision() {
     const wt = 0.15;
 
     // pw1: horizontal wall at z=-5, x from -14 to 14 (W=28)
-    // Door gap at local x=5, gap width=2 (x: 4 to 6)
-    // Segment left: x=-14 to 4
-    addCollisionBox(furnitureBoxes1BHK, -5, -5, 9, wt, ox1, oz1);
-    // Segment right: x=6 to 14
-    addCollisionBox(furnitureBoxes1BHK, 10, -5, 4, wt, ox1, oz1);
+    // Door gap at local x=5, gap width=3 (x: 3.5 to 6.5)
+    // Segment left: x=-14 to 3.5
+    addCollisionBox(furnitureBoxes1BHK, -5.25, -5, 8.75, wt, ox1, oz1);
+    // Segment right: x=6.5 to 14
+    addCollisionBox(furnitureBoxes1BHK, 10.25, -5, 3.75, wt, ox1, oz1);
 
     // pw2: vertical wall at x=-4, z from -5 to 11 (kitchenDepth=16)
-    // Door gap at local z=3, gap width=2 (z: 2 to 4)
-    // Segment bottom: z=-5 to 2
-    addCollisionBox(furnitureBoxes1BHK, -4, -1.5, wt, 3.5, ox1, oz1);
-    // Segment top: z=4 to 11
-    addCollisionBox(furnitureBoxes1BHK, -4, 7.5, wt, 3.5, ox1, oz1);
+    // Door gap at local z=3, gap width=3 (z: 1.5 to 4.5)
+    // Segment bottom: z=-5 to 1.5
+    addCollisionBox(furnitureBoxes1BHK, -4, -1.75, wt, 3.25, ox1, oz1);
+    // Segment top: z=4.5 to 11
+    addCollisionBox(furnitureBoxes1BHK, -4, 7.75, wt, 3.25, ox1, oz1);
 
     // 2BHK furniture (local coords, bhk2Group at 24, 0)
     const ox2 = 24, oz2 = 0;
 
-    // Bed 1 (center -7, -9)
-    addCollisionBox(furnitureBoxes2BHK, -7, -9, 1.8, 2.2, ox2, oz2);
-    // Bed 2 (center 7, -9)
-    addCollisionBox(furnitureBoxes2BHK, 7, -9, 1.8, 2.2, ox2, oz2);
-    // Hall sofa (center 11, 3)
-    addCollisionBox(furnitureBoxes2BHK, 11, 3, 2.7, 1.5, ox2, oz2);
-    // Coffee table (center 5, 3)
-    addCollisionBox(furnitureBoxes2BHK, 5, 3, 1.5, 0.8, ox2, oz2);
+    // Bed 1 (center -7, -9) — trimmed to leave walkway
+    addCollisionBox(furnitureBoxes2BHK, -7, -9, 1.5, 1.8, ox2, oz2);
+    // Bed 2 (center 7, -9) — trimmed to leave walkway
+    addCollisionBox(furnitureBoxes2BHK, 7, -9, 1.5, 1.8, ox2, oz2);
+    // Hall sofa (center 10, 2) — moved slightly inward, reduced footprint
+    addCollisionBox(furnitureBoxes2BHK, 10, 2, 2.2, 1.0, ox2, oz2);
+    // Coffee table (center 3, 1) — moved away from Bedroom 2 door gap
+    addCollisionBox(furnitureBoxes2BHK, 3, 1, 1.2, 0.6, ox2, oz2);
     // Kitchen counter (center -11, -3.5)
-    addCollisionBox(furnitureBoxes2BHK, -11, -3.5, 2.5, 0.7, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -11, -3.5, 2.0, 0.6, ox2, oz2);
     // Kitchen fridge (center -7, 1)
-    addCollisionBox(furnitureBoxes2BHK, -7, 1, 1, 0.9, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -7, 1, 0.8, 0.7, ox2, oz2);
     // Toilet area (center -7.5, 10)
     addCollisionBox(furnitureBoxes2BHK, -7.5, 10, 0.7, 0.7, ox2, oz2);
     // Basin (center -11, 6)
@@ -175,13 +169,13 @@ function initFurnitureCollision() {
     // ── 2BHK WALL SEGMENTS (partition walls with door gaps) ──
 
     // Wall 1: horizontal at z=-5, full width (x=-14 to 14)
-    // Door gap at x=-5 (Bedroom1 door, x: -6 to -4) and x=5 (Bedroom2 door, x: 4 to 6)
-    // Segment 1: x=-14 to -6
-    addCollisionBox(furnitureBoxes2BHK, -10, -5, 4, wt, ox2, oz2);
-    // Segment 2: x=-4 to 4
-    addCollisionBox(furnitureBoxes2BHK, 0, -5, 4, wt, ox2, oz2);
-    // Segment 3: x=6 to 14
-    addCollisionBox(furnitureBoxes2BHK, 10, -5, 4, wt, ox2, oz2);
+    // Door gap at x=-5 (Bedroom1 door, x: -6.5 to -3.5) and x=5 (Bedroom2 door, x: 3.5 to 6.5)
+    // Segment 1: x=-14 to -6.5
+    addCollisionBox(furnitureBoxes2BHK, -10.25, -5, 3.75, wt, ox2, oz2);
+    // Segment 2: x=-3.5 to 3.5
+    addCollisionBox(furnitureBoxes2BHK, 0, -5, 3.5, wt, ox2, oz2);
+    // Segment 3: x=6.5 to 14
+    addCollisionBox(furnitureBoxes2BHK, 10.25, -5, 3.75, wt, ox2, oz2);
 
     // NOTE: Main front door collision boxes REMOVED — entry/exit is gated
     // by ENTER/ESCAPE key prompts, so blocking movement at doorways is
@@ -191,13 +185,13 @@ function initFurnitureCollision() {
     addCollisionBox(furnitureBoxes2BHK, 0, -8.5, wt, 3.5, ox2, oz2);
 
     // Wall 3: vertical at x=-5, z=-5 to 12 (Hall/Kitchen/Bath separator)
-    // Door gap at z=-1 (Kitchen door, z: -2 to 0) and z=7 (Bathroom door, z: 6 to 8)
-    // Segment 1: z=-5 to -2
-    addCollisionBox(furnitureBoxes2BHK, -5, -3.5, wt, 1.5, ox2, oz2);
-    // Segment 2: z=0 to 6
-    addCollisionBox(furnitureBoxes2BHK, -5, 3, wt, 3, ox2, oz2);
-    // Segment 3: z=8 to 12
-    addCollisionBox(furnitureBoxes2BHK, -5, 10, wt, 2, ox2, oz2);
+    // Door gap at z=-1 (Kitchen door, z: -2.5 to 0.5) and z=7 (Bathroom door, z: 5.5 to 8.5)
+    // Segment 1: z=-5 to -2.5
+    addCollisionBox(furnitureBoxes2BHK, -5, -3.75, wt, 1.25, ox2, oz2);
+    // Segment 2: z=0.5 to 5.5
+    addCollisionBox(furnitureBoxes2BHK, -5, 3, wt, 2.5, ox2, oz2);
+    // Segment 3: z=8.5 to 12
+    addCollisionBox(furnitureBoxes2BHK, -5, 10.25, wt, 1.75, ox2, oz2);
 
     // Wall 4: horizontal at z=3, x=-14 to -5 (Kitchen/Bathroom separator, NO door)
     addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2);

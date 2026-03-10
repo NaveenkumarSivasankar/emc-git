@@ -1094,6 +1094,96 @@ canvas {
     transform: translateY(-2px) scale(1.05);
 }
 
+/* ── 3D Exit Button (Scene) ────────────────────────── */
+.exit-scene-btn {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.exit-scene-btn:hover {
+    transform: scale(1.15) translateY(-2px);
+    background: linear-gradient(135deg, #ff6b81, #ff4757);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.6);
+    border-color: #fff;
+}
+
+.exit-scene-btn::before {
+    content: '🚪';
+    font-size: 1.1rem;
+}
+
+/* ═══════════════════════════════════════════════
+           SOLAR SELECTION MODAL
+           ═══════════════════════════════════════════════ */
+#solar-selection-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#solar-selection-modal.modal-hidden {
+    display: none !important;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    position: relative;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255, 71, 87, 0.15);
+    color: #ff4757;
+}
+
 /* ═══════════════════════════════════════════════
            ENERGY MODAL (ApexCharts)
            ═══════════════════════════════════════════════ */

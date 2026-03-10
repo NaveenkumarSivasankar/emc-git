@@ -2,7 +2,10 @@
 //  SOLAR PANELS — Photorealistic PV Cells + Roof Placement
 // ═══════════════════════════════════════════════
 const solarPanels = [];
-const maxPanels = 10;
+const houseState = {
+    '1bhk': { panels: [], count: 0, max: 0, isSolarMode: false },
+    '2bhk': { panels: [], count: 0, max: 0, isSolarMode: false }
+};
 
 // ═══════════════════════════════════════════════
 //  ROOF DATA CONSTANTS
@@ -476,11 +479,17 @@ const funFacts = [
 
 function updateStats() {
     let total = 0;
-    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    const list = activeKey === '2bhk' ? bhk2Appliances : simpleAppliances;
+
     list.forEach(a => { if (a.on) total += a.watt; });
+
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
+    const activeState = houseState[activeKey];
+
     const statConsumption = document.getElementById('stat-consumption');
     if (statConsumption) statConsumption.textContent = total.toLocaleString() + ' W';
+
     const statPanels = document.getElementById('stat-panels');
     if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
 
@@ -488,16 +497,18 @@ function updateStats() {
     const coverageRatio = solarActive ? Math.min(currentPanelCount / panelsNeeded, 1) : 0;
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+
     const statSavings = document.getElementById('stat-savings');
     if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
+
     const statCo2 = document.getElementById('stat-co2');
     if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+
     const statFact = document.getElementById('stat-fact');
     if (statFact) statFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
+
     const panelNum = document.getElementById('panel-num');
-    if (panelNum) panelNum.textContent = currentPanelCount;
-    updateBarChart(total, coverageRatio);
-}
+    if (panelNum) panelNum.textContent = activeState.count;
 
 function toggleSolar() {
     if (isSolarMode) {
@@ -522,31 +533,110 @@ function toggleSolar() {
 }
 
 function updatePowerLines() {
-    const panelsNeeded = Math.ceil(totalWatt / 350);
-    const coverage = panelsNeeded > 0 ? Math.min(currentPanelCount / panelsNeeded, 1) : 0;
-    const poleOpacity = isSolarMode ? Math.max(0.1, 1 - coverage) : 1;
+    if (typeof poleGroup === 'undefined') return;
+
+    // Check BOTH houses for solar mode — grid should only fade based on combined coverage
+    const state1 = houseState['1bhk'];
+    const state2 = houseState['2bhk'];
+    const anySolarMode = state1.isSolarMode || state2.isSolarMode;
+
+    if (!anySolarMode) {
+        // No solar on either house — grid fully visible
+        poleGroup.children.forEach(child => {
+            if (child.material) { child.material.transparent = true; child.material.opacity = 1; }
+        });
+        return;
+    }
+
+    // Calculate combined coverage from both houses
+    let total1 = 0, total2 = 0;
+    simpleAppliances.forEach(a => { if (a.on) total1 += a.watt; });
+    bhk2Appliances.forEach(a => { if (a.on) total2 += a.watt; });
+    const totalWatt = total1 + total2;
+
+    const totalPanelsNeeded = Math.max(1, Math.ceil(totalWatt / 350));
+    const totalPanels = state1.count + state2.count;
+    const overallCoverage = Math.min(totalPanels / totalPanelsNeeded, 1);
+
+    // Grid fades proportionally to overall solar coverage, minimum 0.3 so it stays visible
+    const poleOpacity = Math.max(0.3, 1 - overallCoverage * 0.7);
+
     poleGroup.children.forEach(child => {
         if (child.material) { child.material.transparent = true; child.material.opacity = poleOpacity; }
     });
 }
 
-function animatePanelsIn(count) {
-    layoutSolarPanels(count);
-}
 
 function changePanelCount(delta) {
-    if (!isSolarMode) return;
-    const newCount = Math.max(0, Math.min(maxPanels, currentPanelCount + delta));
-    if (newCount === currentPanelCount) return;
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    const state = houseState[activeKey];
 
-    currentPanelCount = newCount;
-    layoutSolarPanels(currentPanelCount);
+    if (!state.isSolarMode) return;
+
+    const newCount = Math.max(0, Math.min(state.max, state.count + delta));
+    if (newCount === state.count) {
+        if (newCount === state.max && delta > 0) {
+            alert("Maximum solar panels reached for this house.");
+        }
+        return;
+    }
+
+    const config = getRoofConfig(activeKey);
+
+    if (delta > 0) {
+        const idx = state.count; // the zero-based index of the panel being added
+        const side = idx % 2 === 0 ? 1 : -1; // 1 for right, -1 for left
+        const pairIdx = Math.floor(idx / 2);
+        const row = pairIdx % config.rows;
+        const col = Math.floor(pairIdx / config.rows);
+
+        const g = createSolarPanel();
+
+        // Calculate position dynamically
+        const xOffset = config.startX + col * config.panelGapX * 1.05 + 0.9;
+        const xPos = xOffset * side;
+        const zPos = config.startZ + row * config.panelGapZ * 1.05 + 1.25;
+
+        const hFallback = typeof H !== 'undefined' ? H : 7;
+        const roofLocalY = hFallback + 0.3 + config.baseRoofH - Math.abs(xPos) * (config.baseRoofH / config.roofWidthHalf);
+
+        g.rotation.set(0, 0, side * -config.slopeAngle);
+        g.position.set(xPos, roofLocalY - 0.2, zPos);
+        g.translateY(0.15); // float off roof slightly
+
+        config.targetGroup.add(g);
+        g.visible = true;
+
+        const targetY = g.position.y;
+        g.position.y = targetY + 15; // start from above for drop animation
+
+        state.panels.push({ group: g, targetY: targetY, animating: true, frame: 0, delay: 0 });
+    } else {
+        const lastPanel = state.panels.pop();
+        if (lastPanel && lastPanel.group && lastPanel.group.parent) {
+            lastPanel.group.parent.remove(lastPanel.group);
+        }
+    }
+
+    state.count = newCount;
     updatePowerLines();
     updateStats();
 }
 
+// Ensure the main animation loop can animate all panels if needed
+if (!window.solarPanelsAnimHook) {
+    window.solarPanelsAnimHook = true;
+    const originalAnimate = window.animate;
+}
+// Continuously flush all active panels back into global `solarPanels` for animation 
+setInterval(() => {
+    solarPanels.length = 0;
+    houseState['1bhk'].panels.forEach(p => solarPanels.push(p));
+    houseState['2bhk'].panels.forEach(p => solarPanels.push(p));
+}, 100);
+
 function refreshSolarPanelsPlacement() {
-    if (isSolarMode && currentPanelCount > 0) {
-        layoutSolarPanels(currentPanelCount);
+    if (typeof houseState !== 'undefined') {
+        // Re-sync panel counts
     }
 }

@@ -498,7 +498,7 @@ const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow1.position.set(0, 1.5, 0);
 arrow1.rotation.x = Math.PI;
 entry1BHK.add(arrow1);
-entry1BHK.position.set(-22, 0, 12);
+entry1BHK.position.set(-22, 0, 8);
 scene.add(entry1BHK);
 
 // 2BHK entry circle
@@ -515,8 +515,9 @@ const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow2.position.set(0, 1.5, 0);
 arrow2.rotation.x = Math.PI;
 entry2BHK.add(arrow2);
-entry2BHK.position.set(24, 0, 13);
+entry2BHK.position.set(24, 0, 9);
 scene.add(entry2BHK);
+
 
 // ═══════════════════════════════════════════════
 //  COLLISION — kept for backward compat from old code
@@ -561,6 +562,44 @@ const collisionBoxes = [
     { xMin: 20.95, xMax: 25.45, zMin: 0, zMax: 2.2, house: '2bhk' },
     { xMin: 17.25, xMax: 19.75, zMin: 0.4, zMax: 1.6, house: '2bhk' },
     { xMin: 6.3, xMax: 9.3, zMin: -1.9, zMax: -1.1, house: '2bhk' },
+    // ── 1BHK OUTER WALLS (house at x=-22, z=-4) ──
+    { xMin: -24, xMax: -4, zMin: -11.65, zMax: -11.35, house: '1bhk' },
+    { xMin: -24.15, xMax: -23.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
+    { xMin: -4.15, xMax: -3.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
+    { xMin: -24.15, xMax: -15.25, zMin: 3.35, zMax: 3.65, house: '1bhk' },
+    { xMin: -12.75, xMax: -3.85, zMin: 3.35, zMax: 3.65, house: '1bhk' },
+    // ── 1BHK PARTITIONS (with door gaps) ──
+    { xMin: -23.8, xMax: -11.85, zMin: -5.6, zMax: -5.4, house: '1bhk' },
+    { xMin: -10.15, xMax: -4.2, zMin: -5.6, zMax: -5.4, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: -3.15, zMax: -1.35, house: '1bhk' },
+    { xMin: -16.6, xMax: -16.4, zMin: 0.35, zMax: 2.65, house: '1bhk' },
+    // ── 1BHK FURNITURE ──
+    { xMin: -19.5, xMax: -14.5, zMin: -9.75, zMax: -7.4, house: '1bhk' },
+    { xMin: -8.75, xMax: -6.25, zMin: -9.45, zMax: -8.55, house: '1bhk' },
+    { xMin: -15.75, xMax: -12.25, zMin: -10.65, zMax: -6.0, house: '1bhk' },
+    { xMin: -22.7, xMax: -20.3, zMin: -10, zMax: -9, house: '1bhk' },
+    { xMin: -21.75, xMax: -18.25, zMin: -4.95, zMax: -4.05, house: '1bhk' },
+    // ── 2BHK OUTER WALLS (house at x=24, z=-4) ──
+    { xMin: 6, xMax: 26, zMin: -12.15, zMax: -11.85, house: '2bhk' },
+    { xMin: 5.85, xMax: 6.15, zMin: -12, zMax: 4, house: '2bhk' },
+    { xMin: 25.85, xMax: 26.15, zMin: -12, zMax: 4, house: '2bhk' },
+    { xMin: 5.85, xMax: 14.75, zMin: 3.85, zMax: 4.15, house: '2bhk' },
+    { xMin: 17.25, xMax: 26.15, zMin: 3.85, zMax: 4.15, house: '2bhk' },
+    // ── 2BHK PARTITIONS (with door gaps) ──
+    { xMin: 6.2, xMax: 12.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 13.75, xMax: 18.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 19.75, xMax: 25.8, zMin: -6.6, zMax: -6.4, house: '2bhk' },
+    { xMin: 15.9, xMax: 16.1, zMin: -11.9, zMax: -6.6, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -6.3, zMax: -4.25, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: -2.75, zMax: 0.75, house: '2bhk' },
+    { xMin: 10.9, xMax: 11.1, zMin: 2.25, zMax: 4.0, house: '2bhk' },
+    { xMin: 6.1, xMax: 10.9, zMin: -0.1, zMax: 0.1, house: '2bhk' },
+    // ── 2BHK FURNITURE ──
+    { xMin: 9.6, xMax: 12.4, zMin: -11, zMax: -7.5, house: '2bhk' },
+    { xMin: 19.6, xMax: 22.4, zMin: -11, zMax: -7.5, house: '2bhk' },
+    { xMin: 20.95, xMax: 25.45, zMin: -4, zMax: -1.8, house: '2bhk' },
+    { xMin: 17.25, xMax: 19.75, zMin: -3.6, zMax: -2.4, house: '2bhk' },
+    { xMin: 6.3, xMax: 9.3, zMin: -5.9, zMax: -5.1, house: '2bhk' },
 ];
 
 function checkCollision(testX, testZ) {
@@ -610,6 +649,16 @@ const roomRegions = [
     { xMin: 16, xMax: 26, zMin: -8, zMax: -2.5, room: '🛏️ Bedroom 2', house: '2bhk' },
     { xMin: 6, xMax: 11, zMin: -2.5, zMax: 4, room: '🍳 Kitchen', house: '2bhk' },
     { xMin: 6, xMax: 11, zMin: 4, zMax: 8, room: '🚿 Bathroom', house: '2bhk' },
+    // 1BHK (shifted z by -4)
+    { xMin: -16.5, xMax: -4, zMin: -5.5, zMax: 3.5, room: '🏠 Hall', house: '1bhk' },
+    { xMin: -24, xMax: -16.5, zMin: -5.5, zMax: 3.5, room: '🍳 Kitchen', house: '1bhk' },
+    { xMin: -24, xMax: -4, zMin: -11.5, zMax: -5.5, room: '🛏️ Bedroom', house: '1bhk' },
+    // 2BHK (shifted z by -4)
+    { xMin: 11, xMax: 26, zMin: -6.5, zMax: 4, room: '🏠 Hall', house: '2bhk' },
+    { xMin: 6, xMax: 16, zMin: -12, zMax: -6.5, room: '🛏️ Bedroom 1', house: '2bhk' },
+    { xMin: 16, xMax: 26, zMin: -12, zMax: -6.5, room: '🛏️ Bedroom 2', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: -6.5, zMax: 0, room: '🍳 Kitchen', house: '2bhk' },
+    { xMin: 6, xMax: 11, zMin: 0, zMax: 4, room: '🚿 Bathroom', house: '2bhk' },
 ];
 
 // ═══════════════════════════════════════════════
@@ -658,18 +707,18 @@ const boyState = {
 
 // Entry positions
 const entryPositions = {
-    '1bhk': new THREE.Vector3(-22, 0, 12),
-    '2bhk': new THREE.Vector3(24, 0, 13)
+    '1bhk': new THREE.Vector3(-22, 0, 8),
+    '2bhk': new THREE.Vector3(24, 0, 9)
 };
 
 const indoorSpawn = {
-    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI },
-    '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI }
+    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 4), rot: Math.PI },
+    '2bhk': { pos: new THREE.Vector3(24, 0.15, 5), rot: Math.PI }
 };
 
 const indoorBounds = {
-    '1bhk': { xMin: -36, xMax: -8, zMin: -11, zMax: 10 },
-    '2bhk': { xMin: 10, xMax: 38, zMin: -12, zMax: 11 }
+    '1bhk': { xMin: -35.5, xMax: -8.5, zMin: -14.5, zMax: 6.5 },
+    '2bhk': { xMin: 10.5, xMax: 37.5, zMin: -15.5, zMax: 7.5 }
 };
 
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
@@ -685,9 +734,11 @@ window.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { boyState.keys.right = true; e.preventDefault(); }
 
     // ENTER — enter house if near entry circle
-    if (e.key === 'Enter' && boyState.mode === 'outdoor' && boyState.nearEntry) {
-        enterHouse(boyState.nearEntry);
-        e.preventDefault();
+    if (e.key === 'Enter') {
+        if (boyState.mode === 'outdoor' && boyState.nearEntry) {
+            enterHouse(boyState.nearEntry);
+            e.preventDefault();
+        }
     }
 
     // ESCAPE — exit house
@@ -908,34 +959,58 @@ function updateBoy(delta) {
         const speed = boyState.speed;
         const moveVec = moveDir.clone().multiplyScalar(speed * delta);
 
-        // Proposed position
-        const proposed = boyGroup.position.clone().add(moveVec);
+        const dx = moveDir.x * boyState.speed * delta;
+        const dz = moveDir.z * boyState.speed * delta;
 
-        // Bounds clamping
-        if (boyState.mode === 'outdoor') {
-            proposed.x = Math.max(-45, Math.min(48, proposed.x));
-            proposed.z = Math.max(8, Math.min(18, proposed.z));
-        } else if (boyState.mode === 'indoor') {
-            const bounds = indoorBounds[boyState.insideHouse];
-            if (bounds) {
-                proposed.x = Math.max(bounds.xMin, Math.min(bounds.xMax, proposed.x));
-                proposed.z = Math.max(bounds.zMin, Math.min(bounds.zMax, proposed.z));
+        // Clamp helper
+        function clampPos(x, z) {
+            if (boyState.mode === 'outdoor') {
+                x = Math.max(-45, Math.min(48, x));
+                z = Math.max(9, Math.min(17, z));
+            } else if (boyState.mode === 'indoor') {
+                const bounds = indoorBounds[boyState.insideHouse];
+                if (bounds) {
+                    x = Math.max(bounds.xMin, Math.min(bounds.xMax, x));
+                    z = Math.max(bounds.zMin, Math.min(bounds.zMax, z));
+                }
+            }
+            return { x, z };
+        }
+
+        const collides = typeof checkFurnitureCollision === 'function'
+            ? checkFurnitureCollision : () => false;
+
+        // Axis-separated sliding collision:
+        // Try moving both axes first
+        let newX = prevX + dx;
+        let newZ = prevZ + dz;
+        let clamped = clampPos(newX, newZ);
+        newX = clamped.x; newZ = clamped.z;
+
+        if (collides(newX, newZ)) {
+            // Both blocked — try X-only movement (slide along Z wall)
+            newX = prevX + dx;
+            newZ = prevZ;
+            clamped = clampPos(newX, newZ);
+            newX = clamped.x; newZ = clamped.z;
+
+            if (collides(newX, newZ)) {
+                // X also blocked — try Z-only movement (slide along X wall)
+                newX = prevX;
+                newZ = prevZ + dz;
+                clamped = clampPos(newX, newZ);
+                newX = clamped.x; newZ = clamped.z;
+
+                if (collides(newX, newZ)) {
+                    // Fully stuck — no movement possible
+                    newX = prevX;
+                    newZ = prevZ;
+                }
             }
         }
 
-        // Collision resolution — use new system first, fallback to old
-        if (typeof collisionSystem !== 'undefined' && collisionSystem.walls.length > 0) {
-            const result = collisionSystem.resolveCollision(boyGroup, proposed);
-            boyGroup.position.copy(result.position);
-        } else if (boyState.mode === 'indoor' && typeof resolveSliding === 'function') {
-            const oldX = boyGroup.position.x;
-            const oldZ = boyGroup.position.z;
-            const resolved = resolveSliding(oldX, oldZ, proposed.x, proposed.z);
-            boyGroup.position.x = resolved.x;
-            boyGroup.position.z = resolved.z;
-        } else {
-            boyGroup.position.copy(proposed);
-        }
+        boyGroup.position.x = newX;
+        boyGroup.position.z = newZ;
 
         // Face movement direction
         const targetAngle = Math.atan2(moveDir.x, moveDir.z);

@@ -45,8 +45,9 @@ function updateWallTransparency() {
     environmentGroup.visible = true;
 
     // Camera-distance-based transparency for 1BHK
-    const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, 0));
+    const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, -4));
     const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
+    if (tSimple < 1.0 && typeof window.load1BHKFurniture === 'function') window.load1BHKFurniture();
 
     transparentWalls.forEach(wall => {
         wall.material.opacity = tSimple;
@@ -61,8 +62,9 @@ function updateWallTransparency() {
     });
 
     // Camera-distance-based transparency for 2BHK
-    const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, 0));
+    const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, -4));
     const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
+    if (t2BHK < 1.0 && typeof window.load2BHKFurniture === 'function') window.load2BHKFurniture();
 
     bhk2TransWalls.forEach(wall => {
         wall.material.opacity = t2BHK;
@@ -80,14 +82,16 @@ function updateWallTransparency() {
 
 
 // ═══════════════════════════════════════════════
-//  ANIMATION LOOP
+//  ANIMATION LOOP (optimized)
 // ═══════════════════════════════════════════════
 const clock = new THREE.Clock();
+let frameCount = 0;
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = clock.getDelta();
     const elapsed = clock.getElapsedTime();
+    frameCount++;
 
     controls.update();
 
@@ -121,8 +125,13 @@ function animate() {
         bird.group.rotation.y = Math.atan2(dx, dz);
     });
 
-    // 1BHK appliances
-    if (!is2BHK) {
+    // Determine which house to animate (skip inactive house for performance)
+    const activeHouse = (typeof boyState !== 'undefined' && boyState.mode === 'indoor')
+        ? boyState.insideHouse
+        : (typeof currentFocusedHouse !== 'undefined' ? currentFocusedHouse : 'simple');
+
+    // 1BHK appliances (only if active)
+    if (activeHouse === 'simple' || activeHouse === '1bhk') {
         const sa = simpleAppliances;
         if (sa[1].on) fan1.blades.rotation.y += delta * 5;
         if (sa[5] && sa[5].on && typeof tableFan !== 'undefined') tableFan.blades.rotation.z += delta * 8;
@@ -149,8 +158,8 @@ function animate() {
         } else if (sa[4]) { light2.bulbMat.emissiveIntensity = 0; light2.pointLight.intensity = 0; }
     }
 
-    // 2BHK appliances
-    if (is2BHK) {
+    // 2BHK appliances (only if active)
+    if (activeHouse === '2bhk') {
         bhk2AnimData.fans.forEach(f => { if (f.on) f.mesh.blades.rotation.y += delta * 5; });
         bhk2AnimData.tableFans.forEach(tf => { if (tf.on) tf.mesh.blades.rotation.z += delta * 8; });
         bhk2AnimData.acs.forEach(a2 => {
@@ -203,10 +212,14 @@ function animate() {
     // Entry circle pulse animation
     updateEntryCircles(elapsed);
 
-    updateWallTransparency();
+    // Wall transparency — throttle to every 3rd frame for performance
+    if (frameCount % 3 === 0) {
+        updateWallTransparency();
+    }
 
-    // TV flicker
-    [...simpleAppliances, ...bhk2Appliances].forEach(a => {
+    // TV flicker (only for active house)
+    const tvList = activeHouse === '2bhk' ? bhk2Appliances : simpleAppliances;
+    tvList.forEach(a => {
         if (a.kind === 'tv' && a.on && a.mesh && a.mesh.screen) {
             const noise = 0.8 + Math.random() * 0.4;
             a.mesh.screen.material.emissiveIntensity = noise;
