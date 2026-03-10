@@ -669,3 +669,52 @@ function refreshSolarPanelsPlacement() {
         layoutSolarPanels(currentPanelCount);
     }
 }
+
+// ═══════════════════════════════════════════════
+//  addSolarPanels — Safe wrapper with try-catch (Bug B fix)
+// ═══════════════════════════════════════════════
+function addSolarPanels(houseId) {
+    try {
+        console.log('[SOLAR] addSolarPanels called for:', houseId);
+        const roof = houseId === '1bhk' ? window.ROOF_1BHK : window.ROOF_2BHK;
+        if (!roof) {
+            console.error('[SOLAR] ERROR: No roof data for', houseId);
+            if (typeof showToast === 'function') showToast('❌ Roof data missing — check house files');
+            return;
+        }
+        console.log('[SOLAR] Roof data found:', JSON.stringify(roof));
+        // Use the existing layout system
+        is2BHK = (houseId === '2bhk');
+        solarHouseState[houseId] = true;
+        isSolarMode = true;
+        currentPanelCount = 6;
+        layoutSolarPanels(currentPanelCount);
+        updatePowerLines();
+        updateStats();
+        if (typeof showToast === 'function') showToast('☀️ Solar panels added to ' + (houseId === '1bhk' ? '1BHK' : '2BHK') + '!');
+    } catch (err) {
+        console.error('[SOLAR] CRASH:', err);
+        if (typeof showToast === 'function') showToast('❌ Solar panel error: ' + err.message);
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  Window-level exports for cross-file compatibility
+// ═══════════════════════════════════════════════
+window.handleSolarSelect = function (choice) {
+    closeSolarSelector();
+    console.log('[SOLAR] User selected:', choice);
+    if (choice === 'both') {
+        addSolarPanels('1bhk');
+        setTimeout(() => addSolarPanels('2bhk'), 300);
+    } else {
+        addSolarPanels(choice);
+    }
+};
+
+window.closeSolarModal = function () {
+    closeSolarSelector();
+};
+
+console.log('[SOLAR] Solar panel system initialized');
+

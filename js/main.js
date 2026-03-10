@@ -91,21 +91,20 @@ let nearDoor = null;
 
 const entryPositions = { '1bhk': new THREE.Vector3(-22, 0, 12), '2bhk': new THREE.Vector3(24, 0, 13) };
 const indoorSpawn = { '1bhk': { pos: new THREE.Vector3(-22, 0.15, 8), rot: Math.PI }, '2bhk': { pos: new THREE.Vector3(24, 0.15, 9), rot: Math.PI } };
-const INTERIOR_BOUNDS = { '1bhk': { minX: -30, maxX: -14, minZ: -10, maxZ: 7 }, '2bhk': { minX: 14, maxX: 34, minZ: -12, maxZ: 7 } };
+const INTERIOR_BOUNDS = { '1bhk': { minX: -36, maxX: -8, minZ: -11, maxZ: 11 }, '2bhk': { minX: 10, maxX: 38, minZ: -12, maxZ: 12 } };
 
 const ROOM_ZONES = {
     '1bhk': [
-        { id: 'hall', center: new THREE.Vector3(-22, 0, 4), radius: 3.5 },
-        { id: 'bedroom', center: new THREE.Vector3(-19, 0, -1), radius: 3.0 },
-        { id: 'kitchen', center: new THREE.Vector3(-25, 0, -5), radius: 3.0 },
-        { id: 'bathroom', center: new THREE.Vector3(-19, 0, -8), radius: 2.5 },
+        { id: 'hall', center: new THREE.Vector3(-17, 0, 3), radius: 5 },
+        { id: 'bedroom', center: new THREE.Vector3(-19, 0, -8), radius: 4 },
+        { id: 'kitchen', center: new THREE.Vector3(-31, 0, 3), radius: 4 },
     ],
     '2bhk': [
-        { id: 'hall', center: new THREE.Vector3(24, 0, 5), radius: 4.0 },
-        { id: 'bedroom1', center: new THREE.Vector3(20, 0, 0), radius: 3.5 },
-        { id: 'bedroom2', center: new THREE.Vector3(28, 0, 0), radius: 3.5 },
-        { id: 'kitchen', center: new THREE.Vector3(20, 0, -6), radius: 3.0 },
-        { id: 'bathroom', center: new THREE.Vector3(28, 0, -6), radius: 2.5 },
+        { id: 'hall', center: new THREE.Vector3(29, 0, 4), radius: 5 },
+        { id: 'bedroom1', center: new THREE.Vector3(17, 0, -8.5), radius: 4 },
+        { id: 'bedroom2', center: new THREE.Vector3(31, 0, -8.5), radius: 4 },
+        { id: 'kitchen', center: new THREE.Vector3(14.5, 0, -1), radius: 3.5 },
+        { id: 'bathroom', center: new THREE.Vector3(14.5, 0, 7.5), radius: 3.5 },
     ]
 };
 let lastRoomId = null;
@@ -214,6 +213,76 @@ window.addEventListener('keyup', (e) => { keys[e.code] = false; }, { passive: fa
 if (typeof controls !== 'undefined') controls.enableKeys = false;
 
 // ═══════════════════════════════════════════════
+//  MOBILE VIRTUAL D-PAD CONTROLS
+// ═══════════════════════════════════════════════
+function createMobileControls() {
+    const dpad = document.createElement('div');
+    dpad.id = 'mobile-dpad';
+    dpad.innerHTML = `
+      <div class="dpad-row">
+        <button class="dpad-btn dpad-up" id="btn-up">▲</button>
+      </div>
+      <div class="dpad-row dpad-middle">
+        <button class="dpad-btn dpad-left" id="btn-left">◀</button>
+        <div class="dpad-center">●</div>
+        <button class="dpad-btn dpad-right" id="btn-right">▶</button>
+      </div>
+      <div class="dpad-row">
+        <button class="dpad-btn dpad-down" id="btn-down">▼</button>
+      </div>
+    `;
+    document.body.appendChild(dpad);
+
+    window.virtualKeys = { up: false, down: false, left: false, right: false };
+
+    const map = {
+        'btn-up': 'up',
+        'btn-down': 'down',
+        'btn-left': 'left',
+        'btn-right': 'right',
+    };
+
+    Object.entries(map).forEach(([id, dir]) => {
+        const btn = document.getElementById(id);
+        btn.addEventListener('touchstart', e => { e.preventDefault(); window.virtualKeys[dir] = true; }, { passive: false });
+        btn.addEventListener('touchend', e => { e.preventDefault(); window.virtualKeys[dir] = false; }, { passive: false });
+        btn.addEventListener('mousedown', () => { window.virtualKeys[dir] = true; });
+        btn.addEventListener('mouseup', () => { window.virtualKeys[dir] = false; });
+        btn.addEventListener('mouseleave', () => { window.virtualKeys[dir] = false; });
+    });
+
+    const style = document.createElement('style');
+    style.textContent = `
+      #mobile-dpad {
+        position: fixed; bottom: 90px; right: 24px;
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        z-index: 600; opacity: 0.85;
+      }
+      .dpad-row { display: flex; justify-content: center; gap: 2px; }
+      .dpad-middle { align-items: center; gap: 2px; }
+      .dpad-btn {
+        width: 48px; height: 48px;
+        background: rgba(0,0,0,0.65); border: 2px solid rgba(255,255,255,0.25);
+        border-radius: 10px; color: white; font-size: 1.1rem;
+        cursor: pointer; display: flex; align-items: center; justify-content: center;
+        touch-action: none; user-select: none; transition: background 0.1s;
+        -webkit-tap-highlight-color: transparent;
+      }
+      .dpad-btn:active, .dpad-btn.pressed {
+        background: rgba(255,220,0,0.45); border-color: rgba(255,220,0,0.7);
+      }
+      .dpad-center {
+        width: 48px; height: 48px; display: flex; align-items: center;
+        justify-content: center; color: rgba(255,255,255,0.2); font-size: 0.8rem;
+      }
+    `;
+    document.head.appendChild(style);
+    console.log('[DPAD] Mobile D-pad controls created');
+}
+
+createMobileControls();
+
+// ═══════════════════════════════════════════════
 //  UTILITY FUNCTIONS
 // ═══════════════════════════════════════════════
 function fadeOverlay(targetOpacity, duration) {
@@ -224,13 +293,6 @@ function fadeOverlay(targetOpacity, duration) {
         o.style.opacity = targetOpacity;
         setTimeout(resolve, duration);
     });
-}
-
-function clampToBounds(pos, houseId) {
-    const b = INTERIOR_BOUNDS[houseId]; if (!b) return pos;
-    pos.x = Math.max(b.minX, Math.min(b.maxX, pos.x));
-    pos.z = Math.max(b.minZ, Math.min(b.maxZ, pos.z));
-    return pos;
 }
 
 // ═══════════════════════════════════════════════
@@ -275,8 +337,6 @@ function enterHouse(houseId) {
     if (typeof showDoorHint === 'function') showDoorHint(false, null);
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
-    // Step 1: Fade out
-    console.log('[FADE] Overlay opacity set to 1');
     const overlay = document.getElementById('fade-overlay');
     if (overlay) {
         overlay.style.transition = 'opacity 0.5s ease';
@@ -285,23 +345,19 @@ function enterHouse(houseId) {
     }
 
     setTimeout(() => {
-        // Step 2: Camera mode selection during black screen
         showCameraModeModal().then(camMode => {
             window.cameraMode = camMode;
 
-            // Clear exterior collisions
             if (typeof collisionSystem !== 'undefined') { collisionSystem.walls = []; collisionSystem.doors = []; }
 
-            // Teleport boy
             const spawn = indoorSpawn[houseId];
             boyGroup.position.copy(spawn.pos); boyGroup.rotation.y = spawn.rot;
             yaw = spawn.rot; pitch = 0;
-            orbitYaw = spawn.rot; // Reset orbit yaw to match boy facing
+            orbitYaw = spawn.rot;
             orbitPitch = 0.35;
             orbitDist = 5.5;
             boy.groundY = spawn.pos.y;
 
-            // Visibility — show correct interior, hide rest
             environmentGroup.visible = false;
             if (houseId === '1bhk') {
                 bhk2Group.visible = false;
@@ -310,15 +366,12 @@ function enterHouse(houseId) {
                 houseGroup.visible = false;
                 bhk2Group.visible = true;
             }
-            console.log('[INTERIOR] Showing interior for:', houseId);
 
-            // Panels
             is2BHK = (houseId === '2bhk');
             if (typeof buildAppliancePanel === 'function') buildAppliancePanel();
             if (typeof buildRoomNavPanel === 'function') buildRoomNavPanel();
             if (typeof recalcWattage === 'function') recalcWattage();
 
-            // Interior collision
             if (typeof collisionSystem !== 'undefined' && typeof collisionSystem.setupInterior === 'function')
                 collisionSystem.setupInterior(houseId);
 
@@ -326,11 +379,9 @@ function enterHouse(houseId) {
             lastTriggeredRoom = null; popupCooldown = false;
             boyState.currentRoom = null;
 
-            // Fix camera clipping
             camera.near = 0.01; camera.far = 1000;
             camera.updateProjectionMatrix();
 
-            // Emergency ambient light for interior
             let eLight = scene.getObjectByName('emergencyLight');
             if (!eLight) {
                 eLight = new THREE.AmbientLight(0xffffff, 1.5);
@@ -340,7 +391,6 @@ function enterHouse(houseId) {
                 eLight.intensity = 1.5;
             }
 
-            // Camera mode setup
             if (camMode === 'firstperson') {
                 boy.setFirstPerson(true);
                 if (typeof controls !== 'undefined') controls.enabled = false;
@@ -353,7 +403,6 @@ function enterHouse(houseId) {
 
             camera.position.set(boyGroup.position.x, boyGroup.position.y + EYE_HEIGHT, boyGroup.position.z);
             camera.lookAt(boyGroup.position.x, boyGroup.position.y + 1, boyGroup.position.z - 2);
-            console.log('[RENDER] camera pos:', camera.position);
 
             const backBtn = document.getElementById('back-btn');
             if (backBtn) backBtn.classList.add('visible');
@@ -361,8 +410,6 @@ function enterHouse(houseId) {
             if (typeof showViewModeBadge === 'function') showViewModeBadge(true);
             if (typeof updateViewModeBadge === 'function') updateViewModeBadge(camMode);
 
-            // Step 3: Fade in
-            console.log('[FADE] Overlay opacity set to 0');
             if (overlay) {
                 overlay.style.transition = 'opacity 0.5s ease';
                 overlay.style.opacity = '0';
@@ -370,32 +417,26 @@ function enterHouse(houseId) {
             }
 
             setTimeout(() => {
-                // Step 4: Enable movement
                 gameState = STATE.INSIDE; window.gameState = gameState;
                 boyState.mode = 'indoor';
                 console.log('[INSIDE] gameState = INSIDE, movement enabled');
-                if (typeof showToast === 'function') showToast('🏠 You are inside! Walk to explore rooms.');
-                console.log('[SUCCESS] Inside house:', houseId);
+                if (typeof showToast === 'function') showToast('🏠 You are inside! Use arrow keys or WASD to walk.');
             }, 600);
 
             setTimeout(() => { if (typeof closeMainDoor === 'function') closeMainDoor(houseId); }, 1500);
         });
     }, 600);
 
-    // Safety fallback — force overlay off after 5 seconds no matter what
     setTimeout(() => {
         const o = document.getElementById('fade-overlay');
         if (o && parseFloat(o.style.opacity) > 0.5) {
-            console.warn('[SAFETY] Forcing fade overlay to 0');
-            o.style.opacity = '0';
-            o.style.pointerEvents = 'none';
+            o.style.opacity = '0'; o.style.pointerEvents = 'none';
         }
     }, 5000);
 }
 
 async function exitHouse() {
     if (gameState === STATE.TRANSITIONING) return;
-    console.log('[STATE] → EXITING house');
     const houseId = currentHouseId;
     if (typeof openMainDoor === 'function') openMainDoor(houseId);
 
@@ -405,7 +446,6 @@ async function exitHouse() {
     boy.setFirstPerson(false);
     if (typeof showViewModeBadge === 'function') showViewModeBadge(false);
 
-    // Turn off Energy Vision if active
     if (typeof energyVisionActive !== 'undefined' && energyVisionActive && typeof toggleEnergyVision === 'function') {
         toggleEnergyVision();
     }
@@ -449,105 +489,104 @@ window.setCameraMode = function (mode) {
     } else {
         boy.setFirstPerson(false);
         if (document.pointerLockElement) document.exitPointerLock();
-        // Reset orbit camera
         orbitYaw = boyGroup.rotation.y;
         orbitPitch = 0.35;
         orbitDist = 5.5;
         if (typeof showToast === 'function') showToast('🖱️ Drag to rotate camera | Scroll to zoom');
     }
     if (typeof updateViewModeBadge === 'function') updateViewModeBadge(mode);
-    if (typeof showToast === 'function')
-        showToast(mode === 'firstperson' ? '👁️ First Person — move mouse to look' : '🎮 Watch Boy — drag to orbit camera');
 };
 
 // ═══════════════════════════════════════════════
-//  MOVEMENT (camera-relative direction)
+//  MOVEMENT — FIX 1: Correct direction, no inversion
 // ═══════════════════════════════════════════════
 function processMovement(delta) {
     if (gameState === STATE.TRANSITIONING) return;
 
-    const speed = (gameState === STATE.INSIDE) ? 4.0 : 8;
-    let mx = 0, mz = 0;
+    const speed = 4.0;
+    let moveX = 0;
+    let moveZ = 0;
 
-    // Read keys — simple and explicit
-    if (keys['KeyW'] || keys['ArrowUp']) mz = -1;
-    if (keys['KeyS'] || keys['ArrowDown']) mz = 1;
-    if (keys['KeyA'] || keys['ArrowLeft']) mx = -1;
-    if (keys['KeyD'] || keys['ArrowRight']) mx = 1;
+    // Read keys — SAME direction for inside and outside
+    if (keys['KeyW'] || keys['ArrowUp']) moveZ -= 1;
+    if (keys['KeyS'] || keys['ArrowDown']) moveZ += 1;
+    if (keys['KeyA'] || keys['ArrowLeft']) moveX -= 1;
+    if (keys['KeyD'] || keys['ArrowRight']) moveX += 1;
 
-    if (mx === 0 && mz === 0) {
+    // Also read virtual button inputs (for mobile D-pad)
+    if (window.virtualKeys) {
+        if (window.virtualKeys.up) moveZ -= 1;
+        if (window.virtualKeys.down) moveZ += 1;
+        if (window.virtualKeys.left) moveX -= 1;
+        if (window.virtualKeys.right) moveX += 1;
+    }
+
+    if (moveX === 0 && moveZ === 0) {
         boy.isWalking = false;
         return;
     }
 
     boy.isWalking = true;
 
-    let moveX, moveZ;
+    let dx, dz;
 
     if (gameState === STATE.OUTSIDE && typeof controls !== 'undefined' && controls.enabled) {
-        // Third-person outside: camera-relative movement
+        // OUTSIDE: camera-relative movement via OrbitControls
         const camFwd = new THREE.Vector3();
         camFwd.subVectors(controls.target, camera.position); camFwd.y = 0;
         if (camFwd.lengthSq() > 0.0001) camFwd.normalize(); else camFwd.set(0, 0, -1);
         const camRight = new THREE.Vector3().crossVectors(camFwd, new THREE.Vector3(0, 1, 0)).normalize();
         const cm = new THREE.Vector3();
-        if (keys['KeyW'] || keys['ArrowUp']) cm.add(camFwd);
-        if (keys['KeyS'] || keys['ArrowDown']) cm.sub(camFwd);
-        if (keys['KeyA'] || keys['ArrowLeft']) cm.sub(camRight);
-        if (keys['KeyD'] || keys['ArrowRight']) cm.add(camRight);
+        if (moveZ < 0) cm.add(camFwd);     // W = forward
+        if (moveZ > 0) cm.sub(camFwd);     // S = backward
+        if (moveX < 0) cm.sub(camRight);   // A = left
+        if (moveX > 0) cm.add(camRight);   // D = right
         if (cm.lengthSq() > 0) cm.normalize();
-        moveX = cm.x * speed * delta;
-        moveZ = cm.z * speed * delta;
-    } else if (gameState === STATE.INSIDE && window.cameraMode === 'thirdperson') {
-        // Watch Boy mode: movement relative to orbitYaw (camera facing direction)
-        const sinY = Math.sin(orbitYaw);
-        const cosY = Math.cos(orbitYaw);
-        const fwdX = -sinY, fwdZ = -cosY;
-        const rgtX = cosY, rgtZ = -sinY;
-        moveX = (fwdX * mz + rgtX * mx) * speed * delta;
-        moveZ = (fwdZ * mz + rgtZ * mx) * speed * delta;
+        dx = cm.x * speed * delta;
+        dz = cm.z * speed * delta;
     } else {
-        // First-person / inside: yaw-relative movement
-        const sinY = Math.sin(yaw);
-        const cosY = Math.cos(yaw);
-        const fwdX = -sinY;
-        const fwdZ = -cosY;
-        const rgtX = cosY;
-        const rgtZ = -sinY;
-        moveX = (fwdX * mz + rgtX * mx) * speed * delta;
-        moveZ = (fwdZ * mz + rgtZ * mx) * speed * delta;
+        // INSIDE (first-person or third-person): yaw-relative movement
+        // Use orbitYaw for third-person, regular yaw for first-person
+        const activeYaw = (window.cameraMode === 'thirdperson') ? orbitYaw : yaw;
+        const sinY = Math.sin(activeYaw);
+        const cosY = Math.cos(activeYaw);
+
+        // Forward = into scene = AWAY from camera
+        // W (moveZ=-1) should move boy FORWARD (away from camera)
+        const worldX = (-sinY * (-moveZ)) + (cosY * moveX);
+        const worldZ = (-cosY * (-moveZ)) + (-sinY * moveX);
+
+        dx = worldX * speed * delta;
+        dz = worldZ * speed * delta;
     }
 
-    const newX = boyGroup.position.x + moveX;
-    const newZ = boyGroup.position.z + moveZ;
-    const newPos = new THREE.Vector3(newX, boyGroup.position.y, newZ);
+    const newX = boy.group.position.x + dx;
+    const newZ = boy.group.position.z + dz;
 
-    // Apply bounds
     if (gameState === STATE.INSIDE && currentHouseId) {
         const b = INTERIOR_BOUNDS[currentHouseId];
-        if (b) {
-            newPos.x = Math.max(b.minX, Math.min(b.maxX, newPos.x));
-            newPos.z = Math.max(b.minZ, Math.min(b.maxZ, newPos.z));
+        // Apply collision THEN bounds
+        if (typeof resolveSliding === 'function') {
+            const r = resolveSliding(boy.group.position.x, boy.group.position.z, newX, newZ);
+            boy.group.position.x = b ? Math.max(b.minX, Math.min(b.maxX, r.x)) : r.x;
+            boy.group.position.z = b ? Math.max(b.minZ, Math.min(b.maxZ, r.z)) : r.z;
+        } else if (b) {
+            boy.group.position.x = Math.max(b.minX, Math.min(b.maxX, newX));
+            boy.group.position.z = Math.max(b.minZ, Math.min(b.maxZ, newZ));
+        } else {
+            boy.group.position.x = newX;
+            boy.group.position.z = newZ;
         }
-    } else if (gameState === STATE.OUTSIDE) {
-        newPos.x = Math.max(-45, Math.min(48, newPos.x));
-        newPos.z = Math.max(8, Math.min(18, newPos.z));
-    }
-
-    // Collision
-    if (gameState === STATE.INSIDE && typeof resolveSliding === 'function') {
-        const r = resolveSliding(boyGroup.position.x, boyGroup.position.z, newPos.x, newPos.z);
-        boyGroup.position.x = r.x; boyGroup.position.z = r.z;
-    } else if (typeof collisionSystem !== 'undefined' && collisionSystem.walls && collisionSystem.walls.length > 0) {
-        const res = collisionSystem.resolveCollision(boyGroup, newPos);
-        boyGroup.position.copy(res.position);
     } else {
-        boyGroup.position.x = newPos.x; boyGroup.position.z = newPos.z;
+        boy.group.position.x = newX;
+        boy.group.position.z = newZ;
     }
 
-    // Rotate boy to face movement direction
-    const angle = Math.atan2(moveX, moveZ);
-    boyGroup.rotation.y = THREE.MathUtils.lerp(boyGroup.rotation.y, angle, 0.12);
+    // Boy faces movement direction
+    if (dx !== 0 || dz !== 0) {
+        const targetAngle = Math.atan2(dx, dz);
+        boy.group.rotation.y = THREE.MathUtils.lerp(boy.group.rotation.y, targetAngle, 0.15);
+    }
 
     // Third-person camera follow outside
     if (gameState === STATE.OUTSIDE && typeof controls !== 'undefined' && controls.enabled) {
@@ -557,6 +596,8 @@ function processMovement(delta) {
         camera.position.add(controls.target.clone().sub(pt));
         controls.update();
     }
+
+    console.log('[MOVE] pos:', boy.group.position.x.toFixed(2), boy.group.position.z.toFixed(2));
 }
 
 // ═══════════════════════════════════════════════
@@ -570,22 +611,17 @@ function updateCamera() {
         camera.position.copy(eye);
         camera.lookAt(eye.clone().add(fwd));
     } else {
-        // Orbital third-person camera
         updateThirdPersonCamera();
     }
 }
 
 function updateThirdPersonCamera() {
     if (window.cameraMode !== 'thirdperson') return;
-
-    // Camera position orbits around boy
     const boyPos = boyGroup.position.clone();
-    boyPos.y += 0.8; // look at boy's chest, not feet
-
+    boyPos.y += 0.8;
     const camX = boyPos.x + orbitDist * Math.sin(orbitYaw) * Math.cos(orbitPitch);
     const camY = boyPos.y + orbitDist * Math.sin(orbitPitch);
     const camZ = boyPos.z + orbitDist * Math.cos(orbitYaw) * Math.cos(orbitPitch);
-
     camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.08);
     camera.lookAt(boyPos);
 }
@@ -617,44 +653,29 @@ function checkRoomProximity() {
     const zones = ROOM_ZONES[currentHouseId] || [];
 
     for (const zone of zones) {
-        const dist = new THREE.Vector2(
-            boyPos.x - zone.center.x,
-            boyPos.z - zone.center.z
-        ).length();
-
+        const dist = new THREE.Vector2(boyPos.x - zone.center.x, boyPos.z - zone.center.z).length();
         if (dist < zone.radius) {
-            // Only trigger if this is a NEW room
             if (lastTriggeredRoom !== zone.id) {
                 lastTriggeredRoom = zone.id;
                 lastRoomId = zone.id;
                 boyState.currentRoom = zone.id;
                 popupCooldown = true;
-
-                // Show popup for THIS room only
                 if (typeof showRoomPopup === 'function') showRoomPopup(zone.id, currentHouseId);
                 console.log('[ROOM] Entered:', zone.id);
-
-                // Cooldown prevents re-triggering for 4 seconds
                 setTimeout(() => { popupCooldown = false; }, 4000);
             }
             return;
         }
     }
-
-    // Boy left all room zones — reset so can re-trigger
-    if (lastTriggeredRoom !== null) {
-        lastTriggeredRoom = null;
-    }
+    if (lastTriggeredRoom !== null) lastTriggeredRoom = null;
 }
 
 function checkExitProximity() {
     if (gameState !== STATE.INSIDE || !currentHouseId) return;
     const sp = indoorSpawn[currentHouseId];
     if (sp && boyGroup.position.distanceTo(sp.pos) < 3) {
-        if (typeof showDoorHint === 'function') {
-            let h = document.getElementById('door-hint');
-            if (h) { h.classList.remove('hidden'); const t = h.querySelector('#hint-text') || h.querySelector('.hint-text'); if (t) t.textContent = 'Press ESC to exit'; const k = h.querySelector('.hint-key'); if (k) k.textContent = 'ESC'; }
-        }
+        let h = document.getElementById('door-hint');
+        if (h) { h.classList.remove('hidden'); const t = h.querySelector('.hint-text'); if (t) t.textContent = 'Press ESC to exit'; const k = h.querySelector('.hint-key'); if (k) k.textContent = 'ESC'; }
         boyState.nearExit = true;
     } else {
         boyState.nearExit = false;

@@ -409,4 +409,16 @@ const ROOF_DATA_2BHK = {
     slopeAngle: Math.atan2(roofH + 1, W2 / 2 + 0.8),
     slopeAxis: 'x',
 };
-console.log('[HOUSE-2BHK] Built — roof data exported');
+
+// Export for solar.js — world coords
+window.ROOF_2BHK = {
+    centerX: 24,
+    centerZ: 0,
+    roofY: H + 0.3 + roofH + 1 > 0 ? H + 0.3 + roofH + 1 : 5.5,
+    width: W2,
+    depth: D2,
+    slopeAngle: Math.atan2(roofH + 1, W2 / 2 + 0.8),
+};
+
+console.log('[HOUSE-2BHK] Built — roof data exported, window.ROOF_2BHK set');
+

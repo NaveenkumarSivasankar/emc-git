@@ -1,6 +1,7 @@
 // ═══════════════════════════════════════════════
 //  INTERIOR INTERACTION SYSTEM
 //  Room transparency, furniture collision, door animation
+//  FIXED: Walls now SOLID (opacity 1.0) except glass/mirror
 // ═══════════════════════════════════════════════
 
 // ── ROOM DEFINITIONS (local coords relative to house origin) ──
@@ -44,55 +45,123 @@ function getBoyRoom() {
 
 // ═══════════════════════════════════════════════
 //  ROOM-BASED TRANSPARENCY
-//  Only the room the boy is in gets transparent walls/partitions
+//  Partition walls go transparent near boy, outer walls stay SOLID
+//  Energy Vision mode overrides this
 // ═══════════════════════════════════════════════
 
-// Tag partition walls with which rooms they border
-// 1BHK partitions: pw1 (z=-5, between Hall/Kitchen and Bedroom), pw2 (x=-4, between Hall and Kitchen)
-// Partition visibility: make transparent when boy is in either adjacent room
 const bhk1PartitionRooms = [
     { mesh: null, rooms: ['Hall', 'Kitchen', 'Bedroom'] },  // pw1 (horizontal, z=-5)
     { mesh: null, rooms: ['Hall', 'Kitchen'] }               // pw2 (vertical, x=-4)
 ];
 
-// 2BHK partitions stored in bhk2PartWalls array (indices match addPartWall order)
 const bhk2PartitionRooms = [
-    { rooms: ['Hall', 'Kitchen', 'Bathroom', 'Bedroom 1', 'Bedroom 2'] },  // z=-5 horizontal
-    { rooms: ['Bedroom 1', 'Bedroom 2'] },                                  // x=0 vertical
-    { rooms: ['Hall', 'Kitchen', 'Bathroom'] },                              // x=-5 vertical
-    { rooms: ['Kitchen', 'Bathroom'] }                                       // z=3 horizontal
+    { rooms: ['Hall', 'Kitchen', 'Bathroom', 'Bedroom 1', 'Bedroom 2'] },
+    { rooms: ['Bedroom 1', 'Bedroom 2'] },
+    { rooms: ['Hall', 'Kitchen', 'Bathroom'] },
+    { rooms: ['Kitchen', 'Bathroom'] }
 ];
 
 function initPartitionRefs() {
-    // Link 1BHK partitions (pw1, pw2 are global from house-1bhk.js)
     if (typeof pw1 !== 'undefined') bhk1PartitionRooms[0].mesh = pw1;
     if (typeof pw2 !== 'undefined') bhk1PartitionRooms[1].mesh = pw2;
+    console.log('[Interiors] Partition refs initialized');
 }
 
 function updateRoomTransparency() {
+    // Skip if Energy Vision is controlling transparency
+    if (typeof energyVisionActive !== 'undefined' && energyVisionActive) return;
+
     const currentRoom = getBoyRoom();
 
     if (boyState.insideHouse === '1bhk') {
-        // Make outer walls transparent (they're already handled by camera distance)
-        // Handle partition walls: transparent only if boy is in adjacent room
+        // Partition walls — transparent when boy is in adjacent room
         bhk1PartitionRooms.forEach(p => {
             if (!p.mesh) return;
             const shouldBeTransparent = currentRoom && p.rooms.includes(currentRoom);
-            const targetOpacity = shouldBeTransparent ? 0.15 : 0.9;
-            p.mesh.material.transparent = true;
+            // FIXED: Use 0.25 for transparent, 1.0 for solid (NOT 0.15/0.9)
+            const targetOpacity = shouldBeTransparent ? 0.25 : 1.0;
+            p.mesh.material.transparent = targetOpacity < 1.0;
             p.mesh.material.opacity += (targetOpacity - p.mesh.material.opacity) * 0.1;
+            p.mesh.material.depthWrite = true;
             p.mesh.material.needsUpdate = true;
         });
     } else if (boyState.insideHouse === '2bhk') {
-        // 2BHK partitions
         bhk2PartWalls.forEach((mesh, i) => {
             if (i >= bhk2PartitionRooms.length) return;
             const shouldBeTransparent = currentRoom && bhk2PartitionRooms[i].rooms.includes(currentRoom);
-            const targetOpacity = shouldBeTransparent ? 0.15 : 0.9;
-            mesh.material.transparent = true;
+            const targetOpacity = shouldBeTransparent ? 0.25 : 1.0;
+            mesh.material.transparent = targetOpacity < 1.0;
             mesh.material.opacity += (targetOpacity - mesh.material.opacity) * 0.1;
+            mesh.material.depthWrite = true;
             mesh.material.needsUpdate = true;
         });
+    }
+}
+
+// ═══════════════════════════════════════════════
+//  INTERIOR ROOM LIGHTING
+//  Each room gets its own PointLight at ceiling center
+// ═══════════════════════════════════════════════
+function setupInteriorLighting() {
+    // Shared ambient fill (so nothing is completely black)
+    const ambientFill = new THREE.AmbientLight(0xFFFFFF, 0.5);
+    ambientFill.name = 'interiorAmbient';
+    scene.add(ambientFill);
+
+    // 1BHK lights
+    if (typeof houseGroup !== 'undefined') {
+        const hallLight1 = new THREE.PointLight(0xFFF4E0, 1.2, 15);
+        hallLight1.position.set(5, 6.2, 3);
+        houseGroup.add(hallLight1);
+
+        const kitchenLight1 = new THREE.PointLight(0xFFFFFF, 1.4, 14);
+        kitchenLight1.position.set(-9, 6.2, 3);
+        houseGroup.add(kitchenLight1);
+
+        const bedroomLight1 = new THREE.PointLight(0xFFE4B5, 0.9, 12);
+        bedroomLight1.position.set(0, 6.2, -8);
+        houseGroup.add(bedroomLight1);
+
+        // Bedside lamp
+        const bedsideLamp = new THREE.PointLight(0xFFAA44, 0.4, 3);
+        bedsideLamp.position.set(-8, 2.5, -8);
+        houseGroup.add(bedsideLamp);
+
+        console.log('[Interiors] 1BHK room lights added');
+    }
+
+    // 2BHK lights
+    if (typeof bhk2Group !== 'undefined') {
+        const hallLight2 = new THREE.PointLight(0xFFF4E0, 1.2, 15);
+        hallLight2.position.set(5, 6.2, 4);
+        bhk2Group.add(hallLight2);
+
+        const kitchenLight2 = new THREE.PointLight(0xFFFFFF, 1.4, 14);
+        kitchenLight2.position.set(-9.5, 6.2, -1);
+        bhk2Group.add(kitchenLight2);
+
+        const bathroomLight2 = new THREE.PointLight(0xF0F8FF, 1.1, 10);
+        bathroomLight2.position.set(-9.5, 6.2, 7.5);
+        bhk2Group.add(bathroomLight2);
+
+        const bed1Light = new THREE.PointLight(0xFFE4B5, 0.9, 12);
+        bed1Light.position.set(-7, 6.2, -8.5);
+        bhk2Group.add(bed1Light);
+
+        const bed2Light = new THREE.PointLight(0xFFE4B5, 0.9, 12);
+        bed2Light.position.set(7, 6.2, -8.5);
+        bhk2Group.add(bed2Light);
+
+        // Bedroom bedsides
+        const bedsideLamp2a = new THREE.PointLight(0xFFAA44, 0.4, 3);
+        bedsideLamp2a.position.set(-10, 2.5, -9);
+        bhk2Group.add(bedsideLamp2a);
+
+        const bedsideLamp2b = new THREE.PointLight(0xFFAA44, 0.4, 3);
+        bedsideLamp2b.position.set(10, 2.5, -9);
+        bhk2Group.add(bedsideLamp2b);
+
+        console.log('[Interiors] 2BHK room lights added');
     }
 }
 
@@ -104,7 +173,6 @@ const furnitureBoxes1BHK = [];
 const furnitureBoxes2BHK = [];
 
 function addCollisionBox(list, centerX, centerZ, halfW, halfD, houseOriginX, houseOriginZ) {
-    // Store in world coords
     const worldX = centerX + houseOriginX;
     const worldZ = centerZ + houseOriginZ;
     list.push({
@@ -119,96 +187,50 @@ function initFurnitureCollision() {
     // 1BHK furniture (local coords, houseGroup at -22, 0)
     const ox1 = -22, oz1 = 0;
 
-    // Sofa (center 9, -3.5, size 5×2.2)
     addCollisionBox(furnitureBoxes1BHK, 9, -3.5, 3, 1.5, ox1, oz1);
-    // Bookshelf (center 12, 0, size 2.5×0.9)
     addCollisionBox(furnitureBoxes1BHK, 12, 0, 1.5, 0.7, ox1, oz1);
-    // Bed (center 3, -8.5, size 3.5×4.2)
     addCollisionBox(furnitureBoxes1BHK, 3, -8.5, 2, 2.5, ox1, oz1);
-    // Wardrobe (center -11, -8, size 2.4×1)
     addCollisionBox(furnitureBoxes1BHK, -11, -8, 1.5, 0.8, ox1, oz1);
-    // Kitchen counter (center -10, -3.5, size 4×0.9)
     addCollisionBox(furnitureBoxes1BHK, -10, -3.5, 2.5, 0.7, ox1, oz1);
-    // Table+fan (center 10, 6, size 2×1.5)
     addCollisionBox(furnitureBoxes1BHK, 10, 6, 1.3, 1, ox1, oz1);
-    // Fridge (center -12, 5, size 1.4×1.2)
     addCollisionBox(furnitureBoxes1BHK, -12, 5, 1, 0.9, ox1, oz1);
 
-    // ── 1BHK WALL SEGMENTS (partition walls with door gaps) ──
-    // Wall thickness = 0.15 (half = 0.15)
+    // 1BHK Wall segments
     const wt = 0.15;
-
-    // pw1: horizontal wall at z=-5, x from -14 to 14 (W=28)
-    // Door gap at local x=5, gap width=2 (x: 4 to 6)
-    // Segment left: x=-14 to 4
     addCollisionBox(furnitureBoxes1BHK, -5, -5, 9, wt, ox1, oz1);
-    // Segment right: x=6 to 14
     addCollisionBox(furnitureBoxes1BHK, 10, -5, 4, wt, ox1, oz1);
-
-    // pw2: vertical wall at x=-4, z from -5 to 11 (kitchenDepth=16)
-    // Door gap at local z=3, gap width=2 (z: 2 to 4)
-    // Segment bottom: z=-5 to 2
     addCollisionBox(furnitureBoxes1BHK, -4, -1.5, wt, 3.5, ox1, oz1);
-    // Segment top: z=4 to 11
     addCollisionBox(furnitureBoxes1BHK, -4, 7.5, wt, 3.5, ox1, oz1);
 
     // 2BHK furniture (local coords, bhk2Group at 24, 0)
     const ox2 = 24, oz2 = 0;
 
-    // Bed 1 (center -7, -9)
     addCollisionBox(furnitureBoxes2BHK, -7, -9, 1.8, 2.2, ox2, oz2);
-    // Bed 2 (center 7, -9)
     addCollisionBox(furnitureBoxes2BHK, 7, -9, 1.8, 2.2, ox2, oz2);
-    // Hall sofa (center 11, 3)
     addCollisionBox(furnitureBoxes2BHK, 11, 3, 2.7, 1.5, ox2, oz2);
-    // Coffee table (center 5, 3)
     addCollisionBox(furnitureBoxes2BHK, 5, 3, 1.5, 0.8, ox2, oz2);
-    // Kitchen counter (center -11, -3.5)
     addCollisionBox(furnitureBoxes2BHK, -11, -3.5, 2.5, 0.7, ox2, oz2);
-    // Kitchen fridge (center -7, 1)
     addCollisionBox(furnitureBoxes2BHK, -7, 1, 1, 0.9, ox2, oz2);
-    // Toilet area (center -7.5, 10)
     addCollisionBox(furnitureBoxes2BHK, -7.5, 10, 0.7, 0.7, ox2, oz2);
-    // Basin (center -11, 6)
     addCollisionBox(furnitureBoxes2BHK, -11, 6, 0.6, 0.6, ox2, oz2);
 
-    // ── 2BHK WALL SEGMENTS (partition walls with door gaps) ──
-
-    // Wall 1: horizontal at z=-5, full width (x=-14 to 14)
-    // Door gap at x=-5 (Bedroom1 door, x: -6 to -4) and x=5 (Bedroom2 door, x: 4 to 6)
-    // Segment 1: x=-14 to -6
+    // 2BHK wall segments
     addCollisionBox(furnitureBoxes2BHK, -10, -5, 4, wt, ox2, oz2);
-    // Segment 2: x=-4 to 4
     addCollisionBox(furnitureBoxes2BHK, 0, -5, 4, wt, ox2, oz2);
-    // Segment 3: x=6 to 14
     addCollisionBox(furnitureBoxes2BHK, 10, -5, 4, wt, ox2, oz2);
-
-    // NOTE: Main front door collision boxes REMOVED — entry/exit is gated
-    // by ENTER/ESCAPE key prompts, so blocking movement at doorways is
-    // unnecessary and was causing the "stuck after entering" bug.
-
-    // Wall 2: vertical at x=0, z=-12 to -5 (between bedrooms, NO door)
     addCollisionBox(furnitureBoxes2BHK, 0, -8.5, wt, 3.5, ox2, oz2);
-
-    // Wall 3: vertical at x=-5, z=-5 to 12 (Hall/Kitchen/Bath separator)
-    // Door gap at z=-1 (Kitchen door, z: -2 to 0) and z=7 (Bathroom door, z: 6 to 8)
-    // Segment 1: z=-5 to -2
     addCollisionBox(furnitureBoxes2BHK, -5, -3.5, wt, 1.5, ox2, oz2);
-    // Segment 2: z=0 to 6
     addCollisionBox(furnitureBoxes2BHK, -5, 3, wt, 3, ox2, oz2);
-    // Segment 3: z=8 to 12
     addCollisionBox(furnitureBoxes2BHK, -5, 10, wt, 2, ox2, oz2);
-
-    // Wall 4: horizontal at z=3, x=-14 to -5 (Kitchen/Bathroom separator, NO door)
     addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2);
+
+    console.log('[Interiors] Furniture collision initialized —', furnitureBoxes1BHK.length, '1BHK boxes,', furnitureBoxes2BHK.length, '2BHK boxes');
 }
 
 function checkFurnitureCollision(newX, newZ) {
     if (boyState.mode !== 'indoor') return false;
-
     const boxes = boyState.insideHouse === '1bhk' ? furnitureBoxes1BHK : furnitureBoxes2BHK;
-    const boyRadius = 0.22; // slimmed for easier navigation through doors
-
+    const boyRadius = 0.22;
     for (const box of boxes) {
         if (newX > box.xMin - boyRadius && newX < box.xMax + boyRadius &&
             newZ > box.zMin - boyRadius && newZ < box.zMax + boyRadius) {
@@ -218,23 +240,16 @@ function checkFurnitureCollision(newX, newZ) {
     return false;
 }
 
-// Sliding collision: try to move on each axis independently
-// Returns { x, z } of the best valid position
 function resolveSliding(oldX, oldZ, newX, newZ) {
     if (boyState.mode !== 'indoor') return { x: newX, z: newZ };
-    // Both axes OK
     if (!checkFurnitureCollision(newX, newZ)) return { x: newX, z: newZ };
-    // Try X only
     if (!checkFurnitureCollision(newX, oldZ)) return { x: newX, z: oldZ };
-    // Try Z only
     if (!checkFurnitureCollision(oldX, newZ)) return { x: oldX, z: newZ };
-    // Fully blocked
     return { x: oldX, z: oldZ };
 }
 
 // ═══════════════════════════════════════════════
 //  ANIMATED DOORS
-//  Doors pivot open when boy approaches
 // ═══════════════════════════════════════════════
 const interactiveDoors = [];
 
@@ -243,31 +258,25 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a2e10, roughness: 0.6 });
     const handleMat2 = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.9, roughness: 0.2 });
 
-    // Pivot group positioned at hinge edge
     const pivot = new THREE.Group();
     pivot.position.set(x + hingeOffset.x, 0, z + hingeOffset.z);
     pivot.rotation.y = ry || 0;
     parent.add(pivot);
 
-    // Door mesh offset from pivot (so it swings around the hinge)
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.5, 3.5, 0.25), doorMat);
     door.position.set(-hingeOffset.x, y, -hingeOffset.z);
     pivot.add(door);
 
-    // Handle
     const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), handleMat2);
     handle.position.set(-hingeOffset.x + 0.5, y, -hingeOffset.z + 0.15);
     pivot.add(handle);
 
-    // Frame top
     const frameTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.28), frameMat);
     frameTop.position.set(-hingeOffset.x, y + 1.85, -hingeOffset.z);
     pivot.add(frameTop);
 
-    // Store base rotation for animation
     pivot.userData.baseRY = ry || 0;
 
-    // World position of door center (for proximity check)
     const worldX = x + houseOriginX;
     const worldZ = z + houseOriginZ;
 
@@ -287,28 +296,21 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
 
 function updateDoors(delta) {
     if (boyState.mode !== 'indoor') return;
-    if (!delta) delta = 0.016; // fallback ~60fps
+    if (!delta) delta = 0.016;
 
     const bx = boyGroup.position.x;
     const bz = boyGroup.position.z;
 
     interactiveDoors.forEach(d => {
         const dist = Math.sqrt((bx - d.worldX) ** 2 + (bz - d.worldZ) ** 2);
-
-        // Set target angle based on proximity
         d.targetAngle = dist < d.triggerRadius ? d.openAngle : 0;
-
-        // Smooth lerp rotation
         d.currentAngle += (d.targetAngle - d.currentAngle) * 0.08;
-
-        // Apply: base rotation + animated swing
         d.pivot.rotation.y = d.baseRY + d.currentAngle;
     });
 }
 
 // ═══════════════════════════════════════════════
 //  MAIN DOOR ANIMATION (entry/exit doors)
-//  Animated on ENTER/ESC key press only
 // ═══════════════════════════════════════════════
 const mainDoorState = {
     '1bhk': { currentAngle: 0, targetAngle: 0, isOpen: false },
@@ -316,7 +318,7 @@ const mainDoorState = {
 };
 
 function openMainDoor(houseId) {
-    mainDoorState[houseId].targetAngle = -Math.PI / 2; // swing open outward
+    mainDoorState[houseId].targetAngle = -Math.PI / 2;
     mainDoorState[houseId].isOpen = true;
 }
 
@@ -326,13 +328,11 @@ function closeMainDoor(houseId) {
 }
 
 function updateMainDoors() {
-    // 1BHK main door
     if (typeof mainDoor1BHK_pivot !== 'undefined') {
         const s = mainDoorState['1bhk'];
         s.currentAngle += (s.targetAngle - s.currentAngle) * 0.1;
         mainDoor1BHK_pivot.rotation.y = s.currentAngle;
     }
-    // 2BHK main door
     if (typeof mainDoor2BHK_pivot !== 'undefined') {
         const s = mainDoorState['2bhk'];
         s.currentAngle += (s.targetAngle - s.currentAngle) * 0.1;
@@ -341,15 +341,15 @@ function updateMainDoors() {
 }
 
 // ═══════════════════════════════════════════════
-//  INITIALIZATION — deferred until all scripts loaded
+//  INITIALIZATION
 // ═══════════════════════════════════════════════
 function initInteriors() {
     initPartitionRefs();
     initFurnitureCollision();
+    setupInteriorLighting();
+    console.log('[Interiors] All systems initialized');
 }
 
-// Init after all scripts are loaded
 window.addEventListener('DOMContentLoaded', () => {
-    // Small delay to ensure all house scripts have run
     setTimeout(initInteriors, 100);
 });
