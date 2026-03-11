@@ -18,8 +18,8 @@ const bhk2Rooms = [
 ];
 
 // House world origins
-const bhk1Origin = { x: -22, z: 0 };
-const bhk2Origin = { x: 24, z: 0 };
+const bhk1Origin = { x: -22, z: -4 };
+const bhk2Origin = { x: 24, z: -4 };
 
 function getBoyRoom() {
     if (boyState.mode !== 'indoor') return null;
@@ -111,14 +111,14 @@ function addCollisionBox(list, centerX, centerZ, halfW, halfD, houseOriginX, hou
 
 function initFurnitureCollision() {
     // 1BHK furniture (local coords, houseGroup at -22, 0)
-    const ox1 = -22, oz1 = 0;
+    const ox1 = -22, oz1 = -4;
 
-    // Sofa (center 9, -3.5, size 5×2.2)
-    addCollisionBox(furnitureBoxes1BHK, 9, -3.5, 3, 1.5, ox1, oz1);
+    // Sofa (center 9, -3.5, size — trimmed for walkway)
+    addCollisionBox(furnitureBoxes1BHK, 9, -3.5, 2.6, 1.2, ox1, oz1);
     // Bookshelf (center 12, 0, size 2.5×0.9)
     addCollisionBox(furnitureBoxes1BHK, 12, 0, 1.5, 0.7, ox1, oz1);
-    // Bed (center 3, -8.5, size 3.5×4.2)
-    addCollisionBox(furnitureBoxes1BHK, 3, -8.5, 2, 2.5, ox1, oz1);
+    // Bed (center 3, -8.5, size — trimmed for walkway)
+    addCollisionBox(furnitureBoxes1BHK, 3, -8.5, 1.8, 2.3, ox1, oz1);
     // Wardrobe (center -11, -8, size 2.4×1)
     addCollisionBox(furnitureBoxes1BHK, -11, -8, 1.5, 0.8, ox1, oz1);
     // Kitchen counter (center -10, -3.5, size 4×0.9)
@@ -127,6 +127,10 @@ function initFurnitureCollision() {
     addCollisionBox(furnitureBoxes1BHK, 10, 6, 1.3, 1, ox1, oz1);
     // Fridge (center -12, 5, size 1.4×1.2)
     addCollisionBox(furnitureBoxes1BHK, -12, 5, 1, 0.9, ox1, oz1);
+    // Dining table (center 5, 5)
+    addCollisionBox(furnitureBoxes1BHK, 5, 5, 1.2, 0.8, ox1, oz1);
+    // TV Stand (center 13, -3)
+    addCollisionBox(furnitureBoxes1BHK, 13, -3, 0.6, 1.0, ox1, oz1);
 
     // ── 1BHK WALL SEGMENTS (partition walls with door gaps) ──
     // Wall thickness = 0.15 (half = 0.15)
@@ -135,19 +139,19 @@ function initFurnitureCollision() {
     // pw1: horizontal wall at z=-5, x from -14 to 14 (W=28)
     // Door gap at local x=5, gap width=3 (x: 3.5 to 6.5)
     // Segment left: x=-14 to 3.5
-    addCollisionBox(furnitureBoxes1BHK, -5.25, -5, 8.75, wt, ox1, oz1);
+    addCollisionBox(furnitureBoxes1BHK, -5.475, -5, 8.525, wt, ox1, oz1);
     // Segment right: x=6.5 to 14
-    addCollisionBox(furnitureBoxes1BHK, 10.25, -5, 3.75, wt, ox1, oz1);
+    addCollisionBox(furnitureBoxes1BHK, 10.475, -5, 3.525, wt, ox1, oz1);
 
     // pw2: vertical wall at x=-4, z from -5 to 11 (kitchenDepth=16)
     // Door gap at local z=3, gap width=3 (z: 1.5 to 4.5)
     // Segment bottom: z=-5 to 1.5
-    addCollisionBox(furnitureBoxes1BHK, -4, -1.75, wt, 3.25, ox1, oz1);
+    addCollisionBox(furnitureBoxes1BHK, -4, -1.975, wt, 3.025, ox1, oz1);
     // Segment top: z=4.5 to 11
-    addCollisionBox(furnitureBoxes1BHK, -4, 7.75, wt, 3.25, ox1, oz1);
+    addCollisionBox(furnitureBoxes1BHK, -4, 7.975, wt, 3.025, ox1, oz1);
 
     // 2BHK furniture (local coords, bhk2Group at 24, 0)
-    const ox2 = 24, oz2 = 0;
+    const ox2 = 24, oz2 = -4;
 
     // Bed 1 (center -7, -9) — trimmed to leave walkway
     addCollisionBox(furnitureBoxes2BHK, -7, -9, 1.5, 1.8, ox2, oz2);
@@ -155,8 +159,6 @@ function initFurnitureCollision() {
     addCollisionBox(furnitureBoxes2BHK, 7, -9, 1.5, 1.8, ox2, oz2);
     // Hall sofa (center 10, 2) — moved slightly inward, reduced footprint
     addCollisionBox(furnitureBoxes2BHK, 10, 2, 2.2, 1.0, ox2, oz2);
-    // Coffee table (center 3, 1) — moved away from Bedroom 2 door gap
-    addCollisionBox(furnitureBoxes2BHK, 3, 1, 1.2, 0.6, ox2, oz2);
     // Kitchen counter (center -11, -3.5)
     addCollisionBox(furnitureBoxes2BHK, -11, -3.5, 2.0, 0.6, ox2, oz2);
     // Kitchen fridge (center -7, 1)
@@ -165,17 +167,20 @@ function initFurnitureCollision() {
     addCollisionBox(furnitureBoxes2BHK, -7.5, 10, 0.7, 0.7, ox2, oz2);
     // Basin (center -11, 6)
     addCollisionBox(furnitureBoxes2BHK, -11, 6, 0.6, 0.6, ox2, oz2);
+    // Wardrobes (Bedroom 1 center -12, -9, Bedroom 2 center 12, -9)
+    addCollisionBox(furnitureBoxes2BHK, -12, -9, 0.8, 0.6, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, 12, -9, 0.8, 0.6, ox2, oz2);
+    // TV Stand in Hall (center 13, 8)
+    addCollisionBox(furnitureBoxes2BHK, 13, 8, 0.6, 0.8, ox2, oz2);
 
     // ── 2BHK WALL SEGMENTS (partition walls with door gaps) ──
 
     // Wall 1: horizontal at z=-5, full width (x=-14 to 14)
     // Door gap at x=-5 (Bedroom1 door, x: -6.5 to -3.5) and x=5 (Bedroom2 door, x: 3.5 to 6.5)
     // Segment 1: x=-14 to -6.5
-    addCollisionBox(furnitureBoxes2BHK, -10.25, -5, 3.75, wt, ox2, oz2);
-    // Segment 2: x=-3.5 to 3.5
-    addCollisionBox(furnitureBoxes2BHK, 0, -5, 3.5, wt, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -10.475, -5, 3.525, wt, ox2, oz2);
     // Segment 3: x=6.5 to 14
-    addCollisionBox(furnitureBoxes2BHK, 10.25, -5, 3.75, wt, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, 10.475, -5, 3.525, wt, ox2, oz2);
 
     // NOTE: Main front door collision boxes REMOVED — entry/exit is gated
     // by ENTER/ESCAPE key prompts, so blocking movement at doorways is
@@ -187,21 +192,48 @@ function initFurnitureCollision() {
     // Wall 3: vertical at x=-5, z=-5 to 12 (Hall/Kitchen/Bath separator)
     // Door gap at z=-1 (Kitchen door, z: -2.5 to 0.5) and z=7 (Bathroom door, z: 5.5 to 8.5)
     // Segment 1: z=-5 to -2.5
-    addCollisionBox(furnitureBoxes2BHK, -5, -3.75, wt, 1.25, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -5, -3.975, wt, 1.025, ox2, oz2);
     // Segment 2: z=0.5 to 5.5
-    addCollisionBox(furnitureBoxes2BHK, -5, 3, wt, 2.5, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -5, 3.0, wt, 2.05, ox2, oz2);
     // Segment 3: z=8.5 to 12
-    addCollisionBox(furnitureBoxes2BHK, -5, 10.25, wt, 1.75, ox2, oz2);
+    addCollisionBox(furnitureBoxes2BHK, -5, 10.475, wt, 1.525, ox2, oz2);
 
     // Wall 4: horizontal at z=3, x=-14 to -5 (Kitchen/Bathroom separator, NO door)
-    addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2);
+    // addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2); // Removed to allow free transitions
+
+    // ── OUTER WALL COLLISION BOXES (prevent escaping house) ──
+    const owt = 0.4; // outer wall half-thickness
+
+    // 1BHK outer walls (local origin -22, 0 — house W=28, D=22)
+    // Back wall z=-11
+    addCollisionBox(furnitureBoxes1BHK, 0, -11, 14, owt, ox1, oz1);
+    // Front wall left of door gap
+    addCollisionBox(furnitureBoxes1BHK, -9, 11, 5, owt, ox1, oz1);
+    // Front wall right of door gap
+    addCollisionBox(furnitureBoxes1BHK, 9, 11, 5, owt, ox1, oz1);
+    // Left wall x=-14
+    addCollisionBox(furnitureBoxes1BHK, -14, 0, owt, 11, ox1, oz1);
+    // Right wall x=14
+    addCollisionBox(furnitureBoxes1BHK, 14, 0, owt, 11, ox1, oz1);
+
+    // 2BHK outer walls (local origin 24, 0 — house W=28, D=24)
+    // Back wall z=-12
+    addCollisionBox(furnitureBoxes2BHK, 0, -12, 14, owt, ox2, oz2);
+    // Front wall left of door gap
+    addCollisionBox(furnitureBoxes2BHK, -9, 12, 5, owt, ox2, oz2);
+    // Front wall right of door gap
+    addCollisionBox(furnitureBoxes2BHK, 9, 12, 5, owt, ox2, oz2);
+    // Left wall x=-14
+    addCollisionBox(furnitureBoxes2BHK, -14, 0, owt, 12, ox2, oz2);
+    // Right wall x=14
+    addCollisionBox(furnitureBoxes2BHK, 14, 0, owt, 12, ox2, oz2);
 }
 
 function checkFurnitureCollision(newX, newZ) {
     if (boyState.mode !== 'indoor') return false;
 
     const boxes = boyState.insideHouse === '1bhk' ? furnitureBoxes1BHK : furnitureBoxes2BHK;
-    const boyRadius = 0.20; // slimmed down for easier navigation through doors/furniture
+    const boyRadius = 0.04; // slimmed down for easier navigation through doors/furniture
 
     for (const box of boxes) {
         // Expanded box by boy radius
@@ -210,6 +242,43 @@ function checkFurnitureCollision(newX, newZ) {
             return true; // collision!
         }
     }
+
+    // Check closed interactive doors
+    if (typeof interactiveDoors !== 'undefined') {
+        const originX = boyState.insideHouse === '1bhk' ? -22 : 24;
+        const originZ = boyState.insideHouse === '1bhk' ? -4 : -4;
+        for (const door of interactiveDoors) {
+            // Skip doors belonging to the other house
+            if (Math.abs(door.worldX - originX) > 20) continue;
+
+            // If the door is opening/open, its collision is disabled
+            // We use a small threshold to allow passing through even as it starts opening
+            if (door.targetAngle > 0.05 || door.currentAngle > 0.05) continue;
+
+            // Door bounding box (closed pos)
+            let dx, dz;
+            if (Math.abs(door.baseRY) < 0.1) {
+                // Rotated 0 (aligned along X)
+                dx = 0.75; // half of 1.5 width
+                dz = 0.15; // slightly larger than half of 0.25 depth
+            } else {
+                // Rotated 90 deg (aligned along Z)
+                dx = 0.15;
+                dz = 0.75;
+            }
+
+            const xMin = door.worldX - dx;
+            const xMax = door.worldX + dx;
+            const zMin = door.worldZ - dz;
+            const zMax = door.worldZ + dz;
+
+            if (newX > xMin - boyRadius && newX < xMax + boyRadius &&
+                newZ > zMin - boyRadius && newZ < zMax + boyRadius) {
+                return true;
+            }
+        }
+    }
+
     return false;
 }
 
@@ -278,8 +347,8 @@ function updateDoors() {
         // Set target angle based on proximity
         d.targetAngle = dist < d.triggerRadius ? d.openAngle : 0;
 
-        // Smooth lerp rotation
-        d.currentAngle += (d.targetAngle - d.currentAngle) * 0.08;
+        // Smooth lerp rotation (faster for snappier response)
+        d.currentAngle += (d.targetAngle - d.currentAngle) * 0.30;
 
         // Apply: base rotation + animated swing
         d.pivot.rotation.y = d.baseRY + d.currentAngle;
@@ -309,13 +378,13 @@ function updateMainDoors() {
     // 1BHK main door
     if (typeof mainDoor1BHK_pivot !== 'undefined') {
         const s = mainDoorState['1bhk'];
-        s.currentAngle += (s.targetAngle - s.currentAngle) * 0.1;
+        s.currentAngle += (s.targetAngle - s.currentAngle) * 0.15;
         mainDoor1BHK_pivot.rotation.y = s.currentAngle;
     }
     // 2BHK main door
     if (typeof mainDoor2BHK_pivot !== 'undefined') {
         const s = mainDoorState['2bhk'];
-        s.currentAngle += (s.targetAngle - s.currentAngle) * 0.1;
+        s.currentAngle += (s.targetAngle - s.currentAngle) * 0.15;
         mainDoor2BHK_pivot.rotation.y = s.currentAngle;
     }
 }
@@ -326,6 +395,30 @@ function updateMainDoors() {
 function initInteriors() {
     initPartitionRefs();
     initFurnitureCollision();
+
+    // ── Create interactive interior doors ──
+    const ox1 = -22, oz1 = -4;
+    const ox2 = 24, oz2 = -4;
+
+    // 1BHK interior doors (in partition walls)
+    // Bedroom door (in horizontal wall at z=-5, gap at local x≈5)
+    if (typeof houseGroup !== 'undefined') {
+        createInteractiveDoor(houseGroup, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox1, oz1);
+        // Kitchen door (in vertical wall at x=-4, gap at local z≈3)
+        createInteractiveDoor(houseGroup, -4, 2.05, 3, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox1, oz1);
+    }
+
+    // 2BHK interior doors (in partition walls)
+    if (typeof bhk2Group !== 'undefined') {
+        // Bedroom 1 door (horizontal wall z=-5, gap at local x≈-5)
+        createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
+        // Bedroom 2 door (horizontal wall z=-5, gap at local x≈5)
+        createInteractiveDoor(bhk2Group, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
+        // Kitchen door (vertical wall x=-5, gap at local z≈-1)
+        createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox2, oz2);
+        // Bathroom door (vertical wall x=-5, gap at local z≈7)
+        createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox2, oz2);
+    }
 }
 
 // Init after all scripts are loaded

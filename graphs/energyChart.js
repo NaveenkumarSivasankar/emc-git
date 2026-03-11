@@ -15,8 +15,34 @@ function openEnergyModal() {
     const modal = document.getElementById('energy-modal');
     if (!modal) return;
 
-    const appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+    // Determine which house data to show based on boy's current location
+    let appliancesList;
+    let modalHouseLabel;
+
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        if (boyState.insideHouse === '1bhk') {
+            appliancesList = simpleAppliances;
+            modalHouseLabel = '🏠 1BHK House';
+        } else if (boyState.insideHouse === '2bhk') {
+            appliancesList = bhk2Appliances;
+            modalHouseLabel = '🏠 2BHK House';
+        } else {
+            appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+            modalHouseLabel = is2BHK ? '🏠 2BHK House' : '🏠 1BHK House';
+        }
+    } else {
+        // Outdoor or fallback — use current selected house
+        appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+        modalHouseLabel = is2BHK ? '🏠 2BHK House' : '🏠 1BHK House';
+    }
+
     const data = getApplianceEnergyData(appliancesList);
+    window._currentModalHouseLabel = modalHouseLabel;
+
+    // When outdoors, store which house is selected for switching
+    if (typeof boyState !== 'undefined' && boyState.mode !== 'indoor') {
+        window._outdoorSelectedHouse = is2BHK ? '2bhk' : '1bhk';
+    }
 
     if (data.length === 0) {
         alert('⚡ No active appliances! Turn on some appliances first.');
@@ -37,7 +63,7 @@ function openEnergyModal() {
     destroyAllCharts();
 
     const content = document.getElementById('energy-modal-body');
-    content.innerHTML = buildDashboardHTML(data, totalDailyUnits, totalWeeklyUnits, totalMonthlyUnits, weeklyBill, totalBill, solarKW);
+    content.innerHTML = buildDashboardHTML(data, totalDailyUnits, totalWeeklyUnits, totalMonthlyUnits, weeklyBill, totalBill, solarKW, window._currentModalHouseLabel);
 
     setTimeout(() => {
         renderBarChart(data);
@@ -59,15 +85,144 @@ function closeEnergyModal() {
     currentEnergyData = [];
 }
 
+function switchModalHouse(houseId) {
+    window._outdoorSelectedHouse = houseId;
+
+    // Determine appliance list for selected house
+    const appliancesList = (houseId === '2bhk') ? bhk2Appliances : simpleAppliances;
+    const houseLabel = (houseId === '2bhk') ? '🏠 2BHK House' : '🏠 1BHK House';
+    window._currentModalHouseLabel = houseLabel;
+
+    const data = getApplianceEnergyData(appliancesList);
+    if (data.length === 0) return;
+
+    currentEnergyData = data;
+
+    const totalMonthlyUnits = data.reduce((s, d) => s + d.perMonth, 0);
+    const totalWeeklyUnits = data.reduce((s, d) => s + d.perWeek, 0);
+    const totalDailyUnits = data.reduce((s, d) => s + d.perDay, 0);
+    const totalBill = calculateTNTariffCost(totalMonthlyUnits);
+    const weeklyBill = calculateTNTariffCost(totalWeeklyUnits);
+    const solarKW = (typeof currentPanelCount !== 'undefined' ? currentPanelCount : 0) * 0.35;
+
+    destroyAllCharts();
+
+    const content = document.getElementById('energy-modal-body');
+    content.innerHTML = buildDashboardHTML(
+        data, totalDailyUnits, totalWeeklyUnits,
+        totalMonthlyUnits, weeklyBill, totalBill,
+        solarKW, houseLabel
+    );
+
+    setTimeout(() => {
+        renderBarChart(data);
+        renderPieChart(data);
+        renderDonutChart(data);
+        renderLineChart(data);
+        animateNetZeroBar(solarKW, totalMonthlyUnits);
+    }, 150);
+}
+
 // ═══════════════════════════════════════════════
 //  SECTION BUILDER
 // ═══════════════════════════════════════════════
-function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthlyBill, solarKW) {
-    const houseName = is2BHK ? '2BHK' : '1BHK';
+function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthlyBill, solarKW, houseLabel) {
+    const houseName = houseLabel || (is2BHK ? '2BHK' : '1BHK');
     const nz = calculateNetZero(monthlyU, solarKW);
     const netZeroNeeded = Math.max(0, Math.ceil(monthlyU - nz.solarMonthly));
 
     return '' +
+
+        // ── House Identity Banner ──
+        '<div class="house-banner">' +
+        '<span class="house-banner-icon">🏠</span>' +
+        '<span class="house-banner-title">' + houseName + ' Energy Report</span>' +
+        '<span class="house-banner-sub">Showing appliances for this house only</span>' +
+        '</div>' +
+
+        // ── House Switcher (outdoor only) ──
+        (typeof boyState !== 'undefined' && boyState.mode !== 'indoor' ?
+            '<div class="house-switcher">' +
+            '<div class="hs-label">👇 Pick a house to explore!</div>' +
+            '<div class="hs-tabs">' +
+            '<button class="hs-tab ' + (window._outdoorSelectedHouse !== '2bhk' ? 'hs-tab-active' : '') + '" onclick="switchModalHouse(\'1bhk\')">' +
+            '<span class="hs-tab-icon">�</span>' +
+            '<span class="hs-tab-name">1BHK</span>' +
+            '<span class="hs-tab-sub">Small Home</span>' +
+            '</button>' +
+            '<div class="hs-vs">VS</div>' +
+            '<button class="hs-tab ' + (window._outdoorSelectedHouse === '2bhk' ? 'hs-tab-active' : '') + '" onclick="switchModalHouse(\'2bhk\')">' +
+            '<span class="hs-tab-icon">🏠</span>' +
+            '<span class="hs-tab-name">2BHK</span>' +
+            '<span class="hs-tab-sub">Big Home</span>' +
+            '</button>' +
+            '</div>' +
+            '</div>'
+            : '')
+        +
+
+        // ── Kids Comparison (outdoor only) ──
+        (typeof boyState !== 'undefined' && boyState.mode !== 'indoor' ?
+            (function () {
+                const bhk1Data = getApplianceEnergyData(simpleAppliances);
+                const bhk2Data = getApplianceEnergyData(bhk2Appliances);
+                const bhk1Units = bhk1Data.reduce((s, d) => s + d.perMonth, 0);
+                const bhk2Units = bhk2Data.reduce((s, d) => s + d.perMonth, 0);
+                const bhk1Bill = calculateTNTariffCost(bhk1Units);
+                const bhk2Bill = calculateTNTariffCost(bhk2Units);
+                const winner = bhk1Units < bhk2Units ? '1BHK' : '2BHK';
+                const bhk1Pct = Math.round((bhk1Units / (bhk1Units + bhk2Units)) * 100);
+                const bhk2Pct = 100 - bhk1Pct;
+                return (
+                    '<div class="kids-compare">' +
+
+                    '<div class="kc-title">⚡ Which house uses MORE electricity?</div>' +
+
+                    '<div class="kc-houses">' +
+
+                    '<div class="kc-house ' + (winner === '1BHK' ? 'kc-loser' : 'kc-winner') + '">' +
+                    '<div class="kc-house-icon">🏡</div>' +
+                    '<div class="kc-house-name">1BHK</div>' +
+                    '<div class="kc-house-units">' + bhk1Units.toFixed(0) + ' <small>units/mo</small></div>' +
+                    '<div class="kc-house-bill">₹' + bhk1Bill + '/month</div>' +
+                    '<div class="kc-badge">' + (winner === '1BHK' ? '🌟 Energy Saver!' : '⚠️ Uses More!') + '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-vs-col">' +
+                    '<div class="kc-vs-text">VS</div>' +
+                    '<div class="kc-diff">' +
+                    '<div class="kc-diff-label">Difference</div>' +
+                    '<div class="kc-diff-value">+' + Math.abs(bhk1Units - bhk2Units).toFixed(0) + ' units</div>' +
+                    '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-house ' + (winner === '2BHK' ? 'kc-loser' : 'kc-winner') + '">' +
+                    '<div class="kc-house-icon">🏠</div>' +
+                    '<div class="kc-house-name">2BHK</div>' +
+                    '<div class="kc-house-units">' + bhk2Units.toFixed(0) + ' <small>units/mo</small></div>' +
+                    '<div class="kc-house-bill">₹' + bhk2Bill + '/month</div>' +
+                    '<div class="kc-badge">' + (winner === '2BHK' ? '🌟 Energy Saver!' : '⚠️ Uses More!') + '</div>' +
+                    '</div>' +
+
+                    '</div>' +
+
+                    '<div class="kc-bar-label">Energy Usage Comparison</div>' +
+                    '<div class="kc-bar-track">' +
+                    '<div class="kc-bar-fill kc-bar-1bhk" style="width:' + bhk1Pct + '%">' +
+                    '<span>1BHK ' + bhk1Pct + '%</span>' +
+                    '</div>' +
+                    '<div class="kc-bar-fill kc-bar-2bhk" style="width:' + bhk2Pct + '%">' +
+                    '<span>2BHK ' + bhk2Pct + '%</span>' +
+                    '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-fun-fact">🧠 <b>Did you know?</b> A bigger house usually needs more electricity because it has more rooms and appliances!</div>' +
+
+                    '</div>'
+                );
+            })()
+            : '')
+        +
 
         // ═══ SECTION 1: SUMMARY CARDS ═══
         '<div class="section-label"><span>📋</span> Overview</div>' +
@@ -179,6 +334,41 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '☀️ Formula: ' + nz.solarKW.toFixed(1) + ' kW × 4 units/day × 30 days = <b>' + nz.solarMonthly.toFixed(0) + ' units/month</b>' +
         '</div>' +
         '<div id="netzero-message" class="nz-message"></div>' +
+        '</div>' +
+
+        // ── Kids Energy Report Card ──
+        '<div class="kids-score-card">' +
+        '<div class="ksc-title">🏆 Your Energy Report Card</div>' +
+        '<div class="ksc-scores">' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">⚡</div>' +
+        '<div class="ksc-label">Daily Usage</div>' +
+        '<div class="ksc-value">' + dailyU.toFixed(1) + ' units</div>' +
+        '<div class="ksc-grade ' + (dailyU < 5 ? 'grade-a' : dailyU < 10 ? 'grade-b' : 'grade-c') + '">' +
+        (dailyU < 5 ? '🌟 A+ Excellent' : dailyU < 10 ? '👍 B Good' : '⚠️ C Save More') +
+        '</div>' +
+        '</div>' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">💰</div>' +
+        '<div class="ksc-label">Monthly Bill</div>' +
+        '<div class="ksc-value">₹' + monthlyBill + '</div>' +
+        '<div class="ksc-grade ' + (monthlyBill < 200 ? 'grade-a' : monthlyBill < 500 ? 'grade-b' : 'grade-c') + '">' +
+        (monthlyBill < 200 ? '🌟 A+ Super Saver' : monthlyBill < 500 ? '👍 B Average' : '⚠️ C High Bill') +
+        '</div>' +
+        '</div>' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">🌍</div>' +
+        '<div class="ksc-label">CO₂ Impact</div>' +
+        '<div class="ksc-value">' + (monthlyU * 0.82).toFixed(1) + ' kg</div>' +
+        '<div class="ksc-grade grade-info">🌱 Plant ' + Math.ceil(monthlyU * 0.82 / 21) + ' trees to offset!</div>' +
+        '</div>' +
+
+        '</div>' +
+        '<div class="ksc-tip">💡 <b>Pro Tip:</b> Turn off lights when leaving a room — it saves ₹' +
+        Math.round(60 / 1000 * 8 * 30 * 3) + ' every month!</div>' +
         '</div>' +
 
         // ── Learning Panel (slide-in, hidden) ──
@@ -344,6 +534,13 @@ function renderBarChart(data) {
             theme: 'dark',
             custom: function ({ dataPointIndex }) {
                 const d = data[dataPointIndex];
+                const funFacts = [
+                    'This appliance runs like ' + Math.round(d.watt / 10) + ' phone chargers!',
+                    'In a month it uses ' + d.perMonth + ' units — that could charge ' + Math.round(d.perMonth * 83) + ' phones!',
+                    'Saving 1 hour/day saves ' + (d.watt / 1000).toFixed(2) + ' units daily!',
+                    'This costs ₹' + (d.monthlyCost / 30).toFixed(1) + ' every single day!'
+                ];
+                const fact = funFacts[dataPointIndex % funFacts.length];
                 return '<div class="energy-tooltip">' +
                     '<div class="tt-header">' + d.name + ' <span>' + d.watts + 'W</span></div>' +
                     '<div class="tt-row"><span>⚡ Monthly</span><b>' + d.perMonth + ' kWh</b></div>' +
@@ -351,7 +548,8 @@ function renderBarChart(data) {
                     '<div class="tt-row"><span>🕐 Daily</span><b>' + d.perDay + ' kWh</b></div>' +
                     '<div class="tt-divider"></div>' +
                     '<div class="tt-cost">💰 ₹' + d.monthlyCost + '/month</div>' +
-                    '<div class="tt-hint">👆 Click to see step-by-step math!</div>' +
+                    '<div class="tt-funfact">🤩 ' + fact + '</div>' +
+                    '<div class="tt-hint">👆 Click to learn the maths!</div>' +
                     '</div>';
             }
         },

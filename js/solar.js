@@ -78,8 +78,8 @@ function getRoofConfig(houseKey) {
         targetGroup = typeof houseGroup !== 'undefined' ? houseGroup : new THREE.Group();
     }
 
-    const panelGapX = 2.0;
-    const panelGapZ = 1.4;
+    const panelGapX = 2.8;
+    const panelGapZ = 2.2;
     const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
     const max = colsPerSide * rows * 2;
@@ -310,24 +310,26 @@ function changePanelCount(delta) {
 
     if (delta > 0) {
         const idx = state.count; // the zero-based index of the panel being added
-        const side = idx % 2 === 0 ? 1 : -1; // 1 for right, -1 for left
-        const pairIdx = Math.floor(idx / 2);
-        const row = pairIdx % config.rows;
-        const col = Math.floor(pairIdx / config.rows);
+        // Fill left side fully (colsPerSide * rows), then right side
+        const panelsPerSide = config.colsPerSide * config.rows;
+        const side = idx < panelsPerSide ? -1 : 1; // -1 for left, 1 for right
+        const sideIdx = idx < panelsPerSide ? idx : idx - panelsPerSide;
+        const col = Math.floor(sideIdx / config.rows);
+        const row = sideIdx % config.rows;
 
         const g = createSolarPanel();
 
-        // Calculate position dynamically
-        const xOffset = config.startX + col * config.panelGapX * 1.05 + 0.9;
+        // Calculate position with clean grid alignment (no 1.05 multiplier)
+        const xOffset = config.startX + col * config.panelGapX + 1.4;
         const xPos = xOffset * side;
-        const zPos = config.startZ + row * config.panelGapZ * 1.05 + 1.25;
+        const zPos = config.startZ + row * config.panelGapZ + 1.1;
 
         const hFallback = typeof H !== 'undefined' ? H : 7;
         const roofLocalY = hFallback + 0.3 + config.baseRoofH - Math.abs(xPos) * (config.baseRoofH / config.roofWidthHalf);
 
         g.rotation.set(0, 0, side * -config.slopeAngle);
-        g.position.set(xPos, roofLocalY - 0.2, zPos);
-        g.translateY(0.15); // float off roof slightly
+        g.position.set(xPos, roofLocalY - 0.15, zPos);
+        g.translateY(0.1); // slight float off roof surface
 
         config.targetGroup.add(g);
         g.visible = true;
