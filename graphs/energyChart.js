@@ -300,23 +300,32 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
 
     return '' +
 
-        // ── School Chalkboard Header ──
-        '<div class="school-header">' +
-        '<div class="sh-chalkboard">' +
-        '<div class="sh-chalk-line"></div>' +
-        '<div class="sh-title-row">' +
-        '<div class="sh-pixel-star">' + PIXEL_ICONS.star + '</div>' +
-        '<div class="sh-title">Energy Learning Dashboard</div>' +
-        '<div class="sh-pixel-star">' + PIXEL_ICONS.star + '</div>' +
+        // ── Chalkboard Header ──
+        '<div class="chalkboard-header">' +
+        '<div class="chalkboard-wood-top"></div>' +
+        '<div class="chalkboard-surface">' +
+        '<div class="chalk-tray"></div>' +
+        '<div class="chalkboard-inner">' +
+        '<div class="chalk-decoration chalk-star">★</div>' +
+        '<div class="chalk-decoration chalk-star right">★</div>' +
+        '<div class="chalkboard-title">⚡ Energy Learning Dashboard</div>' +
+        '<div class="chalkboard-subtitle">' + (houseName || 'House') + ' — Electricity Report Card</div>' +
+        '<div class="chalk-line"></div>' +
+        '<div class="chalk-items-row">' +
+        '<div class="chalk-item">📏 Learn</div>' +
+        '<div class="chalk-item">✏️ Calculate</div>' +
+        '<div class="chalk-item">🔔 Discover</div>' +
         '</div>' +
-        '<div class="sh-subtitle">' + houseName + ' — Electricity Report Card</div>' +
-        '<div class="sh-chalk-line"></div>' +
         '</div>' +
-        '<div class="sh-decorations">' +
-        '<div class="sh-deco-item">' + PIXEL_ICONS.bulb + '<span>Learn</span></div>' +
-        '<div class="sh-deco-item">' + PIXEL_ICONS.star + '<span>Explore</span></div>' +
-        '<div class="sh-deco-item">' + PIXEL_ICONS.trophy + '<span>Save</span></div>' +
+        '<div class="chalk-tray bottom-tray">' +
+        '<div class="chalk-piece"></div>' +
+        '<div class="chalk-piece yellow"></div>' +
+        '<div class="chalk-piece"></div>' +
+        '<div class="chalk-piece pink"></div>' +
+        '<div class="chalk-piece"></div>' +
         '</div>' +
+        '</div>' +
+        '<div class="chalkboard-wood-bottom"></div>' +
         '</div>' +
 
         // ── House Switcher (outdoor only) ──

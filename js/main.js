@@ -197,19 +197,18 @@ function animate() {
     }
 
     // Solar panels animation
-    solarPanels.forEach(p => {
-        if (p.animating) {
-            p.frame++;
-            if (p.frame > p.delay) {
-                const dy = (p.targetY - p.group.position.y) * 0.08;
-                p.group.position.y += dy;
-                if (Math.abs(p.group.position.y - p.targetY) < 0.05) {
-                    p.group.position.y = p.targetY;
-                    p.animating = false;
-                }
-            }
+    for (let i = 0; i < solarPanels.length; i++) {
+        const p = solarPanels[i];
+        if (!p.animating) continue;
+        p.frame++;
+        const t = Math.min(p.frame / 30, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        p.group.position.y = p.targetY + 14 * (1 - eased);
+        if (t >= 1) {
+            p.group.position.y = p.targetY;
+            p.animating = false;
         }
-    });
+    }
 
     // Boy character animation
     updateBoy(delta);
