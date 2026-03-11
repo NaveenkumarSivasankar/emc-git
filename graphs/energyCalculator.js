@@ -142,7 +142,7 @@ function buildLearningStepsHTML(watts, hoursPerDay) {
     const monthlyCost = calculateTNTariffCost(parseFloat(monthlyUnits));
 
     // Energy level emoji
-    const energyEmoji = watts < 100 ? '🟢' : watts < 500 ? '🟡' : watts < 1000 ? '🟠' : '🔴';
+    const energyEmoji = watts < 100 ? PIXEL_ICONS.star : watts < 500 ? PIXEL_ICONS.bulb : watts < 1000 ? PIXEL_ICONS.heater : PIXEL_ICONS.ac;
     const energyLabel = watts < 100 ? 'Low Energy' : watts < 500 ? 'Medium Energy' : watts < 1000 ? 'High Energy' : 'Very High!';
 
     return `

@@ -2,6 +2,173 @@
 //  APEXCHARTS ENERGY DASHBOARD — v2
 //  Clean 4-section layout for kids
 // ═══════════════════════════════════════════════
+
+const PIXEL_ICONS = {
+    fan: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="7" y="1" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="7" y="12" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="1" y="7" width="3" height="2" fill="#5B8DEF"/>
+        <rect x="12" y="7" width="3" height="2" fill="#5B8DEF"/>
+        <rect x="6" y="6" width="4" height="4" fill="#818CF8"/>
+        <rect x="5" y="5" width="6" height="1" fill="#5B8DEF"/>
+        <rect x="5" y="10" width="6" height="1" fill="#5B8DEF"/>
+        <rect x="5" y="5" width="1" height="6" fill="#5B8DEF"/>
+        <rect x="10" y="5" width="1" height="6" fill="#5B8DEF"/>
+    </svg>`,
+    bulb: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="6" y="1" width="4" height="1" fill="#FFD700"/>
+        <rect x="4" y="2" width="8" height="1" fill="#FFD700"/>
+        <rect x="3" y="3" width="10" height="4" fill="#FFE066"/>
+        <rect x="4" y="7" width="8" height="2" fill="#FFD700"/>
+        <rect x="5" y="9" width="6" height="1" fill="#FFD700"/>
+        <rect x="5" y="10" width="6" height="2" fill="#cccccc"/>
+        <rect x="6" y="12" width="4" height="1" fill="#aaaaaa"/>
+        <rect x="2" y="4" width="1" height="2" fill="#fff5aa"/>
+        <rect x="13" y="4" width="1" height="2" fill="#fff5aa"/>
+    </svg>`,
+    ac: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="3" width="14" height="8" fill="#5B8DEF"/>
+        <rect x="2" y="4" width="12" height="6" fill="#818CF8"/>
+        <rect x="3" y="5" width="10" height="1" fill="#c8d8ff"/>
+        <rect x="3" y="7" width="10" height="1" fill="#c8d8ff"/>
+        <rect x="13" y="5" width="1" height="3" fill="#FFD700"/>
+        <rect x="2" y="11" width="2" height="2" fill="#5B8DEF"/>
+        <rect x="7" y="11" width="2" height="2" fill="#5B8DEF"/>
+        <rect x="12" y="11" width="2" height="2" fill="#5B8DEF"/>
+    </svg>`,
+    tv: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="2" width="14" height="10" fill="#222"/>
+        <rect x="2" y="3" width="12" height="8" fill="#1a3a5c"/>
+        <rect x="3" y="4" width="10" height="6" fill="#225588"/>
+        <rect x="4" y="5" width="3" height="2" fill="#5B8DEF" opacity="0.6"/>
+        <rect x="6" y="12" width="4" height="1" fill="#555"/>
+        <rect x="4" y="13" width="8" height="1" fill="#444"/>
+    </svg>`,
+    fridge: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="3" y="1" width="10" height="14" fill="#dddddd"/>
+        <rect x="4" y="2" width="8" height="5" fill="#eeeeee"/>
+        <rect x="4" y="8" width="8" height="6" fill="#f5f5f5"/>
+        <rect x="7" y="7" width="2" height="1" fill="#888"/>
+        <rect x="11" y="4" width="1" height="2" fill="#888"/>
+        <rect x="11" y="10" width="1" height="2" fill="#888"/>
+    </svg>`,
+    laptop: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="2" y="3" width="12" height="8" fill="#555"/>
+        <rect x="3" y="4" width="10" height="6" fill="#225588"/>
+        <rect x="4" y="5" width="4" height="2" fill="#5B8DEF" opacity="0.5"/>
+        <rect x="1" y="11" width="14" height="2" fill="#444"/>
+        <rect x="5" y="11" width="6" height="1" fill="#333"/>
+    </svg>`,
+    phone: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="4" y="1" width="8" height="14" fill="#333"/>
+        <rect x="5" y="2" width="6" height="10" fill="#225588"/>
+        <rect x="6" y="13" width="4" height="1" fill="#555"/>
+        <rect x="6" y="3" width="3" height="2" fill="#5B8DEF" opacity="0.5"/>
+    </svg>`,
+    heater: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="2" y="5" width="12" height="8" fill="#888"/>
+        <rect x="3" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="6" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="9" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="12" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="4" y="2" width="2" height="3" fill="#FF6B6B"/>
+        <rect x="8" y="1" width="2" height="4" fill="#FF6B6B"/>
+        <rect x="10" y="2" width="2" height="3" fill="#FF6B6B"/>
+    </svg>`,
+    microwave: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="3" width="14" height="10" fill="#555"/>
+        <rect x="2" y="4" width="9" height="8" fill="#222"/>
+        <rect x="3" y="5" width="7" height="6" fill="#1a1a2e"/>
+        <rect x="11" y="4" width="3" height="8" fill="#444"/>
+        <rect x="12" y="5" width="1" height="1" fill="#FF6B6B"/>
+        <rect x="12" y="7" width="1" height="1" fill="#2ECC8B"/>
+        <rect x="12" y="9" width="1" height="1" fill="#5B8DEF"/>
+    </svg>`,
+    stove: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="2" width="14" height="12" fill="#444"/>
+        <rect x="3" y="4" width="4" height="4" fill="#333"/>
+        <rect x="9" y="4" width="4" height="4" fill="#333"/>
+        <rect x="4" y="5" width="2" height="2" fill="#FF6B35"/>
+        <rect x="10" y="5" width="2" height="2" fill="#FF6B35"/>
+        <rect x="3" y="9" width="10" height="2" fill="#555"/>
+    </svg>`,
+    wifi: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="4" width="14" height="2" fill="#5B8DEF" opacity="0.4"/>
+        <rect x="3" y="6" width="10" height="2" fill="#5B8DEF" opacity="0.6"/>
+        <rect x="5" y="8" width="6" height="2" fill="#5B8DEF" opacity="0.8"/>
+        <rect x="7" y="10" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="6" y="13" width="4" height="1" fill="#5B8DEF"/>
+    </svg>`,
+    generic: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="3" y="2" width="10" height="12" fill="#555"/>
+        <rect x="4" y="3" width="8" height="8" fill="#333"/>
+        <rect x="5" y="4" width="6" height="6" fill="#225588"/>
+        <rect x="4" y="12" width="3" height="1" fill="#888"/>
+        <rect x="9" y="12" width="3" height="1" fill="#FF6B6B"/>
+    </svg>`,
+    solar: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="6" y="1" width="4" height="1" fill="#FFD700"/>
+        <rect x="7" y="2" width="2" height="1" fill="#FFD700"/>
+        <rect x="1" y="6" width="1" height="4" fill="#FFD700"/>
+        <rect x="2" y="7" width="1" height="2" fill="#FFD700"/>
+        <rect x="14" y="6" width="1" height="4" fill="#FFD700"/>
+        <rect x="13" y="7" width="1" height="2" fill="#FFD700"/>
+        <rect x="3" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="4" y="4" width="8" height="8" fill="#FFE066"/>
+        <rect x="5" y="5" width="6" height="6" fill="#FFD700"/>
+        <rect x="6" y="6" width="4" height="4" fill="#fff5aa"/>
+    </svg>`,
+    house: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="8" y="1" width="1" height="1" fill="#FF6B6B"/>
+        <rect x="6" y="2" width="5" height="1" fill="#FF6B6B"/>
+        <rect x="4" y="3" width="9" height="1" fill="#FF6B6B"/>
+        <rect x="2" y="4" width="13" height="1" fill="#c0392b"/>
+        <rect x="3" y="5" width="11" height="9" fill="#e8d5b7"/>
+        <rect x="6" y="9" width="4" height="5" fill="#5c3a1e"/>
+        <rect x="4" y="6" width="3" height="3" fill="#88ccee"/>
+        <rect x="10" y="6" width="3" height="3" fill="#88ccee"/>
+    </svg>`,
+    star: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="7" y="1" width="2" height="3" fill="#FFD700"/>
+        <rect x="7" y="12" width="2" height="3" fill="#FFD700"/>
+        <rect x="1" y="7" width="3" height="2" fill="#FFD700"/>
+        <rect x="12" y="7" width="3" height="2" fill="#FFD700"/>
+        <rect x="3" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="3" y="11" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="11" width="2" height="2" fill="#FFD700"/>
+        <rect x="5" y="5" width="6" height="6" fill="#FFE066"/>
+        <rect x="6" y="6" width="4" height="4" fill="#fff5aa"/>
+    </svg>`,
+    trophy: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="5" y="1" width="6" height="1" fill="#FFD700"/>
+        <rect x="4" y="2" width="8" height="5" fill="#FFE066"/>
+        <rect x="3" y="3" width="2" height="3" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="3" fill="#FFD700"/>
+        <rect x="5" y="7" width="6" height="2" fill="#FFD700"/>
+        <rect x="6" y="9" width="4" height="2" fill="#FFD700"/>
+        <rect x="5" y="11" width="6" height="1" fill="#c0a020"/>
+        <rect x="4" y="12" width="8" height="2" fill="#c0a020"/>
+    </svg>`
+};
+
+function getAppliancePixelIcon(name) {
+    const n = name.toLowerCase();
+    if (n.includes('fan')) return PIXEL_ICONS.fan;
+    if (n.includes('bulb') || n.includes('light')) return PIXEL_ICONS.bulb;
+    if (n.includes('ac') || n.includes('air')) return PIXEL_ICONS.ac;
+    if (n.includes('tv') || n.includes('tele')) return PIXEL_ICONS.tv;
+    if (n.includes('fridge') || n.includes('refrig')) return PIXEL_ICONS.fridge;
+    if (n.includes('laptop')) return PIXEL_ICONS.laptop;
+    if (n.includes('mobile') || n.includes('phone')) return PIXEL_ICONS.phone;
+    if (n.includes('heater') || n.includes('geyser')) return PIXEL_ICONS.heater;
+    if (n.includes('micro')) return PIXEL_ICONS.microwave;
+    if (n.includes('stove') || n.includes('induct')) return PIXEL_ICONS.stove;
+    if (n.includes('wifi') || n.includes('router')) return PIXEL_ICONS.wifi;
+    return PIXEL_ICONS.generic;
+}
+
 let chartInstances = [];
 let currentEnergyData = [];
 
@@ -69,7 +236,7 @@ function openEnergyModal() {
         renderBarChart(data);
         renderPieChart(data);
         renderDonutChart(data);
-        renderLineChart(data);
+
         animateNetZeroBar(solarKW, totalMonthlyUnits);
     }, 150);
 }
@@ -118,7 +285,7 @@ function switchModalHouse(houseId) {
         renderBarChart(data);
         renderPieChart(data);
         renderDonutChart(data);
-        renderLineChart(data);
+
         animateNetZeroBar(solarKW, totalMonthlyUnits);
     }, 150);
 }
@@ -133,11 +300,23 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
 
     return '' +
 
-        // ── House Identity Banner ──
-        '<div class="house-banner">' +
-        '<span class="house-banner-icon">🏠</span>' +
-        '<span class="house-banner-title">' + houseName + ' Energy Report</span>' +
-        '<span class="house-banner-sub">Showing appliances for this house only</span>' +
+        // ── School Chalkboard Header ──
+        '<div class="school-header">' +
+        '<div class="sh-chalkboard">' +
+        '<div class="sh-chalk-line"></div>' +
+        '<div class="sh-title-row">' +
+        '<div class="sh-pixel-star">' + PIXEL_ICONS.star + '</div>' +
+        '<div class="sh-title">Energy Learning Dashboard</div>' +
+        '<div class="sh-pixel-star">' + PIXEL_ICONS.star + '</div>' +
+        '</div>' +
+        '<div class="sh-subtitle">' + houseName + ' — Electricity Report Card</div>' +
+        '<div class="sh-chalk-line"></div>' +
+        '</div>' +
+        '<div class="sh-decorations">' +
+        '<div class="sh-deco-item">' + PIXEL_ICONS.bulb + '<span>Learn</span></div>' +
+        '<div class="sh-deco-item">' + PIXEL_ICONS.star + '<span>Explore</span></div>' +
+        '<div class="sh-deco-item">' + PIXEL_ICONS.trophy + '<span>Save</span></div>' +
+        '</div>' +
         '</div>' +
 
         // ── House Switcher (outdoor only) ──
@@ -225,7 +404,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         +
 
         // ═══ SECTION 1: SUMMARY CARDS ═══
-        '<div class="section-label"><span>📋</span> Overview</div>' +
+        '<div class="section-label">' + PIXEL_ICONS.star + ' <span>Overview</span></div>' +
         '<div class="summary-cards">' +
 
         '<div class="s-card blue">' +
@@ -280,14 +459,14 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ═══ SECTION 2: MAIN BAR CHART ═══
-        '<div class="section-label"><span>📊</span> Energy Consumption by Appliance</div>' +
+        '<div class="section-label">' + PIXEL_ICONS.bulb + ' <span>Energy Consumption by Appliance</span></div>' +
         '<div class="section-hint">👆 Click any bar to learn how the calculation works!</div>' +
         '<div class="chart-panel main-chart">' +
         '<div id="chart-bar"></div>' +
         '</div>' +
 
         // ═══ SECTION 3: DISTRIBUTION CHARTS ═══
-        '<div class="section-label"><span>🔍</span> Energy Distribution</div>' +
+        '<div class="section-label">' + PIXEL_ICONS.solar + ' <span>Energy Distribution</span></div>' +
         '<div class="distribution-row">' +
         '<div class="chart-panel half">' +
         '<h3 class="chart-heading">🥧 Energy Share by Appliance</h3>' +
@@ -301,14 +480,10 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
         '</div>' +
 
-        // ── Line Chart ──
-        '<div class="chart-panel main-chart">' +
-        '<h3 class="chart-heading">📈 Energy Growth: Day → Week → Month</h3>' +
-        '<div id="chart-line"></div>' +
-        '</div>' +
+
 
         // ═══ SECTION 4: NET ZERO PANEL ═══
-        '<div class="section-label"><span>🌞</span> Net Zero Energy Goal</div>' +
+        '<div class="section-label">' + PIXEL_ICONS.solar + ' <span>Net Zero Energy Goal</span></div>' +
         '<div class="netzero-panel">' +
         '<div class="nz-stats">' +
         '<div class="nz-stat">' +
@@ -338,7 +513,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
 
         // ── Kids Energy Report Card ──
         '<div class="kids-score-card">' +
-        '<div class="ksc-title">🏆 Your Energy Report Card</div>' +
+        '<div class="ksc-title">' + PIXEL_ICONS.trophy + ' Your Energy Report Card</div>' +
         '<div class="ksc-scores">' +
 
         '<div class="ksc-item">' +
@@ -534,23 +709,30 @@ function renderBarChart(data) {
             theme: 'dark',
             custom: function ({ dataPointIndex }) {
                 const d = data[dataPointIndex];
+                const icon = getAppliancePixelIcon(d.name);
                 const funFacts = [
-                    'This appliance runs like ' + Math.round(d.watt / 10) + ' phone chargers!',
-                    'In a month it uses ' + d.perMonth + ' units — that could charge ' + Math.round(d.perMonth * 83) + ' phones!',
-                    'Saving 1 hour/day saves ' + (d.watt / 1000).toFixed(2) + ' units daily!',
-                    'This costs ₹' + (d.monthlyCost / 30).toFixed(1) + ' every single day!'
+                    'Uses same power as ' + Math.round(d.watts / 10) + ' phone chargers running together',
+                    'In a month uses ' + d.perMonth + ' units — enough to charge ' + Math.round(d.perMonth * 83) + ' phones!',
+                    'Saving 1 hour per day saves ' + (d.watts / 1000).toFixed(2) + ' units daily',
+                    'Costs only \u20b9' + (d.monthlyCost / 30).toFixed(1) + ' every single day'
                 ];
                 const fact = funFacts[dataPointIndex % funFacts.length];
-                return '<div class="energy-tooltip">' +
-                    '<div class="tt-header">' + d.name + ' <span>' + d.watts + 'W</span></div>' +
-                    '<div class="tt-row"><span>⚡ Monthly</span><b>' + d.perMonth + ' kWh</b></div>' +
-                    '<div class="tt-row"><span>📅 Weekly</span><b>' + d.perWeek + ' kWh</b></div>' +
-                    '<div class="tt-row"><span>🕐 Daily</span><b>' + d.perDay + ' kWh</b></div>' +
-                    '<div class="tt-divider"></div>' +
-                    '<div class="tt-cost">💰 ₹' + d.monthlyCost + '/month</div>' +
-                    '<div class="tt-funfact">🤩 ' + fact + '</div>' +
-                    '<div class="tt-hint">👆 Click to learn the maths!</div>' +
-                    '</div>';
+                return `<div class="energy-tooltip">
+                    <div class="tt-header-pixel">
+                        <div class="tt-pixel-icon">${icon}</div>
+                        <div class="tt-header-text">
+                            <div class="tt-name">${d.name}</div>
+                            <div class="tt-watts">${d.watts}W</div>
+                        </div>
+                    </div>
+                    <div class="tt-row"><span>Monthly</span><b>${d.perMonth} kWh</b></div>
+                    <div class="tt-row"><span>Weekly</span><b>${d.perWeek} kWh</b></div>
+                    <div class="tt-row"><span>Daily</span><b>${d.perDay} kWh</b></div>
+                    <div class="tt-divider"></div>
+                    <div class="tt-cost">Cost: Rs.${d.monthlyCost}/month</div>
+                    <div class="tt-funfact">${fact}</div>
+                    <div class="tt-hint">Click to learn the maths!</div>
+                </div>`;
             }
         },
         responsive: [{
@@ -666,42 +848,3 @@ function renderDonutChart(data) {
     chartInstances.push(chart);
 }
 
-// ── 4. LINE CHART ─────────────────────────────
-function renderLineChart(data) {
-    const el = document.getElementById('chart-line');
-    if (!el) return;
-
-    const base = chartBase();
-    const series = data.map(d => ({
-        name: d.name,
-        data: [parseFloat(d.perDay.toFixed(2)), parseFloat(d.perWeek.toFixed(2)), parseFloat(d.perMonth.toFixed(2))]
-    }));
-
-    const config = {
-        ...base,
-        series: series,
-        chart: { ...base.chart, type: 'line', height: 340, zoom: { enabled: false } },
-        stroke: { curve: 'smooth', width: 3 },
-        markers: { size: 7, strokeWidth: 2, strokeColors: '#1a1a2e', hover: { size: 10 } },
-        xaxis: {
-            categories: ['📅 1 Day', '📅 1 Week', '📅 1 Month'],
-            labels: { style: { colors: '#aaa', fontSize: '14px', fontWeight: 600 } }
-        },
-        yaxis: {
-            title: { text: 'Units (kWh)', style: { color: '#777', fontSize: '13px' } },
-            labels: { style: { colors: '#777', fontSize: '12px' }, formatter: v => v.toFixed(1) }
-        },
-        tooltip: {
-            theme: 'dark', shared: true, intersect: false,
-            y: { formatter: v => v.toFixed(2) + ' kWh' }
-        },
-        legend: {
-            position: 'top', labels: { colors: '#bbb' },
-            fontSize: '12px', fontWeight: 500, itemMargin: { horizontal: 10 }
-        }
-    };
-
-    const chart = new ApexCharts(el, config);
-    chart.render();
-    chartInstances.push(chart);
-}
