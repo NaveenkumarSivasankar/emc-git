@@ -66,43 +66,53 @@ function toggleSimpleAppliance(idx, isOn) {
 // ═══════════════════════════════════════════════
 function recalcWattage() {
     let total = 0;
-    if (is2BHK) {
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    if (activeKey === '2bhk') {
         bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
     } else {
         simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
     }
-    const el = document.getElementById('stat-consumption');
-    if (el) el.textContent = total.toLocaleString() + ' W';
+
+    // Fallback if houseState isn't fully initialized yet
+    const currentCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    setText('stat-consumption', total.toLocaleString() + ' W');
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    const statPanels = document.getElementById('stat-panels');
-    if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
+    setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
+
+    const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
     const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
     const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    const statSavings = document.getElementById('stat-savings');
-    if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
-    const statCo2 = document.getElementById('stat-co2');
-    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved + ' kg/yr');
+
     updateBarChart(total, coverageRatio);
 }
 
 function updateBarChart(totalW, coverageRatio) {
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
+
     const solarPct = Math.round(coverageRatio * 100);
     const gridPct = 100 - solarPct;
-    const gridBar = document.getElementById('grid-bar');
-    if (gridBar) { gridBar.style.width = Math.max(gridPct, 5) + '%'; gridBar.textContent = gridPct + '%'; }
-    const solarBar = document.getElementById('solar-bar');
-    if (solarBar) { solarBar.style.width = Math.max(solarPct, 5) + '%'; solarBar.textContent = solarPct + '%'; }
+
+    setWidth('grid-bar', Math.max(gridPct, 5) + '%');
+    setText('grid-bar', gridPct + '%');
+
+    setWidth('solar-bar', Math.max(solarPct, 5) + '%');
+    setText('solar-bar', solarPct + '%');
+
     const dailyKwh = totalW * 8 / 1000;
     const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
     const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
     const monthlyBill = Math.round(gridCostDaily * 30);
-    const calcGrid = document.getElementById('calc-grid');
-    if (calcGrid) calcGrid.textContent = '₹' + gridCostDaily;
-    const calcSolar = document.getElementById('calc-solar');
-    if (calcSolar) calcSolar.textContent = '₹' + solarSavingsDaily;
-    const calcMonthly = document.getElementById('calc-monthly');
-    if (calcMonthly) calcMonthly.textContent = '₹' + monthlyBill;
+
+    setText('calc-grid', '₹' + gridCostDaily);
+    setText('calc-solar', '₹' + solarSavingsDaily);
+    setText('calc-monthly', '₹' + monthlyBill);
 }
 
 // ═══════════════════════════════════════════════
@@ -196,14 +206,15 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-22, 4, 0);
-        camera.position.set(-22, 20, 35);
+        controls.target.set(-22, 4, -4);
+        camera.position.set(-22, 20, 31);
     } else {
         is2BHK = true;
-        controls.target.set(24, 4, 0);
-        camera.position.set(24, 20, 35);
+        controls.target.set(24, 4, -4);
+        camera.position.set(24, 20, 31);
     }
     controls.update();
+    if (typeof positionSolarPanels === 'function') positionSolarPanels();
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
@@ -275,8 +286,9 @@ function zoomToRoom(roomName) {
 
     document.getElementById('back-btn').classList.add('visible');
     document.querySelectorAll('.room-nav-btn').forEach(btn => btn.classList.remove('active'));
-    if (event && event.target) {
-        const btn = event.target.closest('.room-nav-btn');
+    const evt = (typeof event !== 'undefined') ? event : null;
+    if (evt && evt.target) {
+        const btn = evt.target.closest('.room-nav-btn');
         if (btn) btn.classList.add('active');
     }
 }
@@ -303,7 +315,38 @@ function toggleRoomNav() {
 }
 
 // ═══════════════════════════════════════════════
-//  FIX 4: ROOM ENTRY POPUP HUD
+//  STREET OVERVIEW RESET
+// ═══════════════════════════════════════════════
+function resetToStreetOverview() {
+    // Reset camera to standard overview
+    if (typeof camera !== 'undefined' && typeof controls !== 'undefined') {
+        camera.position.set(0, 20, 40);
+        controls.target.set(0, 4, 0);
+        controls.update();
+    }
+
+    // Hide house-specific UI elements
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) backBtn.classList.remove('visible');
+
+    const roomIndicator = document.getElementById('room-indicator');
+    if (roomIndicator) roomIndicator.classList.remove('visible');
+
+    const enterPrompt = document.getElementById('enter-prompt');
+    if (enterPrompt) enterPrompt.classList.remove('visible');
+
+    // Close panels if open
+    const roomNav = document.getElementById('room-nav-panel');
+    if (roomNav) roomNav.classList.remove('visible');
+
+    // Ensure all houses are visible and environment is visible
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = true;
+    if (typeof bhk2Group !== 'undefined') bhk2Group.visible = true;
+    if (typeof houseGroup !== 'undefined') houseGroup.visible = true;
+}
+
+// ═══════════════════════════════════════════════
+//  ROOM ENTRY POPUP HUD
 //  Glassmorphism popup when character enters a room
 // ═══════════════════════════════════════════════
 let roomPopupEl = null;
@@ -379,7 +422,7 @@ function hideRoomPopup() {
 }
 
 // ═══════════════════════════════════════════════
-//  FIX 5: SOLAR PANEL HOUSE SELECTOR MODAL
+//  SOLAR PANEL HOUSE SELECTOR MODAL
 // ═══════════════════════════════════════════════
 let solarSelectorEl = null;
 
@@ -394,9 +437,9 @@ function createSolarSelector() {
         '<h2 class="ssm-title">☀️ Select Solar Installation</h2>' +
         '<p class="ssm-subtitle">Choose which house to install solar panels on</p>' +
         '<div class="ssm-buttons">' +
-        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouse(\'1bhk\')">🏠 1BHK House</button>' +
-        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouse(\'2bhk\')">🏢 2BHK House</button>' +
-        '<button class="ssm-btn ssm-both" onclick="selectSolarHouse(\'both\')">🏘️ Both Houses</button>' +
+        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouseUI(\'1bhk\')">🏠 1BHK House</button>' +
+        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouseUI(\'2bhk\')">🏢 2BHK House</button>' +
+        '<button class="ssm-btn ssm-both" onclick="selectSolarHouseUI(\'both\')">🏘️ Both Houses</button>' +
         '</div>' +
         '<button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>' +
         '</div>';
@@ -414,11 +457,17 @@ function closeSolarSelector() {
 
 let solarTarget = null; // '1bhk', '2bhk', 'both'
 
-function selectSolarHouse(target) {
+// NOTE: selectSolarHouse is defined in solar.js — do NOT redefine here
+// This was previously causing a conflict/freeze. The solar.js version
+// handles per-house solar state (houseState) correctly.
+function selectSolarHouseUI(target) {
     solarTarget = target;
     closeSolarSelector();
-    // Now actually toggle solar with the selected target
-    performSolarToggle(target);
+    // Delegate to the solar.js selectSolarHouse
+    if (typeof selectSolarHouse === 'function') {
+        selectSolarHouse(target === 'both' ? '1bhk' : target);
+        if (target === 'both') selectSolarHouse('2bhk');
+    }
 }
 
 function performSolarToggle(target) {
@@ -441,7 +490,7 @@ function performSolarToggle(target) {
 }
 
 // ═══════════════════════════════════════════════
-//  FIX 6: DYNAMIC ENERGY DATA (live updating)
+//  DYNAMIC ENERGY DATA (live updating)
 // ═══════════════════════════════════════════════
 const dynamicEnergy = {
     sessionStart: Date.now(),
@@ -488,7 +537,7 @@ function updateDynamicEnergy() {
     const elCumulative = document.getElementById('stat-cumulative');
     if (elCumulative) elCumulative.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
 
-    // Track per-appliance duration for analytics (FIX 8)
+    // Track per-appliance duration for analytics
     if (typeof trackApplianceDuration === 'function') trackApplianceDuration();
 }
 
@@ -498,7 +547,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  FIX 7: FLOOR SELECTOR FOR 2BHK
+//  FLOOR SELECTOR FOR 2BHK
 // ═══════════════════════════════════════════════
 let current2BHKFloor = 1;
 
@@ -548,7 +597,7 @@ function selectFloor(floorNum) {
 }
 
 // ═══════════════════════════════════════════════
-//  FIX 8: GAMIFIED TASK LIST & SAVINGS MODE
+//  GAMIFIED TASK LIST & SAVINGS MODE
 // ═══════════════════════════════════════════════
 const savingsBaseline = {
     totalWatts: 3500,

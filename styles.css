@@ -652,9 +652,12 @@ canvas {
 }
 
 @keyframes roomPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 4px 30px rgba(68, 170, 255, 0.3), 0 0 60px rgba(68, 170, 255, 0.1);
     }
+
     50% {
         box-shadow: 0 4px 40px rgba(68, 170, 255, 0.5), 0 0 80px rgba(68, 170, 255, 0.2);
     }
@@ -757,6 +760,96 @@ canvas {
 
 #focus-2bhk-btn:hover {
     transform: translateY(-2px) scale(1.05);
+}
+
+/* ── 3D Exit Button (Scene) ────────────────────────── */
+.exit-scene-btn {
+    background: linear-gradient(135deg, #ff4757, #ff6b81);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 30px;
+    font-family: 'Outfit', sans-serif;
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    box-shadow: 0 4px 15px rgba(255, 71, 87, 0.4);
+    cursor: pointer;
+    pointer-events: auto;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    z-index: 1000;
+}
+
+.exit-scene-btn:hover {
+    transform: scale(1.15) translateY(-2px);
+    background: linear-gradient(135deg, #ff6b81, #ff4757);
+    box-shadow: 0 8px 25px rgba(255, 71, 87, 0.6);
+    border-color: #fff;
+}
+
+.exit-scene-btn::before {
+    content: '🚪';
+    font-size: 1.1rem;
+}
+
+/* ═══════════════════════════════════════════════
+           SOLAR SELECTION MODAL
+           ═══════════════════════════════════════════════ */
+#solar-selection-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#solar-selection-modal.modal-hidden {
+    display: none !important;
+}
+
+.modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    position: relative;
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+    z-index: 1;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255, 71, 87, 0.15);
+    color: #ff4757;
 }
 
 /* ═══════════════════════════════════════════════
@@ -1639,4 +1732,673 @@ canvas {
     #graph-overlay.visible {
         display: block;
     }
+}
+
+/* ═══════════════════════════════════════════════
+   CONTROLS HINT OVERLAY
+   ═══════════════════════════════════════════════ */
+#controls-overlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 50;
+    padding: 14px 18px;
+    background: rgba(10, 10, 30, 0.75);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    font-family: 'Outfit', sans-serif;
+    color: #fff;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+    user-select: none;
+}
+
+#controls-overlay .controls-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #FFD700;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+#controls-overlay .controls-arrows {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+#controls-overlay .key-row {
+    display: flex;
+    gap: 4px;
+}
+
+#controls-overlay .key {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 34px;
+    height: 34px;
+    padding: 0 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+#controls-overlay .key.wide {
+    min-width: 50px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+#controls-overlay .controls-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+#controls-overlay .key-label {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: 500;
+}
+
+/* ═══════════════════════════════════════════════
+   ADD SOLAR BUTTON ON HOUSE
+   ═══════════════════════════════════════════════ */
+.add-solar-btn {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    background: linear-gradient(135deg, #f39c12, #f1c40f);
+    color: #1a1a2e;
+    box-shadow: 0 4px 16px rgba(241, 196, 15, 0.4);
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.add-solar-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+    box-shadow: 0 6px 24px rgba(241, 196, 15, 0.6);
+}
+
+/* ── House Banner (Energy Modal) ────────────────────────── */
+.house-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: linear-gradient(135deg, rgba(91, 141, 239, 0.18), rgba(46, 204, 139, 0.12));
+    border: 1px solid rgba(91, 141, 239, 0.3);
+    border-radius: 14px;
+    padding: 14px 20px;
+    margin-bottom: 20px;
+}
+
+.house-banner-icon {
+    font-size: 2rem;
+}
+
+.house-banner-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+
+.house-banner-sub {
+    font-size: 0.82rem;
+    color: #888;
+    margin-left: auto;
+}
+
+/* ── House Switcher ── */
+.house-switcher {
+    margin-bottom: 22px;
+}
+
+.hs-label {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.9rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.hs-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+}
+
+.hs-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px 28px;
+    border-radius: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.05);
+    color: #aaa;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(.34, 1.56, .64, 1);
+    min-width: 110px;
+}
+
+.hs-tab:hover {
+    transform: translateY(-4px) scale(1.04);
+    border-color: rgba(91, 141, 239, 0.5);
+    background: rgba(91, 141, 239, 0.12);
+    color: #fff;
+}
+
+.hs-tab-active {
+    background: linear-gradient(135deg, #5B8DEF 0%, #2ECC8B 100%);
+    border-color: transparent;
+    color: #fff;
+    transform: translateY(-4px) scale(1.06);
+    box-shadow: 0 8px 24px rgba(91, 141, 239, 0.35);
+}
+
+.hs-tab-icon {
+    font-size: 2rem;
+}
+
+.hs-tab-name {
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
+.hs-tab-sub {
+    font-size: 0.75rem;
+    opacity: 0.8;
+}
+
+.hs-vs {
+    font-size: 1.1rem;
+    font-weight: 900;
+    color: #FFD700;
+    background: rgba(255, 215, 0, 0.1);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 50%;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ── Kids Comparison ── */
+.kids-compare {
+    background: linear-gradient(135deg, rgba(30, 30, 60, 0.9), rgba(20, 20, 45, 0.95));
+    border: 2px solid rgba(255, 215, 0, 0.25);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 24px;
+    animation: slideDown 0.4s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-16px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.kc-title {
+    text-align: center;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #FFD700;
+    margin-bottom: 20px;
+    letter-spacing: 0.5px;
+}
+
+.kc-houses {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.kc-house {
+    flex: 1;
+    min-width: 130px;
+    max-width: 180px;
+    border-radius: 16px;
+    padding: 18px 14px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.kc-house:hover {
+    transform: scale(1.04);
+}
+
+.kc-winner {
+    background: linear-gradient(135deg, rgba(46, 204, 139, 0.18), rgba(46, 204, 139, 0.08));
+    border: 2px solid rgba(46, 204, 139, 0.4);
+}
+
+.kc-loser {
+    background: linear-gradient(135deg, rgba(255, 107, 107, 0.18), rgba(255, 107, 107, 0.08));
+    border: 2px solid rgba(255, 107, 107, 0.35);
+}
+
+.kc-house-icon {
+    font-size: 2.4rem;
+    margin-bottom: 6px;
+}
+
+.kc-house-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.kc-house-units {
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: #FFD700;
+    margin: 6px 0;
+}
+
+.kc-house-units small {
+    font-size: 0.7rem;
+    color: #aaa;
+    font-weight: 400;
+}
+
+.kc-house-bill {
+    font-size: 0.9rem;
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+.kc-badge {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: inline-block;
+}
+
+.kc-vs-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.kc-vs-text {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #FFD700;
+    background: rgba(255, 215, 0, 0.12);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 50%;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.kc-diff {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 8px 12px;
+}
+
+.kc-diff-label {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.kc-diff-value {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #FF6B6B;
+}
+
+.kc-bar-label {
+    font-size: 0.85rem;
+    color: #aaa;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.kc-bar-track {
+    display: flex;
+    height: 36px;
+    border-radius: 18px;
+    overflow: hidden;
+    margin-bottom: 14px;
+}
+
+.kc-bar-fill {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    transition: width 1s cubic-bezier(.34, 1.56, .64, 1);
+}
+
+.kc-bar-1bhk {
+    background: linear-gradient(90deg, #5B8DEF, #818CF8);
+}
+
+.kc-bar-2bhk {
+    background: linear-gradient(90deg, #F5A623, #FF6B6B);
+}
+
+.kc-fun-fact {
+    background: rgba(255, 215, 0, 0.08);
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 0.88rem;
+    color: #ddd;
+    text-align: center;
+}
+
+/* ── Tooltip fun fact ── */
+.tt-funfact {
+    background: rgba(255, 215, 0, 0.1);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 0.78rem;
+    color: #FFD700;
+    margin-top: 6px;
+}
+
+/* ── Energy Report Card ── */
+.kids-score-card {
+    background: linear-gradient(135deg, rgba(30, 30, 60, 0.9), rgba(20, 20, 45, 0.95));
+    border: 2px solid rgba(255, 215, 0, 0.2);
+    border-radius: 20px;
+    padding: 24px;
+    margin-top: 28px;
+    animation: slideDown 0.5s ease;
+}
+
+.ksc-title {
+    text-align: center;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #FFD700;
+    margin-bottom: 18px;
+}
+
+.ksc-scores {
+    display: flex;
+    gap: 14px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.ksc-item {
+    flex: 1;
+    min-width: 120px;
+    max-width: 160px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 16px 12px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: transform 0.2s;
+}
+
+.ksc-item:hover {
+    transform: translateY(-4px);
+}
+
+.ksc-icon {
+    font-size: 1.8rem;
+    margin-bottom: 6px;
+}
+
+.ksc-label {
+    font-size: 0.75rem;
+    color: #888;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.ksc-value {
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+}
+
+.ksc-grade {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 10px;
+    display: inline-block;
+}
+
+.grade-a {
+    background: rgba(46, 204, 139, 0.2);
+    color: #2ECC8B;
+}
+
+.grade-b {
+    background: rgba(245, 166, 35, 0.2);
+    color: #F5A623;
+}
+
+.grade-c {
+    background: rgba(255, 107, 107, 0.2);
+    color: #FF6B6B;
+}
+
+.grade-info {
+    background: rgba(91, 141, 239, 0.2);
+    color: #5B8DEF;
+}
+
+.ksc-tip {
+    text-align: center;
+    font-size: 0.85rem;
+    color: #aaa;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+
+/* ── Learning Panel Output Transition ── */
+#ls-steps-output {
+    transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* ── Learning Panel Inputs ── */
+.ls-inputs {
+    display: flex;
+    gap: 14px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.ls-input-group {
+    flex: 1;
+    min-width: 120px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 14px;
+    padding: 12px 14px;
+}
+
+.ls-input-label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #aaa;
+    margin-bottom: 8px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.ls-input-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ls-input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1.5px solid rgba(91, 141, 239, 0.4);
+    border-radius: 10px;
+    color: #FFD700;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-align: center;
+    padding: 6px 4px;
+    outline: none;
+    width: 100%;
+    font-family: 'Outfit', sans-serif;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.ls-input:focus {
+    border-color: #5B8DEF;
+    box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.2);
+    background: rgba(91, 141, 239, 0.1);
+}
+
+/* Remove number input arrows */
+.ls-input::-webkit-inner-spin-button,
+.ls-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+}
+
+.ls-input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.ls-spin {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.ls-spin:hover {
+    background: rgba(91, 141, 239, 0.25);
+    border-color: rgba(91, 141, 239, 0.5);
+    transform: scale(1.1);
+}
+
+.ls-spin:active {
+    transform: scale(0.95);
+}
+
+/* ── Energy Badge ── */
+.ls-energy-badge {
+    display: inline-block;
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    margin-bottom: 16px;
+}
+
+.eb-green {
+    background: rgba(46, 204, 139, 0.15);
+    color: #2ECC8B;
+    border: 1px solid rgba(46, 204, 139, 0.3);
+}
+
+.eb-yellow {
+    background: rgba(245, 166, 35, 0.15);
+    color: #F5A623;
+    border: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.eb-orange {
+    background: rgba(251, 146, 60, 0.15);
+    color: #FB923C;
+    border: 1px solid rgba(251, 146, 60, 0.3);
+}
+
+.eb-red {
+    background: rgba(255, 107, 107, 0.15);
+    color: #FF6B6B;
+    border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* ── Step tips ── */
+.ls-tip {
+    font-size: 0.76rem;
+    color: #888;
+    margin-top: 6px;
+    font-style: italic;
+}
+
+/* ── Fun compare block ── */
+.ls-fun-compare {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.08), rgba(255, 215, 0, 0.04));
+    border: 1px solid rgba(255, 215, 0, 0.2);
+    border-radius: 14px;
+    padding: 14px 16px;
+    margin-top: 16px;
+}
+
+.ls-fc-title {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #FFD700;
+    margin-bottom: 10px;
+}
+
+.ls-fc-row {
+    font-size: 0.82rem;
+    color: #ccc;
+    margin-bottom: 6px;
+    padding-left: 4px;
+}
+
+.ls-fc-row b {
+    color: #fff;
 }

@@ -49,15 +49,8 @@ const DEFAULT_HOURS = {
     'AC': 8,
     'Television': 5,
     'Wash Basin Tap': 0.5,
-    'Refrigerator': 24,
-    'Microwave': 0.5,
-    'Induction Stove': 2,
     'Water Purifier': 24,
-    'Table Fan': 6,
     'Laptop Charger': 8,
     'Mobile Charger': 12,
-    'Water Heater': 1,
-    'Mixer Grinder': 0.5,
-    'WiFi Router': 24,
     'Charging Port': 6
 };
