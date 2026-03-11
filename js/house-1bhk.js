@@ -166,20 +166,26 @@ window.load1BHKFurniture = function () {
     // ═══════════════════════════════════════════════
     const partWallMat1BHK = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
 
-    // Horizontal partition separating front rooms from bedroom at z=-5
-    const pw1 = new THREE.Mesh(new THREE.BoxGeometry(W - 0.4, H, 0.2), partWallMat1BHK);
-    pw1.position.set(0, H / 2 + 0.3, -5); pw1.castShadow = true; houseGroup.add(pw1);
+    // Horizontal partition at z=-5 — door gap at x=2 (gap: x=1.1 to x=2.9, width=1.8)
+    // Left segment: x = -13.8 to 1.1 → center = -6.35, width = 14.9
+    const pw1a = new THREE.Mesh(new THREE.BoxGeometry(14.9, H, 0.2), partWallMat1BHK);
+    pw1a.position.set(-6.35, H / 2 + 0.3, -5); pw1a.castShadow = true; houseGroup.add(pw1a);
+    // Right segment: x = 2.9 to 13.8 → center = 8.35, width = 10.9
+    const pw1b = new THREE.Mesh(new THREE.BoxGeometry(10.9, H, 0.2), partWallMat1BHK);
+    pw1b.position.set(8.35, H / 2 + 0.3, -5); pw1b.castShadow = true; houseGroup.add(pw1b);
+    const pw1 = pw1a;
 
-    // Vertical partition separating hall from kitchen at x=-4
-    const kitchenDepth = D / 2 - 5;  // from z=-5 to z=D/2
-    const pw2 = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, kitchenDepth), partWallMat1BHK);
-    pw2.position.set(-4, H / 2 + 0.3, -5 + kitchenDepth / 2); pw2.castShadow = true; houseGroup.add(pw2);
+    // Vertical partition at x=-4 — door gap at z=3 (gap: z=2.1 to z=3.9, width=1.8)
+    const kitchenDepth = D / 2 - 5;
+    // Bottom segment: z = -5 to 2.1 → center z = -1.45, depth = 7.1
+    const pw2a = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, 7.1), partWallMat1BHK);
+    pw2a.position.set(-4, H / 2 + 0.3, -1.45); pw2a.castShadow = true; houseGroup.add(pw2a);
+    // Top segment: z = 3.9 to 11 → center z = 7.45, depth = 7.1
+    const pw2b = new THREE.Mesh(new THREE.BoxGeometry(0.2, H, 7.1), partWallMat1BHK);
+    pw2b.position.set(-4, H / 2 + 0.3, 7.45); pw2b.castShadow = true; houseGroup.add(pw2b);
+    const pw2 = pw2a;
 
-    // Room doors (interactive — swing open on approach)
-    // Bedroom door at z=-5, x=5
-    createInteractiveDoor(houseGroup, 5, 2.2, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, -22, 0);
-    // Kitchen door at x=-4, z=3
-    createInteractiveDoor(houseGroup, -4, 2.2, 3, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, -22, 0);
+    // Room doors are created in interiors.js initInteriors() — no duplicates here
 
     // Room floor tiles
     // Hall: x=-4 to W/2, z=-5 to D/2

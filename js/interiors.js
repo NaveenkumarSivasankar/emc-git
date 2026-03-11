@@ -70,24 +70,8 @@ function initPartitionRefs() {
 }
 
 function updateRoomTransparency() {
-    if (boyState.insideHouse === '1bhk') {
-        // Make ALL partition walls transparent so rooms are clearly visible
-        bhk1PartitionRooms.forEach(p => {
-            if (!p.mesh) return;
-            const targetOpacity = 0.1;
-            p.mesh.material.transparent = true;
-            p.mesh.material.opacity += (targetOpacity - p.mesh.material.opacity) * 0.1;
-            p.mesh.material.needsUpdate = true;
-        });
-    } else if (boyState.insideHouse === '2bhk') {
-        // Make ALL 2BHK partition walls transparent so rooms are clearly visible
-        bhk2PartWalls.forEach((mesh, i) => {
-            const targetOpacity = 0.1;
-            mesh.material.transparent = true;
-            mesh.material.opacity += (targetOpacity - mesh.material.opacity) * 0.1;
-            mesh.material.needsUpdate = true;
-        });
-    }
+    // Partition walls stay SOLID — no transparency
+    // Doors provide the visual openings between rooms
 }
 
 // ═══════════════════════════════════════════════
@@ -136,19 +120,17 @@ function initFurnitureCollision() {
     // Wall thickness = 0.15 (half = 0.15)
     const wt = 0.15;
 
-    // pw1: horizontal wall at z=-5, x from -14 to 14 (W=28)
-    // Door gap at local x=5, gap width=3 (x: 3.5 to 6.5)
-    // Segment left: x=-14 to 3.5
-    addCollisionBox(furnitureBoxes1BHK, -5.475, -5, 8.525, wt, ox1, oz1);
-    // Segment right: x=6.5 to 14
-    addCollisionBox(furnitureBoxes1BHK, 10.475, -5, 3.525, wt, ox1, oz1);
+    // pw1: horizontal wall at z=-5, door gap at x=2 (gap: x=1.1 to 2.9)
+    // Segment left: x=-13.8 to 1.1
+    addCollisionBox(furnitureBoxes1BHK, -6.35, -5, 7.45, wt, ox1, oz1);
+    // Segment right: x=2.9 to 13.8
+    addCollisionBox(furnitureBoxes1BHK, 8.35, -5, 5.45, wt, ox1, oz1);
 
-    // pw2: vertical wall at x=-4, z from -5 to 11 (kitchenDepth=16)
-    // Door gap at local z=3, gap width=3 (z: 1.5 to 4.5)
-    // Segment bottom: z=-5 to 1.5
-    addCollisionBox(furnitureBoxes1BHK, -4, -1.975, wt, 3.025, ox1, oz1);
-    // Segment top: z=4.5 to 11
-    addCollisionBox(furnitureBoxes1BHK, -4, 7.975, wt, 3.025, ox1, oz1);
+    // pw2: vertical wall at x=-4, door gap at z=3 (gap: z=2.1 to 3.9)
+    // Segment bottom: z=-5 to 2.1
+    addCollisionBox(furnitureBoxes1BHK, -4, -1.45, wt, 3.55, ox1, oz1);
+    // Segment top: z=3.9 to 11
+    addCollisionBox(furnitureBoxes1BHK, -4, 7.45, wt, 3.55, ox1, oz1);
 
     // 2BHK furniture (local coords, bhk2Group at 24, 0)
     const ox2 = 24, oz2 = -4;
@@ -175,31 +157,29 @@ function initFurnitureCollision() {
 
     // ── 2BHK WALL SEGMENTS (partition walls with door gaps) ──
 
-    // Wall 1: horizontal at z=-5, full width (x=-14 to 14)
-    // Door gap at x=-5 (Bedroom1 door, x: -6.5 to -3.5) and x=5 (Bedroom2 door, x: 3.5 to 6.5)
-    // Segment 1: x=-14 to -6.5
-    addCollisionBox(furnitureBoxes2BHK, -10.475, -5, 3.525, wt, ox2, oz2);
-    // Segment 3: x=6.5 to 14
-    addCollisionBox(furnitureBoxes2BHK, 10.475, -5, 3.525, wt, ox2, oz2);
-
-    // NOTE: Main front door collision boxes REMOVED — entry/exit is gated
-    // by ENTER/ESCAPE key prompts, so blocking movement at doorways is
-    // unnecessary and was causing the "stuck after entering" bug.
+    // Wall 1: horizontal at z=-5
+    // Door gap at x=-5 (Bed1, gap: -5.9 to -4.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+    // Segment 1: x=-14 to -5.9
+    addCollisionBox(furnitureBoxes2BHK, -9.85, -5, 3.95, wt, ox2, oz2);
+    // Segment 2: x=-4.1 to 8.1
+    addCollisionBox(furnitureBoxes2BHK, 2, -5, 6.1, wt, ox2, oz2);
+    // Segment 3: x=9.9 to 14
+    addCollisionBox(furnitureBoxes2BHK, 11.85, -5, 1.95, wt, ox2, oz2);
 
     // Wall 2: vertical at x=0, z=-12 to -5 (between bedrooms, NO door)
     addCollisionBox(furnitureBoxes2BHK, 0, -8.5, wt, 3.5, ox2, oz2);
 
-    // Wall 3: vertical at x=-5, z=-5 to 12 (Hall/Kitchen/Bath separator)
-    // Door gap at z=-1 (Kitchen door, z: -2.5 to 0.5) and z=7 (Bathroom door, z: 5.5 to 8.5)
-    // Segment 1: z=-5 to -2.5
-    addCollisionBox(furnitureBoxes2BHK, -5, -3.975, wt, 1.025, ox2, oz2);
-    // Segment 2: z=0.5 to 5.5
-    addCollisionBox(furnitureBoxes2BHK, -5, 3.0, wt, 2.05, ox2, oz2);
-    // Segment 3: z=8.5 to 12
-    addCollisionBox(furnitureBoxes2BHK, -5, 10.475, wt, 1.525, ox2, oz2);
+    // Wall 3: vertical at x=-5 (Hall/Kitchen/Bath)
+    // Door gap at z=-1 (Kitchen, gap: -1.9 to -0.1) and z=7 (Bathroom, gap: 6.1 to 7.9)
+    // Segment 1: z=-5 to -1.9
+    addCollisionBox(furnitureBoxes2BHK, -5, -3.45, wt, 1.55, ox2, oz2);
+    // Segment 2: z=-0.1 to 6.1
+    addCollisionBox(furnitureBoxes2BHK, -5, 3, wt, 3.1, ox2, oz2);
+    // Segment 3: z=7.9 to 12
+    addCollisionBox(furnitureBoxes2BHK, -5, 9.95, wt, 2.05, ox2, oz2);
 
-    // Wall 4: horizontal at z=3, x=-14 to -5 (Kitchen/Bathroom separator, NO door)
-    // addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2); // Removed to allow free transitions
+    // Wall 4: horizontal at z=3 (Kitchen/Bathroom separator, solid)
+    addCollisionBox(furnitureBoxes2BHK, -9.5, 3, 4.5, wt, ox2, oz2);
 
     // ── OUTER WALL COLLISION BOXES (prevent escaping house) ──
     const owt = 0.4; // outer wall half-thickness
@@ -292,6 +272,7 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
     const doorMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a2e10, roughness: 0.6 });
     const handleMat2 = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.9, roughness: 0.2 });
+    const wallFillMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
 
     // Pivot group positioned at hinge edge
     const pivot = new THREE.Group();
@@ -313,6 +294,23 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
     const frameTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.28), frameMat);
     frameTop.position.set(-hingeOffset.x, y + 1.85, -hingeOffset.z);
     pivot.add(frameTop);
+
+    // ── TRANSOM (wall above door to fill gap to ceiling) ──
+    // Door top: y + 1.85 + 0.075 ≈ y + 1.93 = ~4.0
+    // Wall top: H/2 + 0.3 + H/2 = 7.3 (H=7)
+    const transomH = 3.3; // from ~4.0 to ~7.3
+    const transom = new THREE.Mesh(new THREE.BoxGeometry(1.8, transomH, 0.22), wallFillMat);
+    transom.position.set(x, y + 1.93 + transomH / 2, z);
+    parent.add(transom);
+
+    // ── SIDE FRAME POSTS (fill 0.15 gap on each side, full height) ──
+    const sideH = y + 1.85; // from floor to frame top
+    const sidePostL = new THREE.Mesh(new THREE.BoxGeometry(0.15, sideH, 0.22), frameMat);
+    sidePostL.position.set(x - 0.825, sideH / 2, z);
+    parent.add(sidePostL);
+    const sidePostR = new THREE.Mesh(new THREE.BoxGeometry(0.15, sideH, 0.22), frameMat);
+    sidePostR.position.set(x + 0.825, sideH / 2, z);
+    parent.add(sidePostR);
 
     // Store base rotation for animation
     pivot.userData.baseRY = ry || 0;
@@ -401,9 +399,9 @@ function initInteriors() {
     const ox2 = 24, oz2 = -4;
 
     // 1BHK interior doors (in partition walls)
-    // Bedroom door (in horizontal wall at z=-5, gap at local x≈5)
+    // Bedroom door (in horizontal wall at z=-5, gap at local x≈2)
     if (typeof houseGroup !== 'undefined') {
-        createInteractiveDoor(houseGroup, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox1, oz1);
+        createInteractiveDoor(houseGroup, 2, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox1, oz1);
         // Kitchen door (in vertical wall at x=-4, gap at local z≈3)
         createInteractiveDoor(houseGroup, -4, 2.05, 3, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox1, oz1);
     }
@@ -412,8 +410,8 @@ function initInteriors() {
     if (typeof bhk2Group !== 'undefined') {
         // Bedroom 1 door (horizontal wall z=-5, gap at local x≈-5)
         createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
-        // Bedroom 2 door (horizontal wall z=-5, gap at local x≈5)
-        createInteractiveDoor(bhk2Group, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
+        // Bedroom 2 door (horizontal wall z=-5, gap at local x≈9, moved away from TV)
+        createInteractiveDoor(bhk2Group, 9, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
         // Kitchen door (vertical wall x=-5, gap at local z≈-1)
         createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox2, oz2);
         // Bathroom door (vertical wall x=-5, gap at local z≈7)

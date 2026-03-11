@@ -3,30 +3,41 @@
 // ═══════════════════════════════════════════════
 const boyGroup = new THREE.Group();
 
-// ── MATERIALS ──
+// ── MATERIALS (School Uniform) ──
 const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDBCB4, roughness: 0.7 });
-const hairMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
-const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.65 });
-const pantsMat = new THREE.MeshStandardMaterial({ color: 0x37474F, roughness: 0.8 });
-const shoeMat = new THREE.MeshStandardMaterial({ color: 0xE53935, roughness: 0.6 });
-const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.5 });
+const hairMat = new THREE.MeshStandardMaterial({ color: 0x1a0f05, roughness: 0.85 });
+const shirtMat = new THREE.MeshStandardMaterial({ color: 0xFAFAFA, roughness: 0.55 }); // White school shirt
+const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1a2744, roughness: 0.75 }); // Navy blue school pants
+const shoeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.15 }); // Black polished shoes
+const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 });
 const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 });
 const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
-const tshirtStripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.65 });
+const tieMat = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.5 }); // Red school tie
+const collarMat = new THREE.MeshStandardMaterial({ color: 0xF0F0F0, roughness: 0.5 });
+const backpackMat = new THREE.MeshStandardMaterial({ color: 0x2244AA, roughness: 0.7 }); // Blue backpack
+const backpackStrapMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
 
 // ── HEAD ──
 const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), skinMat);
 head.position.y = 2.1; head.castShadow = true; boyGroup.add(head);
 
-// Hair (main cap + side tufts)
-const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 16), hairMat);
-hairMain.position.y = 2.22; hairMain.scale.set(1.04, 0.72, 1.04); boyGroup.add(hairMain);
-const hairFringe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 0.14), hairMat);
-hairFringe.position.set(0, 2.14, 0.27); boyGroup.add(hairFringe);
-const hairSideL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
-hairSideL.position.set(-0.3, 2.1, 0); boyGroup.add(hairSideL);
-const hairSideR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
-hairSideR.position.set(0.3, 2.1, 0); boyGroup.add(hairSideR);
+// Hair (short neat school haircut — smooth cap with textured top)
+const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 20), hairMat);
+hairMain.position.y = 2.22; hairMain.scale.set(1.05, 0.75, 1.08); boyGroup.add(hairMain);
+// Top volume layer for fullness
+const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), hairMat);
+hairTop.position.set(0, 2.32, -0.03); hairTop.scale.set(1.1, 0.5, 1.0); boyGroup.add(hairTop);
+// Front fringe (neat, slightly swept right)
+const hairFringe = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.05, 0.14), hairMat);
+hairFringe.position.set(0.02, 2.18, 0.26); hairFringe.rotation.z = -0.05; boyGroup.add(hairFringe);
+// Side coverage (covers above ears naturally)
+const hairSideL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hairMat);
+hairSideL.position.set(-0.28, 2.15, 0.05); hairSideL.scale.set(0.5, 0.8, 0.7); boyGroup.add(hairSideL);
+const hairSideR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hairMat);
+hairSideR.position.set(0.28, 2.15, 0.05); hairSideR.scale.set(0.5, 0.8, 0.7); boyGroup.add(hairSideR);
+// Back hair cover
+const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.30, 12, 12), hairMat);
+hairBack.position.set(0, 2.15, -0.18); hairBack.scale.set(1.1, 0.7, 0.5); boyGroup.add(hairBack);
 
 // Eyes (white + dark pupil)
 const leftEyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeWhiteMat);
@@ -38,63 +49,90 @@ rightEyeWhite.position.set(0.11, 2.12, 0.27); boyGroup.add(rightEyeWhite);
 const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
 rightEye.position.set(0.11, 2.12, 0.30); boyGroup.add(rightEye);
 
-// Mouth
+// Mouth (slight smile)
 const mouthMat = new THREE.MeshStandardMaterial({ color: 0xCC6666, roughness: 0.4 });
-const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.025, 0.03), mouthMat);
+const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), mouthMat);
 mouth.position.set(0, 1.97, 0.30); boyGroup.add(mouth);
 
 // Nose
-const nose = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 6), skinMat);
+const nose = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 6), skinMat);
 nose.position.set(0, 2.04, 0.33); nose.rotation.x = -Math.PI / 2; boyGroup.add(nose);
 
-// Ears (small, natural)
-const earGeo = new THREE.SphereGeometry(0.04, 8, 8);
-const leftEar = new THREE.Mesh(earGeo, skinMat);
-leftEar.position.set(-0.30, 2.10, 0.05); leftEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(leftEar);
-const rightEar = new THREE.Mesh(earGeo, skinMat);
-rightEar.position.set(0.30, 2.10, 0.05); rightEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(rightEar);
+// Ears (natural rounded, flush against head)
+const earMat = new THREE.MeshStandardMaterial({ color: 0xF0B0A0, roughness: 0.7 });
+const leftEar = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), earMat);
+leftEar.position.set(-0.32, 2.08, 0.02); leftEar.scale.set(0.35, 0.55, 0.45); boyGroup.add(leftEar);
+const rightEar = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), earMat);
+rightEar.position.set(0.32, 2.08, 0.02); rightEar.scale.set(0.35, 0.55, 0.45); boyGroup.add(rightEar);
 
-// Eyebrows
-const browMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
-const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
-leftBrow.position.set(-0.11, 2.19, 0.29); boyGroup.add(leftBrow);
-const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
-rightBrow.position.set(0.11, 2.19, 0.29); boyGroup.add(rightBrow);
+// Eyebrows (thicker, slightly arched)
+const browMat = new THREE.MeshStandardMaterial({ color: 0x1a0f05, roughness: 0.9 });
+const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.035), browMat);
+leftBrow.position.set(-0.11, 2.20, 0.28); leftBrow.rotation.z = 0.1; boyGroup.add(leftBrow);
+const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.035), browMat);
+rightBrow.position.set(0.11, 2.20, 0.28); rightBrow.rotation.z = -0.1; boyGroup.add(rightBrow);
 
 // ── NECK ──
 const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.18, 8), skinMat);
 neck.position.y = 1.85; boyGroup.add(neck);
 
-// ── TORSO ──
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.65, 0.28), tshirtMat);
+// ── TORSO (White School Shirt) ──
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.65, 0.28), shirtMat);
 torso.position.y = 1.45; torso.castShadow = true; boyGroup.add(torso);
 
-// Collar
-const collar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.07, 0.30), tshirtMat);
-collar.position.y = 1.80; boyGroup.add(collar);
+// Collar (folded shirt collar — two flaps)
+const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.15), collarMat);
+collarL.position.set(-0.10, 1.80, 0.10); collarL.rotation.z = 0.15; boyGroup.add(collarL);
+const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.15), collarMat);
+collarR.position.set(0.10, 1.80, 0.10); collarR.rotation.z = -0.15; boyGroup.add(collarR);
 
-// Stripe detail
-const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.06, 0.29), tshirtStripeMat);
-stripe.position.set(0, 1.45, 0); boyGroup.add(stripe);
+// Tie (red school tie — knot + body)
+const tieKnot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.04), tieMat);
+tieKnot.position.set(0, 1.76, 0.15); boyGroup.add(tieKnot);
+const tieBody = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.30, 0.03), tieMat);
+tieBody.position.set(0, 1.56, 0.15); boyGroup.add(tieBody);
+const tieTip = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), tieMat);
+tieTip.position.set(0, 1.39, 0.15); boyGroup.add(tieTip);
 
-// ── HIPS ──
+// Shirt buttons (small white dots down center)
+const buttonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.2 });
+for (let bi = 0; bi < 3; bi++) {
+    const btn = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), buttonMat);
+    btn.position.set(0, 1.65 - bi * 0.12, 0.15); boyGroup.add(btn);
+}
+
+// ── HIPS (Navy pants waist) ──
 const hips = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.18, 0.25), pantsMat);
 hips.position.y = 1.08; boyGroup.add(hips);
 
-// ── BELT ──
-const beltMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.5, metalness: 0.3 });
-const belt = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.27), beltMat);
+// ── BELT (Black leather school belt) ──
+const beltMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.2 });
+const belt = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.05, 0.27), beltMat);
 belt.position.y = 1.15; boyGroup.add(belt);
-const buckleMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.8, roughness: 0.2 });
-const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.28), buckleMat);
+const buckleMat = new THREE.MeshStandardMaterial({ color: 0xC0C0C0, metalness: 0.8, roughness: 0.2 });
+const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.045, 0.28), buckleMat);
 buckle.position.set(0, 1.15, 0.01); boyGroup.add(buckle);
 
-// (backpack removed for a cleaner look)
+// ── SCHOOL BACKPACK ──
+const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.40, 0.18), backpackMat);
+backpack.position.set(0, 1.55, -0.22); backpack.castShadow = true; boyGroup.add(backpack);
+// Backpack pocket
+const bpPocket = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.04), new THREE.MeshStandardMaterial({ color: 0x1a3388, roughness: 0.7 }));
+bpPocket.position.set(0, 1.45, -0.33); boyGroup.add(bpPocket);
+// Backpack straps (visible from front shoulders)
+const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.04), backpackStrapMat);
+strapL.position.set(-0.18, 1.58, -0.05); strapL.rotation.x = 0.15; boyGroup.add(strapL);
+const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.04), backpackStrapMat);
+strapR.position.set(0.18, 1.58, -0.05); strapR.rotation.x = 0.15; boyGroup.add(strapR);
+// Backpack zipper
+const zipMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.7, roughness: 0.3 });
+const zip = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.015, 0.04), zipMat);
+zip.position.set(0, 1.64, -0.33); boyGroup.add(zip);
 
 // ── ARMS (Cylinder-based with elbow pivots) ──
 const leftShoulderPivot = new THREE.Group();
 leftShoulderPivot.position.set(-0.34, 1.72, 0); boyGroup.add(leftShoulderPivot);
-const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), shirtMat);
 leftUpperArm.position.set(0, -0.18, 0); leftUpperArm.castShadow = true; leftShoulderPivot.add(leftUpperArm);
 const leftElbowPivot = new THREE.Group();
 leftElbowPivot.position.set(0, -0.36, 0); leftShoulderPivot.add(leftElbowPivot);
@@ -105,7 +143,7 @@ leftHand.position.set(0, -0.34, 0); leftElbowPivot.add(leftHand);
 
 const rightShoulderPivot = new THREE.Group();
 rightShoulderPivot.position.set(0.34, 1.72, 0); boyGroup.add(rightShoulderPivot);
-const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), shirtMat);
 rightUpperArm.position.set(0, -0.18, 0); rightUpperArm.castShadow = true; rightShoulderPivot.add(rightUpperArm);
 const rightElbowPivot = new THREE.Group();
 rightElbowPivot.position.set(0, -0.36, 0); rightShoulderPivot.add(rightElbowPivot);
@@ -346,11 +384,12 @@ function enterHouse(houseId) {
 
     boyState.followTarget.copy(spawn.pos);
 
-    // Position camera for indoor view
+    // Position camera behind the boy (third-person perspective)
+    // Boy faces Math.PI (toward -Z / inward), so camera goes at +Z (behind)
     if (typeof controls !== 'undefined') {
         controls.enabled = true;
-        camera.position.set(spawn.pos.x, spawn.pos.y + 9, spawn.pos.z - 6);
-        controls.target.set(spawn.pos.x, spawn.pos.y + 1.5, spawn.pos.z - 2);
+        camera.position.set(spawn.pos.x, spawn.pos.y + 4, spawn.pos.z + 5);
+        controls.target.set(spawn.pos.x, spawn.pos.y + 1.5, spawn.pos.z - 3);
         controls.update();
     }
 
@@ -529,6 +568,33 @@ function updateBoy(delta) {
         if (boyState.mode === 'outdoor') {
             newX = Math.max(-45, Math.min(48, newX));
             newZ = Math.max(5, Math.min(18, newZ));
+
+            // Outdoor collision with house walls (prevent walking through buildings)
+            const boyR = 0.5;
+            // 1BHK house: world x[-36,-8], z[-15,7]  (origin -22,-4, W=28, D=22)
+            const h1xMin = -36, h1xMax = -8, h1zMin = -15, h1zMax = 7;
+            if (newX > h1xMin - boyR && newX < h1xMax + boyR &&
+                newZ > h1zMin - boyR && newZ < h1zMax + boyR) {
+                // Push boy out of house bounds
+                if (prevX <= h1xMin - boyR) newX = h1xMin - boyR;
+                else if (prevX >= h1xMax + boyR) newX = h1xMax + boyR;
+                if (prevZ <= h1zMin - boyR) newZ = h1zMin - boyR;
+                else if (prevZ >= h1zMax + boyR) newZ = h1zMax + boyR;
+            }
+            // 2BHK house: world x[10,38], z[-16,8]  (origin 24,-4, W2=28, D2=24)
+            const h2xMin = 10, h2xMax = 38, h2zMin = -16, h2zMax = 8;
+            if (newX > h2xMin - boyR && newX < h2xMax + boyR &&
+                newZ > h2zMin - boyR && newZ < h2zMax + boyR) {
+                if (prevX <= h2xMin - boyR) newX = h2xMin - boyR;
+                else if (prevX >= h2xMax + boyR) newX = h2xMax + boyR;
+                if (prevZ <= h2zMin - boyR) newZ = h2zMin - boyR;
+                else if (prevZ >= h2zMax + boyR) newZ = h2zMax + boyR;
+            }
+            // Front wall between houses: world x[-8,10], z=6 (wall 0.4 thick)
+            if (newX > -8.5 && newX < 10.5 && newZ > 5.5 && newZ < 6.5) {
+                if (prevZ >= 6.5) newZ = 6.5;
+                else if (prevZ <= 5.5) newZ = 5.5;
+            }
         }
 
         // Collision check (only uses the dedicated furniture/wall list)

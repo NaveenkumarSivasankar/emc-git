@@ -12,43 +12,39 @@ const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalnes
 
 function createSolarPanel() {
     const g = new THREE.Group();
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.10, 1.8), panelMat);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.12, 3.6), panelMat);
     g.add(panel);
     const gridMat = new THREE.MeshBasicMaterial({ color: 0x283593 });
     for (let i = -3; i <= 3; i++) {
-        const hLine = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.01, 0.02), gridMat);
-        hLine.position.set(0, 0.06, i * 0.25); g.add(hLine);
+        const hLine = new THREE.Mesh(new THREE.BoxGeometry(5.1, 0.01, 0.03), gridMat);
+        hLine.position.set(0, 0.07, i * 0.5); g.add(hLine);
     }
     for (let i = -4; i <= 4; i++) {
-        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.01, 1.75), gridMat);
-        vLine.position.set(i * 0.29, 0.06, 0); g.add(vLine);
+        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, 3.5), gridMat);
+        vLine.position.set(i * 0.58, 0.07, 0); g.add(vLine);
     }
     const frameParts = [
-        new THREE.BoxGeometry(2.65, 0.14, 0.06), new THREE.BoxGeometry(2.65, 0.14, 0.06),
-        new THREE.BoxGeometry(0.06, 0.14, 1.8), new THREE.BoxGeometry(0.06, 0.14, 1.8)
+        new THREE.BoxGeometry(5.3, 0.16, 0.08), new THREE.BoxGeometry(5.3, 0.16, 0.08),
+        new THREE.BoxGeometry(0.08, 0.16, 3.6), new THREE.BoxGeometry(0.08, 0.16, 3.6)
     ];
-    const framePositions = [[0, 0, 0.9], [0, 0, -0.9], [-1.3, 0, 0], [1.3, 0, 0]];
+    const framePositions = [[0, 0, 1.8], [0, 0, -1.8], [-2.6, 0, 0], [2.6, 0, 0]];
     frameParts.forEach((geo, i) => {
         const mesh = new THREE.Mesh(geo, panelFrameMat);
         mesh.position.set(...framePositions[i]); g.add(mesh);
     });
 
-    // ── MOUNTING STAND (two support legs) ──
+    // ── MOUNTING STAND (scaled for doubled panel) ──
     const standMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.4 });
-    // Front leg (shorter — panel tilts toward sun)
-    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.08), standMat);
-    frontLeg.position.set(0, -0.22, 0.6); g.add(frontLeg);
-    // Back leg (taller — supports the high side)
-    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.08), standMat);
-    backLeg.position.set(0, -0.32, -0.6); g.add(backLeg);
-    // Cross rail connecting both legs at the base
-    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.4), standMat);
-    crossRail.position.set(0, -0.45, 0); g.add(crossRail);
-    // Two additional side supports for stability
-    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
-    sideLegL.position.set(-0.9, -0.25, 0); g.add(sideLegL);
-    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
-    sideLegR.position.set(0.9, -0.25, 0); g.add(sideLegR);
+    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, 0.12), standMat);
+    frontLeg.position.set(0, -0.50, 1.2); g.add(frontLeg);
+    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.12), standMat);
+    backLeg.position.set(0, -0.75, -1.2); g.add(backLeg);
+    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.8), standMat);
+    crossRail.position.set(0, -0.95, 0); g.add(crossRail);
+    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegL.position.set(-1.8, -0.52, 0); g.add(sideLegL);
+    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegR.position.set(1.8, -0.52, 0); g.add(sideLegR);
 
     g.visible = false;
     return g;
@@ -78,8 +74,8 @@ function getRoofConfig(houseKey) {
         targetGroup = typeof houseGroup !== 'undefined' ? houseGroup : new THREE.Group();
     }
 
-    const panelGapX = 2.8;
-    const panelGapZ = 2.2;
+    const panelGapX = 5.6;
+    const panelGapZ = 4.4;
     const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
     const max = colsPerSide * rows * 2;
@@ -320,16 +316,16 @@ function changePanelCount(delta) {
         const g = createSolarPanel();
 
         // Calculate position with clean grid alignment (no 1.05 multiplier)
-        const xOffset = config.startX + col * config.panelGapX + 1.4;
+        const xOffset = config.startX + col * config.panelGapX + 2.8;
         const xPos = xOffset * side;
-        const zPos = config.startZ + row * config.panelGapZ + 1.1;
+        const zPos = config.startZ + row * config.panelGapZ + 2.2;
 
         const hFallback = typeof H !== 'undefined' ? H : 7;
         const roofLocalY = hFallback + 0.3 + config.baseRoofH - Math.abs(xPos) * (config.baseRoofH / config.roofWidthHalf);
 
         g.rotation.set(0, 0, side * -config.slopeAngle);
         g.position.set(xPos, roofLocalY - 0.15, zPos);
-        g.translateY(0.1); // slight float off roof surface
+        g.translateY(0.55); // lift panel so mounting stands are visible above roof
 
         config.targetGroup.add(g);
         g.visible = true;

@@ -89,20 +89,29 @@ function addPartWall(w, h, d, x, y, z, room) {
     bhk2PartWalls.push(m); return m;
 }
 
-// Horizontal wall at z=-5 (separates front from bedrooms, full width)
-addPartWall(W2 - 0.4, H, 0.2, 0, H / 2 + 0.3, -5);
-// Vertical wall at x=0 (separates Bedroom 1 from Bedroom 2, z=-12 to -5)
+// Horizontal wall at z=-5 — door gaps at x=-5 (Bed1, gap: -5.9 to -4.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+// Segment 1: x=-13.8 to -5.9 → center=-9.85, w=7.9
+addPartWall(7.9, H, 0.2, -9.85, H / 2 + 0.3, -5);
+// Segment 2: x=-4.1 to 8.1 → center=2, w=12.2
+addPartWall(12.2, H, 0.2, 2, H / 2 + 0.3, -5);
+// Segment 3: x=9.9 to 13.8 → center=11.85, w=3.9
+addPartWall(3.9, H, 0.2, 11.85, H / 2 + 0.3, -5);
+
+// Vertical wall at x=0 (Bedroom 1 / Bedroom 2 separator, NO door — solid)
 addPartWall(0.2, H, 7, 0, H / 2 + 0.3, -8.5);
-// Vertical wall at x=-5 (separates Hall from Kitchen/Bath, z=-5 to 12)
-addPartWall(0.2, H, 17, -5, H / 2 + 0.3, 3.5);
-// Horizontal wall at z=3 (separates Kitchen from Bathroom, x=-14 to -5)
+
+// Vertical wall at x=-5 — door gaps at z=-1 (Kitchen, gap: -1.9 to -0.1) and z=7 (Bathroom, gap: 6.1 to 7.9)
+// Segment 1: z=-5 to -1.9 → center=-3.45, d=3.1
+addPartWall(0.2, H, 3.1, -5, H / 2 + 0.3, -3.45);
+// Segment 2: z=-0.1 to 6.1 → center=3, d=6.2
+addPartWall(0.2, H, 6.2, -5, H / 2 + 0.3, 3);
+// Segment 3: z=7.9 to 12 → center=9.95, d=4.1
+addPartWall(0.2, H, 4.1, -5, H / 2 + 0.3, 9.95);
+
+// Horizontal wall at z=3 (Kitchen/Bathroom separator, NO door — solid)
 addPartWall(9, H, 0.2, -9.5, H / 2 + 0.3, 3);
 
-// Room doors (interactive — swing open on approach)
-createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, 24, 0);       // Bedroom 1
-createInteractiveDoor(bhk2Group, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, -Math.PI / 2, 24, 0);      // Bedroom 2
-createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);  // Kitchen
-createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);   // Bathroom
+// Room doors are created in interiors.js initInteriors() — no duplicates here
 
 // ═══════════════════════════════════════════════
 //  FLOOR TILES
