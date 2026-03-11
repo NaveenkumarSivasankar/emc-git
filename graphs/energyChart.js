@@ -231,6 +231,15 @@ function openEnergyModal() {
 
     const content = document.getElementById('energy-modal-body');
     content.innerHTML = buildDashboardHTML(data, totalDailyUnits, totalWeeklyUnits, totalMonthlyUnits, weeklyBill, totalBill, solarKW, window._currentModalHouseLabel);
+    
+    document.getElementById('energy-modal-body').insertAdjacentHTML('beforeend', buildLearnPanelHTML());
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            if (typeof window.recalcLearningSteps === 'function') {
+                window.recalcLearningSteps();
+            }
+        });
+    });
 
     setTimeout(() => {
         renderBarChart(data);
@@ -363,6 +372,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
                 const bhk2Pct = 100 - bhk1Pct;
                 return (
                     '<div class="kids-compare">' +
+                    '<div class="section-label" data-icon="🏆">KIDS COMPARISON</div>' +
 
                     '<div class="kc-title">⚡ Which house uses MORE electricity?</div>' +
 
@@ -413,7 +423,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         +
 
         // ═══ SECTION 1: SUMMARY CARDS ═══
-        '<div class="section-label">' + PIXEL_ICONS.star + ' <span>Overview</span></div>' +
+        '<div class="section-label" data-icon="⚡">OVERVIEW</div>' +
         '<div class="summary-cards">' +
 
         '<div class="s-card blue">' +
@@ -459,6 +469,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ── Tariff Reference ──
+        '<div class="section-label" data-icon="📋">TARIFF RULES</div>' +
         '<div class="tariff-strip">' +
         '<span class="tariff-title">📋 TN Electricity Tariff:</span>' +
         '<span class="slab free">0-100 units = Free</span>' +
@@ -468,14 +479,14 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ═══ SECTION 2: MAIN BAR CHART ═══
-        '<div class="section-label">' + PIXEL_ICONS.bulb + ' <span>Energy Consumption by Appliance</span></div>' +
+        '<div class="section-label" data-icon="📊">CONSUMPTION BY APPLIANCE</div>' +
         '<div class="section-hint">👆 Click any bar to learn how the calculation works!</div>' +
         '<div class="chart-panel main-chart">' +
         '<div id="chart-bar"></div>' +
         '</div>' +
 
         // ═══ SECTION 3: DISTRIBUTION CHARTS ═══
-        '<div class="section-label">' + PIXEL_ICONS.solar + ' <span>Energy Distribution</span></div>' +
+        '<div class="section-label" data-icon="🥧">ENERGY DISTRIBUTION</div>' +
         '<div class="distribution-row">' +
         '<div class="chart-panel half">' +
         '<h3 class="chart-heading">🥧 Energy Share by Appliance</h3>' +
@@ -492,7 +503,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
 
 
         // ═══ SECTION 4: NET ZERO PANEL ═══
-        '<div class="section-label">' + PIXEL_ICONS.solar + ' <span>Net Zero Energy Goal</span></div>' +
+        '<div class="section-label" data-icon="🌱">NET ZERO GOAL</div>' +
         '<div class="netzero-panel">' +
         '<div class="nz-stats">' +
         '<div class="nz-stat">' +
@@ -521,6 +532,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ── Kids Energy Report Card ──
+        '<div class="section-label" data-icon="📝">REPORT CARD</div>' +
         '<div class="kids-score-card">' +
         '<div class="ksc-title">' + PIXEL_ICONS.trophy + ' Your Energy Report Card</div>' +
         '<div class="ksc-scores">' +
@@ -553,15 +565,59 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
         '<div class="ksc-tip">💡 <b>Pro Tip:</b> Turn off lights when leaving a room — it saves ₹' +
         Math.round(60 / 1000 * 8 * 30 * 3) + ' every month!</div>' +
-        '</div>' +
-
-        // ── Learning Panel (slide-in, hidden) ──
-        '<div id="learn-panel" class="learn-panel">' +
-        '<button class="learn-close" onclick="closeLearningPanel()">✕</button>' +
-        '<h3 class="learn-title">🎓 How is this calculated?</h3>' +
-        '<div id="learn-appliance-name" class="learn-appliance-name"></div>' +
-        '<div id="learn-steps"></div>' +
         '</div>';
+}
+
+function buildLearnPanelHTML() {
+    return `
+        <div id="learn-panel" class="learn-panel">
+            <div class="lp-header">
+                <span style="font-family:'Courier New';font-size:0.9rem;font-weight:900;color:#FFD700;letter-spacing:2px;">📚 HOW IS THIS CALCULATED?</span>
+                <button onclick="document.getElementById('learn-panel').classList.remove('visible')"
+                    style="background:none;border:none;color:#aaa;font-size:1.2rem;cursor:pointer;float:right;">✕</button>
+            </div>
+
+            <div id="ls-appliance-title" style="
+                font-family:'Courier New',monospace;
+                font-size:0.85rem;
+                color:#fff;
+                padding:10px 14px;
+                background:rgba(255,215,0,0.08);
+                border-radius:4px;
+                margin-bottom:12px;
+                border-left:3px solid #FFD700;
+            ">💡 Click any bar to load an appliance</div>
+
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <div style="flex:1;background:rgba(91,141,239,0.12);border-radius:6px;padding:10px 12px;border:1px solid rgba(91,141,239,0.3);">
+                    <div style="font-size:0.65rem;font-weight:900;color:#5B8DEF;font-family:'Courier New',monospace;letter-spacing:1.5px;margin-bottom:6px;">⚡ WATTS</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="adjustLearningValue('watts',-10)"
+                            style="width:28px;height:28px;border-radius:50%;background:#1a2744;border:1px solid #5B8DEF;color:#5B8DEF;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                        <input id="ls-watts" type="number" value="100" min="1" max="5000"
+                            oninput="recalcLearningSteps()"
+                            style="width:60px;text-align:center;background:transparent;border:none;color:#FFD700;font-size:1.1rem;font-weight:900;font-family:'Courier New',monospace;" />
+                        <button onclick="adjustLearningValue('watts',10)"
+                            style="width:28px;height:28px;border-radius:50%;background:#1a2744;border:1px solid #5B8DEF;color:#5B8DEF;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                    </div>
+                </div>
+                <div style="flex:1;background:rgba(46,204,139,0.12);border-radius:6px;padding:10px 12px;border:1px solid rgba(46,204,139,0.3);">
+                    <div style="font-size:0.65rem;font-weight:900;color:#2ECC8B;font-family:'Courier New',monospace;letter-spacing:1.5px;margin-bottom:6px;">🕐 HOURS/DAY</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="adjustLearningValue('hours',-0.5)"
+                            style="width:28px;height:28px;border-radius:50%;background:#0e2d1a;border:1px solid #2ECC8B;color:#2ECC8B;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                        <input id="ls-hours" type="number" value="5" min="0.5" max="24" step="0.5"
+                            oninput="recalcLearningSteps()"
+                            style="width:60px;text-align:center;background:transparent;border:none;color:#FFD700;font-size:1.1rem;font-weight:900;font-family:'Courier New',monospace;" />
+                        <button onclick="adjustLearningValue('hours',0.5)"
+                            style="width:28px;height:28px;border-radius:50%;background:#0e2d1a;border:1px solid #2ECC8B;color:#2ECC8B;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ls-steps-output" style="margin-top:12px;min-height:100px;"></div>
+        </div>
+    `;
 }
 
 // ─── ANIMATE NET ZERO BAR ─────────────────────
@@ -611,6 +667,11 @@ function showLearningPanel(dataIndex) {
     const stepsEl = document.getElementById('learn-steps');
     if (nameEl) nameEl.innerHTML = '💡 ' + d.name + ' <span>(' + d.watts + 'W, ' + d.hoursPerDay + ' hrs/day)</span>';
     if (stepsEl) stepsEl.innerHTML = generateLearningSteps(d);
+    
+    setTimeout(() => {
+        if (typeof recalcLearningSteps === 'function') recalcLearningSteps();
+    }, 50);
+
     if (panel) panel.classList.add('visible');
 }
 
@@ -674,8 +735,31 @@ function renderBarChart(data) {
             type: 'bar',
             height: 380,
             events: {
-                dataPointSelection: function (e, ctx, cfg) {
-                    showLearningPanel(cfg.dataPointIndex);
+                dataPointSelection: function(event, chartContext, config) {
+                    const idx = config.dataPointIndex;
+                    const seriesIdx = config.seriesIndex;
+                    const appList = window._currentModalAppList || simpleAppliances;
+                    const appliance = appList[idx];
+                    if (!appliance) return;
+
+                    const watts = appliance.watt || 100;
+                    const hours = appliance.hours || appliance.hoursPerDay || 5;
+
+                    // Set the learning panel inputs to this appliance
+                    const wInput = document.getElementById('ls-watts');
+                    const hInput = document.getElementById('ls-hours');
+                    const titleEl = document.getElementById('ls-appliance-title');
+
+                    if (wInput) wInput.value = watts;
+                    if (hInput) hInput.value = hours;
+                    if (titleEl) titleEl.innerHTML = `<b>${appliance.name}</b> <span style="color:#888;font-size:0.8rem">(${watts}W, ${hours} hrs/day)</span>`;
+
+                    // Show the panel if hidden
+                    const panel = document.getElementById('learn-panel');
+                    if (panel) panel.classList.add('visible');
+
+                    // Recalculate steps immediately
+                    setTimeout(window.recalcLearningSteps, 200);
                 }
             }
         },
