@@ -127,136 +127,138 @@ function generateLearningSteps(applianceData) {
         </div>
     </div>
 
-    <div id="ls-steps-output">
-        ${buildLearningStepsHTML(d.watts, d.hoursPerDay)}
-    </div>
+    <div id="ls-steps-output" style="margin-top:14px;"></div>
     `;
 }
 
-function buildLearningStepsHTML(watts, hoursPerDay) {
-    const kw = (watts / 1000).toFixed(3);
-    const dailyUnits = (watts / 1000 * hoursPerDay).toFixed(3);
-    const weeklyUnits = (dailyUnits * 7).toFixed(2);
-    const monthlyUnits = (dailyUnits * 30).toFixed(2);
-    const tariffRate = getTariffRate(parseFloat(monthlyUnits));
-    const monthlyCost = calculateTNTariffCost(parseFloat(monthlyUnits));
-
-    // Energy level emoji
-    const energyEmoji = watts < 100 ? '🟢' : watts < 500 ? '🟡' : watts < 1000 ? '🟠' : '🔴';
-    const energyLabel = watts < 100 ? 'Low Energy' : watts < 500 ? 'Medium Energy' : watts < 1000 ? 'High Energy' : 'Very High!';
+function buildLearningStepsHTML(watts, hours) {
+    const units     = (watts * hours) / 1000;
+    const dailyCost = units * 6.5;
+    const monthly   = units * 30;
+    const monthlyCost = monthly * 6.5;
+    const co2Daily  = units * 0.82;
 
     return `
-    <div class="ls-energy-badge ${watts < 100 ? 'eb-green' : watts < 500 ? 'eb-yellow' : watts < 1000 ? 'eb-orange' : 'eb-red'}">
-        ${energyEmoji} ${energyLabel} Appliance
-    </div>
-
-    <div class="learn-step">
-        <div class="learn-step-num">⚡ Step 1</div>
-        <div class="learn-step-title">Convert Watts → Kilowatts</div>
-        <div class="learn-step-calc">
-            <span class="calc-input">${watts} W</span>
-            <span class="calc-op">÷</span>
-            <span class="calc-input">1000</span>
-            <span class="calc-op">=</span>
-            <span class="calc-result">${kw} kW</span>
+        <div class="learn-step" style="animation: stepWrite 0.4s ease 0.1s both;">
+            <div class="ls-step-num">STEP 1</div>
+            <div class="ls-step-title">⚡ Power to Energy</div>
+            <div class="ls-step-body">
+                <span class="ls-formula">${watts}W × ${hours}h ÷ 1000</span>
+                <span class="ls-equals">=</span>
+                <span class="ls-result">${units.toFixed(2)} Units</span>
+            </div>
+            <div class="ls-hint">Watts × Hours gives you Watt-hours. Divide by 1000 for Units (kWh)</div>
         </div>
-        <div class="ls-tip">💡 Kilowatts is how electricity companies measure power!</div>
-    </div>
 
-    <div class="learn-step">
-        <div class="learn-step-num">🕐 Step 2</div>
-        <div class="learn-step-title">Daily Energy (Units / Day)</div>
-        <div class="learn-step-calc">
-            <span class="calc-input">${kw} kW</span>
-            <span class="calc-op">×</span>
-            <span class="calc-input">${hoursPerDay} hrs</span>
-            <span class="calc-op">=</span>
-            <span class="calc-result">${dailyUnits} units/day</span>
+        <div class="learn-step" style="animation: stepWrite 0.4s ease 0.25s both;">
+            <div class="ls-step-num">STEP 2</div>
+            <div class="ls-step-title">📅 Daily Usage</div>
+            <div class="ls-step-body">
+                <span class="ls-formula">${units.toFixed(2)} units × ₹6.50</span>
+                <span class="ls-equals">=</span>
+                <span class="ls-result">₹${dailyCost.toFixed(2)} / day</span>
+            </div>
+            <div class="ls-hint">Multiply units by your electricity rate per unit</div>
         </div>
-        <div class="ls-tip">💡 1 unit = 1 kilowatt used for 1 hour!</div>
-    </div>
 
-    <div class="learn-step">
-        <div class="learn-step-num">📅 Step 3</div>
-        <div class="learn-step-title">Weekly Energy</div>
-        <div class="learn-step-calc">
-            <span class="calc-input">${dailyUnits}</span>
-            <span class="calc-op">×</span>
-            <span class="calc-input">7 days</span>
-            <span class="calc-op">=</span>
-            <span class="calc-result">${weeklyUnits} units/week</span>
+        <div class="learn-step" style="animation: stepWrite 0.4s ease 0.4s both;">
+            <div class="ls-step-num">STEP 3</div>
+            <div class="ls-step-title">📆 Monthly Units</div>
+            <div class="ls-step-body">
+                <span class="ls-formula">${units.toFixed(2)} units × 30 days</span>
+                <span class="ls-equals">=</span>
+                <span class="ls-result">${monthly.toFixed(1)} units/month</span>
+            </div>
+            <div class="ls-hint">Multiply daily units by 30 to get monthly consumption</div>
         </div>
-    </div>
 
-    <div class="learn-step">
-        <div class="learn-step-num">📆 Step 4</div>
-        <div class="learn-step-title">Monthly Energy</div>
-        <div class="learn-step-calc">
-            <span class="calc-input">${dailyUnits}</span>
-            <span class="calc-op">×</span>
-            <span class="calc-input">30 days</span>
-            <span class="calc-op">=</span>
-            <span class="calc-result">${monthlyUnits} units/month</span>
+        <div class="learn-step" style="animation: stepWrite 0.4s ease 0.55s both;">
+            <div class="ls-step-num">STEP 4</div>
+            <div class="ls-step-title">💰 Monthly Bill</div>
+            <div class="ls-step-body">
+                <span class="ls-formula">${monthly.toFixed(1)} units × ₹6.50</span>
+                <span class="ls-equals">=</span>
+                <span class="ls-result">₹${monthlyCost.toFixed(2)} / month</span>
+            </div>
+            <div class="ls-hint">This is your estimated monthly electricity bill</div>
         </div>
-    </div>
 
-    <div class="learn-step">
-        <div class="learn-step-num">💰 Step 5</div>
-        <div class="learn-step-title">Electricity Cost (TN Tariff)</div>
-        <div class="learn-step-calc">
-            <span class="calc-input">${monthlyUnits} units</span>
-            <span class="calc-op">×</span>
-            <span class="calc-input">₹${tariffRate}</span>
-            <span class="calc-op">=</span>
-            <span class="calc-result cost">₹${monthlyCost}/month</span>
+        <div class="learn-step" style="animation: stepWrite 0.4s ease 0.7s both;">
+            <div class="ls-step-num">STEP 5</div>
+            <div class="ls-step-title">🌍 CO₂ Impact</div>
+            <div class="ls-step-body">
+                <span class="ls-formula">${units.toFixed(2)} units × 0.82 kg</span>
+                <span class="ls-equals">=</span>
+                <span class="ls-result">${co2Daily.toFixed(3)} kg CO₂/day</span>
+            </div>
+            <div class="ls-hint">Every unit of electricity produces 0.82kg of CO₂ emissions</div>
         </div>
-        <div class="learn-tariff-note">
-            📋 TN Tariff: 0-100 = Free | 101-200 = ₹1.5 | 201-500 = ₹3 | 501-1000 = ₹4.5
-        </div>
-    </div>
-
-    <div class="ls-fun-compare">
-        <div class="ls-fc-title">🤩 Did You Know?</div>
-        <div class="ls-fc-row">📱 Could charge <b>${Math.round(parseFloat(monthlyUnits) * 83)}</b> phones in a month!</div>
-        <div class="ls-fc-row">💡 Costs just <b>₹${(monthlyCost / 30).toFixed(1)}</b> per day</div>
-        <div class="ls-fc-row">🌱 Produces <b>${(parseFloat(monthlyUnits) * 0.82).toFixed(1)} kg</b> of CO₂ monthly</div>
-    </div>
     `;
 }
 
-function recalcLearningSteps() {
-    const wattsInput = document.getElementById('ls-watts');
-    const hoursInput = document.getElementById('ls-hours');
-    const output = document.getElementById('ls-steps-output');
-    if (!wattsInput || !hoursInput || !output) return;
+window.recalcLearningSteps = function() {
+    let output = document.getElementById('ls-steps-output');
 
-    const watts = Math.max(1, Math.min(5000, parseFloat(wattsInput.value) || 1));
-    const hours = Math.max(0.1, Math.min(24, parseFloat(hoursInput.value) || 1));
+    // If div not found create it and append to panel
+    if (!output) {
+        const panel = document.getElementById('learn-panel');
+        if (!panel) return;
+        output = document.createElement('div');
+        output.id = 'ls-steps-output';
+        output.style.marginTop = '12px';
+        panel.appendChild(output);
+    }
 
-    // Animate the output swap
-    output.style.opacity = '0';
-    output.style.transform = 'translateY(6px)';
-    setTimeout(() => {
-        output.innerHTML = buildLearningStepsHTML(watts, hours);
-        output.style.opacity = '1';
-        output.style.transform = 'translateY(0)';
-    }, 150);
-}
+    const watts = parseFloat(document.getElementById('ls-watts')?.value) || 100;
+    const hours = parseFloat(document.getElementById('ls-hours')?.value) || 5;
 
-function adjustLearningValue(field, delta) {
-    const inputId = field === 'watts' ? 'ls-watts' : 'ls-hours';
-    const input = document.getElementById(inputId);
+    const units       = +((watts * hours) / 1000).toFixed(4);
+    const dailyCost   = +(units * 6.5).toFixed(2);
+    const monthly     = +(units * 30).toFixed(3);
+    const monthlyCost = +(monthly * 6.5).toFixed(2);
+    const co2         = +(units * 0.82).toFixed(4);
+    const trees       = +((co2 * 365) / 21).toFixed(1);
+
+    output.style.cssText = 'margin-top:12px;display:block;visibility:visible;opacity:1;';
+    output.innerHTML = `
+        <div style="background:rgba(91,141,239,0.1);border-left:3px solid #5B8DEF;border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:0.62rem;font-weight:900;color:#FFD700;font-family:'Courier New',monospace;letter-spacing:2px;margin-bottom:4px;">STEP 1 — POWER TO ENERGY</div>
+            <div style="font-family:'Courier New',monospace;font-size:0.82rem;color:#aaccff;">${watts}W × ${hours}h ÷ 1000 = <span style="color:#2ECC8B;font-weight:900;">${units} kWh</span></div>
+            <div style="font-size:0.68rem;color:#666;margin-top:4px;font-style:italic;">Watts × Hours ÷ 1000 = Units (kWh)</div>
+        </div>
+        <div style="background:rgba(46,204,139,0.1);border-left:3px solid #2ECC8B;border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:0.62rem;font-weight:900;color:#FFD700;font-family:'Courier New',monospace;letter-spacing:2px;margin-bottom:4px;">STEP 2 — DAILY COST</div>
+            <div style="font-family:'Courier New',monospace;font-size:0.82rem;color:#aaccff;">${units} × ₹6.50 = <span style="color:#2ECC8B;font-weight:900;">₹${dailyCost}/day</span></div>
+            <div style="font-size:0.68rem;color:#666;margin-top:4px;font-style:italic;">Units × tariff rate per unit</div>
+        </div>
+        <div style="background:rgba(245,166,35,0.1);border-left:3px solid #F5A623;border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:0.62rem;font-weight:900;color:#FFD700;font-family:'Courier New',monospace;letter-spacing:2px;margin-bottom:4px;">STEP 3 — MONTHLY UNITS</div>
+            <div style="font-family:'Courier New',monospace;font-size:0.82rem;color:#aaccff;">${units} × 30 days = <span style="color:#F5A623;font-weight:900;">${monthly} units</span></div>
+            <div style="font-size:0.68rem;color:#666;margin-top:4px;font-style:italic;">Daily units × 30 = monthly consumption</div>
+        </div>
+        <div style="background:rgba(255,107,107,0.1);border-left:3px solid #FF6B6B;border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:0.62rem;font-weight:900;color:#FFD700;font-family:'Courier New',monospace;letter-spacing:2px;margin-bottom:4px;">STEP 4 — MONTHLY BILL</div>
+            <div style="font-family:'Courier New',monospace;font-size:0.82rem;color:#aaccff;">${monthly} × ₹6.50 = <span style="color:#FF6B6B;font-weight:900;">₹${monthlyCost}/month</span></div>
+            <div style="font-size:0.68rem;color:#666;margin-top:4px;font-style:italic;">Monthly units × tariff = electricity bill</div>
+        </div>
+        <div style="background:rgba(100,200,100,0.1);border-left:3px solid #4CAF50;border-radius:4px;padding:10px 12px;margin-bottom:8px;">
+            <div style="font-size:0.62rem;font-weight:900;color:#FFD700;font-family:'Courier New',monospace;letter-spacing:2px;margin-bottom:4px;">STEP 5 — CO₂ IMPACT</div>
+            <div style="font-family:'Courier New',monospace;font-size:0.82rem;color:#aaccff;">${units} × 0.82 = <span style="color:#4CAF50;font-weight:900;">${co2} kg CO₂/day</span></div>
+            <div style="font-size:0.68rem;color:#666;margin-top:4px;font-style:italic;">🌳 ${trees} trees needed per year to absorb this</div>
+        </div>
+    `;
+};
+
+window.adjustLearningValue = function(field, delta) {
+    const id = field === 'watts' ? 'ls-watts' : 'ls-hours';
+    const input = document.getElementById(id);
     if (!input) return;
-
-    let val = parseFloat(input.value) || 0;
-    val = field === 'watts'
-        ? Math.max(1, Math.min(5000, val + delta))
-        : Math.max(0.1, Math.min(24, val + delta));
-
-    // Round to 1 decimal for hours
-    input.value = field === 'hours' ? val.toFixed(1) : Math.round(val);
+    const current = parseFloat(input.value) || 0;
+    const min = field === 'watts' ? 1 : 0.5;
+    const max = field === 'watts' ? 5000 : 24;
+    input.value = Math.max(min, Math.min(max, current + delta));
     recalcLearningSteps();
-}
+};
 
 /**
  * Calculate solar generation and Net Zero status

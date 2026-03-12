@@ -50,6 +50,29 @@ function createSolarPanel() {
     return g;
 }
 
+function flashPanelGlint(panelGroup) {
+    // Find the glass surface mesh (second child)
+    const glass = panelGroup.children[1];
+    if (!glass || !glass.material) return;
+
+    const originalEmissive = glass.material.emissive
+        ? glass.material.emissive.getHex()
+        : 0x000000;
+
+    glass.material.emissive = new THREE.Color(0x4488ff);
+    glass.material.emissiveIntensity = 1.2;
+
+    let glintFrame = 0;
+    const glintAnim = setInterval(() => {
+        glintFrame++;
+        glass.material.emissiveIntensity = Math.max(0, 1.2 - glintFrame * 0.12);
+        if (glintFrame >= 10) {
+            glass.material.emissiveIntensity = 0;
+            clearInterval(glintAnim);
+        }
+    }, 30);
+}
+
 function getRoofConfig(houseKey) {
     let roofWidthHalf, roofDepthHalf, startX, startZ, slopeAngle, baseRoofH, targetGroup, isLeft;
 
@@ -78,7 +101,8 @@ function getRoofConfig(houseKey) {
     const panelGapZ = 4.4;
     const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
-    const max = colsPerSide * rows * 2;
+    const maxRows = Math.floor((roofDepthHalf * 2 - 2.5) / panelGapZ);
+    const max = 3 * maxRows * 2;
     return { roofWidthHalf, roofDepthHalf, startX, startZ, slopeAngle, baseRoofH, targetGroup, panelGapX, panelGapZ, colsPerSide, rows, max };
 }
 
@@ -93,33 +117,7 @@ setTimeout(() => {
     initializeHouseSolar('2bhk');
 }, 500);
 
-// ═══════════════════════════════════════════════
-//  ADD SOLAR PANEL BUTTONS ON HOUSES
-// ═══════════════════════════════════════════════
-(function createSolarButtons() {
-    function makeSolarBtn(houseKey, targetGroup, yPos) {
-        const btn = document.createElement('button');
-        btn.className = 'add-solar-btn';
-        btn.innerHTML = '☀️ Add Solar';
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            selectSolarHouse(houseKey);
-        };
-        const obj = new THREE.CSS2DObject(btn);
-        obj.position.set(0, yPos, 0);
-        targetGroup.add(obj);
-        return obj;
-    }
 
-    setTimeout(() => {
-        if (typeof houseGroup !== 'undefined') {
-            makeSolarBtn('1bhk', houseGroup, H + roofH + 1.5);
-        }
-        if (typeof bhk2Group !== 'undefined') {
-            makeSolarBtn('2bhk', bhk2Group, H + roofH + 2);
-        }
-    }, 600);
-})();
 
 
 
@@ -154,14 +152,23 @@ function updateStats() {
     if (statPanels) statPanels.textContent = activeState.count + ' / ' + panelsNeeded + ' needed';
 
     const coverageRatio = Math.min(activeState.count / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = activeState.count;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
 
     const statSavings = document.getElementById('stat-savings');
     if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
 
     const statCo2 = document.getElementById('stat-co2');
-    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+    if (statCo2) statCo2.textContent = co2Saved.toLocaleString() + ' kg/yr';
 
     const statFact = document.getElementById('stat-fact');
     if (statFact) statFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -188,7 +195,7 @@ function updateStats() {
 
     }
 
-    updateBarChart(total, coverageRatio);
+    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
 function openSolarModal() {
@@ -321,7 +328,49 @@ function changePanelCount(delta) {
         const zPos = config.startZ + row * config.panelGapZ + 2.2;
 
         const hFallback = typeof H !== 'undefined' ? H : 7;
-        const roofLocalY = hFallback + 0.3 + config.baseRoofH - Math.abs(xPos) * (config.baseRoofH / config.roofWidthHalf);
+        const roofHval = typeof roofH !== 'undefined' ? roofH : 4.5;
+        const ridgeY = hFallback + roofHval; // absolute Y of roof ridge peak
+
+        const panelsPerRow = 3;
+        const colSpacing = 3.0;
+        const rowSpacing = 2.5;
+        const maxRows = Math.floor((config.roofDepthHalf * 2 - 2.5) / rowSpacing);
+        const panelsPerSide = panelsPerRow * maxRows;
+
+        const isLeft = idx < panelsPerSide;
+        const sideIdx = isLeft ? idx : idx - panelsPerSide;
+        const col = sideIdx % panelsPerRow;
+        const row = Math.floor(sideIdx / panelsPerRow);
+
+        // X position — spread evenly on each slope half
+        const xSign = isLeft ? -1 : 1;
+        const xStart = 1.8;
+        const xPos = xSign * (xStart + col * colSpacing);
+
+        // Hard clamp so panel never goes past roof edge
+        const clampedX = Math.max(
+            -(config.roofWidthHalf - 1.0),
+            Math.min(config.roofWidthHalf - 1.0, xPos)
+        );
+
+        // Z position — rows from front to back
+        const zPos = -(config.roofDepthHalf - 1.8) + row * rowSpacing;
+        const clampedZ = Math.max(
+            -(config.roofDepthHalf - 1.0),
+            Math.min(config.roofDepthHalf - 1.0, zPos)
+        );
+
+        // ── CRITICAL Y FIX ──
+        const distFromRidge = Math.abs(clampedX);
+        const surfaceY = ridgeY - (distFromRidge / config.roofWidthHalf) * roofHval;
+
+        // Different Y offset for each house to account for different roof heights
+        const mountOffset = activeKey === '2bhk' ? 1.1 : 0.80;
+        const yPos = surfaceY + mountOffset;
+
+        // Tilt panel to match roof slope angle exactly
+        const slopeAngle = Math.atan2(roofHval, config.roofWidthHalf);
+        const tiltZ = isLeft ? slopeAngle : -slopeAngle;
 
         g.rotation.set(0, 0, side * -config.slopeAngle);
         g.position.set(xPos, roofLocalY - 0.15, zPos);
@@ -331,9 +380,16 @@ function changePanelCount(delta) {
         g.visible = true;
 
         const targetY = g.position.y;
-        g.position.y = targetY + 15; // start from above for drop animation
+        g.position.y = targetY + 10; // drop from above
 
-        state.panels.push({ group: g, targetY: targetY, animating: true, frame: 0, delay: 0 });
+        state.panels.push({
+            group: g,
+            targetY,
+            animating: true,
+            frame: 0
+        });
+
+        if (typeof syncSolarPanels === 'function') syncSolarPanels();
     } else {
         const lastPanel = state.panels.pop();
         if (lastPanel && lastPanel.group && lastPanel.group.parent) {
@@ -342,8 +398,39 @@ function changePanelCount(delta) {
     }
 
     state.count = newCount;
+
+    // Calculate required panels
+    let totalWatt = 0;
+    const appList = activeKey === '2bhk' ? bhk2Appliances : simpleAppliances;
+    appList.forEach(a => { if (a.on) totalWatt += a.watt; });
+    const required = Math.max(1, Math.ceil(totalWatt / 350));
+
+    // Show message
+    let msg = '';
+    let msgColor = '#2ECC8B';
+
+    if (state.count === 0) {
+        msg = '';
+    } else if (state.count < required) {
+        const still = required - state.count;
+        msg = `\u2600\uFE0F ${activeKey.toUpperCase()}: ${state.count} panel${state.count > 1 ? 's' : ''} added \u2014 need ${still} more to fully cover your usage`;
+        msgColor = '#F5A623';
+    } else if (state.count === required) {
+        msg = `\u2705 ${activeKey.toUpperCase()}: Perfect! ${state.count} panels fully cover your electricity needs!`;
+        msgColor = '#2ECC8B';
+    } else if (state.count >= state.max) {
+        msg = `\uD83D\uDD34 ${activeKey.toUpperCase()}: Maximum panels reached! Roof is fully covered.`;
+        msgColor = '#FF6B6B';
+    } else {
+        msg = `\u26A1 ${activeKey.toUpperCase()}: ${state.count} panels \u2014 generating more than needed! Great investment.`;
+        msgColor = '#5B8DEF';
+    }
+
+    if (msg) showSolarMessage(msg, msgColor);
+
     updatePowerLines();
     updateStats();
+    syncSolarPanels();
 }
 
 // Ensure the main animation loop can animate all panels if needed
@@ -351,15 +438,59 @@ if (!window.solarPanelsAnimHook) {
     window.solarPanelsAnimHook = true;
     const originalAnimate = window.animate;
 }
-// Continuously flush all active panels back into global `solarPanels` for animation 
-setInterval(() => {
+function syncSolarPanels() {
     solarPanels.length = 0;
     houseState['1bhk'].panels.forEach(p => solarPanels.push(p));
     houseState['2bhk'].panels.forEach(p => solarPanels.push(p));
-}, 100);
+}
+window.syncSolarPanels = syncSolarPanels;
 
 function refreshSolarPanelsPlacement() {
     if (typeof houseState !== 'undefined') {
         // Re-sync panel counts
     }
+}
+
+(function addSolarLight() {
+    if (typeof scene === 'undefined') return;
+    const solarLight = new THREE.DirectionalLight(0xaaccff, 1.2);
+    solarLight.position.set(0, 30, 10);
+    scene.add(solarLight);
+    const ambBoost = new THREE.AmbientLight(0x88aacc, 0.4);
+    scene.add(ambBoost);
+})();
+
+function showSolarMessage(text, color) {
+    let box = document.getElementById('solar-msg-box');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'solar-msg-box';
+        box.style.cssText = `
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a2e;
+            border: 2px solid ${color};
+            color: ${color};
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            z-index: 9999;
+            pointer-events: none;
+            text-align: center;
+            max-width: 480px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: opacity 0.4s ease;
+        `;
+        document.body.appendChild(box);
+    }
+    box.style.borderColor = color;
+    box.style.color = color;
+    box.textContent = text;
+    box.style.opacity = '1';
+    clearTimeout(box._timer);
+    box._timer = setTimeout(() => { box.style.opacity = '0'; }, 3500);
 }

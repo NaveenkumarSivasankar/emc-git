@@ -83,20 +83,35 @@ function recalcWattage() {
     setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
 
     const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
 
     setText('stat-savings', '₹' + monthlySaving.toLocaleString());
-    setText('stat-co2', co2Saved + ' kg/yr');
+    setText('stat-co2', co2Saved.toLocaleString() + ' kg/yr');
 
-    updateBarChart(total, coverageRatio);
+    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
-function updateBarChart(totalW, coverageRatio) {
+function updateBarChart(totalW, coverageRatio, effectiveSolarUnits, totalDailyUnits) {
     const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
     const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
 
-    const solarPct = Math.round(coverageRatio * 100);
+    // If effectiveSolarUnits is not passed (from older calls), calculate a generic one based on coverage ratio for fallback
+    if (typeof effectiveSolarUnits === 'undefined' || typeof totalDailyUnits === 'undefined') {
+        totalDailyUnits = (totalW * 8) / 1000;
+        effectiveSolarUnits = totalDailyUnits * coverageRatio;
+    }
+
+    const solarPct = totalDailyUnits > 0 ? Math.round((effectiveSolarUnits / totalDailyUnits) * 100) : 0;
     const gridPct = 100 - solarPct;
 
     setWidth('grid-bar', Math.max(gridPct, 5) + '%');
@@ -105,9 +120,8 @@ function updateBarChart(totalW, coverageRatio) {
     setWidth('solar-bar', Math.max(solarPct, 5) + '%');
     setText('solar-bar', solarPct + '%');
 
-    const dailyKwh = totalW * 8 / 1000;
-    const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
-    const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
+    const gridCostDaily = Math.round((totalDailyUnits - effectiveSolarUnits) * 6.5); // generic 6.5 INR rate
+    const solarSavingsDaily = Math.round(effectiveSolarUnits * 6.5);
     const monthlyBill = Math.round(gridCostDaily * 30);
 
     setText('calc-grid', '₹' + gridCostDaily);

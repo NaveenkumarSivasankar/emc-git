@@ -950,32 +950,7 @@ canvas {
 }
 
 /* ═══ SECTION LABELS ═══ */
-.section-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #eee;
-    margin: 28px 0 10px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid rgba(255, 255, 255, 0.06);
-}
 
-.section-label:first-child {
-    margin-top: 0;
-}
-
-.section-label span {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 30px;
-    height: 30px;
-    background: rgba(255, 215, 0, 0.12);
-    border-radius: 8px;
-    font-size: 1rem;
-}
 
 .section-hint {
     font-size: 0.78rem;
@@ -1813,28 +1788,7 @@ canvas {
     font-weight: 500;
 }
 
-/* ═══════════════════════════════════════════════
-   ADD SOLAR BUTTON ON HOUSE
-   ═══════════════════════════════════════════════ */
-.add-solar-btn {
-    padding: 8px 18px;
-    border: none;
-    border-radius: 50px;
-    font-family: 'Outfit', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 600;
-    cursor: pointer;
-    background: linear-gradient(135deg, #f39c12, #f1c40f);
-    color: #1a1a2e;
-    box-shadow: 0 4px 16px rgba(241, 196, 15, 0.4);
-    transition: all 0.3s ease;
-    white-space: nowrap;
-}
 
-.add-solar-btn:hover {
-    transform: translateY(-2px) scale(1.08);
-    box-shadow: 0 6px 24px rgba(241, 196, 15, 0.6);
-}
 
 /* ── House Banner (Energy Modal) ────────────────────────── */
 .house-banner {
@@ -2401,4 +2355,914 @@ canvas {
 
 .ls-fc-row b {
     color: #fff;
+}
+
+/* ══ MODAL OVERLAY ══ */
+#energy-modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: flex-start;
+    justify-content: center;
+    overflow-y: auto;
+    padding: 20px;
+    background: rgba(5, 15, 5, 0.93);
+    backdrop-filter: blur(8px);
+}
+
+#energy-modal.visible {
+    display: flex;
+}
+
+/* ══ MODAL CONTAINER — wooden notice board frame ══ */
+#energy-modal-container {
+    width: 100%;
+    max-width: 1100px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow:
+        0 0 0 6px #6b3a10,
+        0 0 0 10px #8B5a20,
+        0 0 0 14px #5a2e08,
+        0 8px 60px rgba(0, 0, 0, 0.8);
+    background: #1a1508;
+    position: relative;
+    animation: modalBookOpen 0.6s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+/* Wood grain texture on container border */
+#energy-modal-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 6px;
+    pointer-events: none;
+    box-shadow: inset 0 0 80px rgba(0, 0, 0, 0.4);
+    z-index: 0;
+}
+
+/* ══ CHALKBOARD HEADER ══ */
+.chalkboard-header {
+    position: relative;
+    background: #1a2e10;
+}
+
+.chalkboard-wood-top {
+    height: 22px;
+    background: repeating-linear-gradient(90deg,
+            #6b3a10 0px, #7a4418 8px,
+            #5a2e08 8px, #6b3a10 16px,
+            #8B5a20 16px, #6b3a10 24px);
+    border-bottom: 3px solid #3a1a04;
+    position: relative;
+}
+
+.chalkboard-wood-top::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: rgba(255, 200, 100, 0.2);
+}
+
+.chalkboard-wood-bottom {
+    height: 22px;
+    background: repeating-linear-gradient(90deg,
+            #6b3a10 0px, #7a4418 8px,
+            #5a2e08 8px, #6b3a10 16px,
+            #8B5a20 16px, #6b3a10 24px);
+    border-top: 3px solid #3a1a04;
+}
+
+.chalkboard-surface {
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(60, 100, 40, 0.3) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 50%, rgba(40, 80, 25, 0.2) 0%, transparent 60%),
+        linear-gradient(160deg, #2a5018 0%, #1e3d10 40%, #254a14 70%, #1e3d10 100%);
+    padding: 20px 32px 0;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Chalk dust texture */
+.chalkboard-surface::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Horizontal ruled lines on chalkboard */
+.chalkboard-surface::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(0deg,
+            transparent,
+            transparent 36px,
+            rgba(255, 255, 255, 0.04) 36px,
+            rgba(255, 255, 255, 0.04) 37px);
+    pointer-events: none;
+}
+
+.chalk-tray {
+    height: 10px;
+    background: linear-gradient(90deg, #3a2008, #5a3510, #3a2008);
+    border-bottom: 2px solid #2a1504;
+    margin: 0 -32px;
+    position: relative;
+    z-index: 2;
+}
+
+.bottom-tray {
+    border-top: 2px solid #2a1504;
+    border-bottom: none;
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 6px;
+    height: 16px;
+}
+
+.chalk-piece {
+    width: 28px;
+    height: 8px;
+    border-radius: 3px;
+    background: #f0ede8;
+    box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+    transform: rotate(-2deg);
+}
+
+.chalk-piece.yellow {
+    background: #f5e642;
+    transform: rotate(3deg);
+}
+
+.chalk-piece.pink {
+    background: #f5a0b0;
+    transform: rotate(-1deg);
+}
+
+.chalkboard-inner {
+    padding: 16px 0 8px;
+    position: relative;
+    z-index: 1;
+    text-align: center;
+}
+
+.chalk-decoration {
+    position: absolute;
+    top: 10px;
+    left: 20px;
+    font-size: 1.8rem;
+    opacity: 0.5;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    animation: chalkFlicker 5s infinite 1s;
+}
+
+.chalk-decoration.right {
+    left: auto;
+    right: 20px;
+}
+
+.chalkboard-title {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 1.6rem;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow:
+        2px 2px 0 rgba(0, 0, 0, 0.5),
+        0 0 30px rgba(255, 255, 255, 0.15),
+        1px 1px 0 rgba(255, 255, 255, 0.1);
+    margin-bottom: 6px;
+    animation: tubeLight 1.2s ease 0.3s both;
+}
+
+.chalkboard-subtitle {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.65);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+}
+
+.chalk-line {
+    height: 0;
+    border-top: 2px dashed rgba(255, 255, 255, 0.35);
+    margin: 10px 40px;
+    position: relative;
+}
+
+.chalk-items-row {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    padding: 10px 0 6px;
+}
+
+.chalk-item {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.7);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+/* ══ MODAL BODY — notebook paper ══ */
+#energy-modal-body {
+    position: relative;
+    padding: 28px 32px;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 31px,
+            rgba(100, 140, 255, 0.07) 31px,
+            rgba(100, 140, 255, 0.07) 32px),
+        linear-gradient(160deg, #13120a 0%, #1a1810 50%, #13120a 100%);
+    min-height: 200px;
+}
+
+/* Red margin line like notebook */
+#energy-modal-body::before {
+    content: '';
+    position: absolute;
+    left: 56px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: rgba(255, 80, 80, 0.18);
+    pointer-events: none;
+}
+
+/* Hole punches like spiral notebook */
+#energy-modal-body::after {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 0;
+    bottom: 0;
+    width: 18px;
+    background: repeating-linear-gradient(180deg,
+            transparent 0px,
+            transparent 48px,
+            rgba(0, 0, 0, 0.5) 48px,
+            rgba(0, 0, 0, 0.5) 64px);
+    pointer-events: none;
+}
+
+/* ══ SECTION LABELS — chalk chapter headings ══ */
+.section-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.82rem;
+    font-weight: 900;
+    color: #ffffff;
+    margin: 28px 0 14px;
+    padding: 10px 18px 10px 14px;
+    background: linear-gradient(90deg, #2a5018, #1e3d10);
+    border-radius: 4px;
+    border-left: 5px solid #FFD700;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    box-shadow: 2px 3px 10px rgba(0,0,0,0.4);
+    width: 100%;
+    box-sizing: border-box;
+    line-height: 1;
+    gap: 0;
+    animation: chalkFlicker 5s infinite;
+}
+
+.section-label::before {
+    content: attr(data-icon);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    line-height: 1;
+    margin-right: 10px;
+    flex-shrink: 0;
+    width: 1.4rem;
+    height: 1.4rem;
+    font-style: normal;
+    font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+/* ══ SUMMARY CARDS — pinned paper style ══ */
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.s-card {
+    border-radius: 3px;
+    padding: 20px 16px 16px;
+    position: relative;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    transition: transform 0.25s, box-shadow 0.25s;
+    box-shadow: 3px 4px 14px rgba(0, 0, 0, 0.5);
+}
+
+.s-card:hover {
+    transform: translateY(-6px) rotate(0.5deg);
+    box-shadow: 6px 10px 28px rgba(0, 0, 0, 0.6);
+}
+
+/* Pushpin */
+.s-card::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff9999, #cc2200);
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.6),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        0 0 0 2px #8B1a00;
+    z-index: 3;
+}
+
+/* Pin shadow on card */
+.s-card::after {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4), transparent);
+    pointer-events: none;
+}
+
+.s-card.blue {
+    background: linear-gradient(160deg, #0e1d42, #162d5e);
+    border-top: 4px solid #5B8DEF;
+}
+
+.s-card.green {
+    background: linear-gradient(160deg, #0e2d1a, #164d2a);
+    border-top: 4px solid #2ECC8B;
+}
+
+.s-card.orange {
+    background: linear-gradient(160deg, #2e1a08, #4d2e10);
+    border-top: 4px solid #F5A623;
+}
+
+.s-card.red {
+    background: linear-gradient(160deg, #2e0e0e, #4d1a1a);
+    border-top: 4px solid #FF6B6B;
+}
+
+.s-card-icon {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.s-card-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 4px;
+}
+
+.s-card-value {
+    font-size: 1.9rem;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    line-height: 1;
+    margin-bottom: 2px;
+}
+
+.s-card-unit {
+    font-size: 0.7rem;
+    color: #666;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 8px;
+}
+
+.s-card-sub {
+    font-size: 0.74rem;
+    color: #aaa;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255, 255, 255, 0.1);
+}
+
+/* ══ CHART PANELS — notice board papers ══ */
+.chart-panel {
+    border-radius: 3px;
+    padding: 22px 20px 20px;
+    margin-bottom: 24px;
+    position: relative;
+    border: 1px solid rgba(200, 170, 80, 0.15);
+    box-shadow: 3px 4px 16px rgba(0, 0, 0, 0.5);
+    transition: transform 0.2s;
+    background:
+        repeating-linear-gradient(0deg,
+            transparent,
+            transparent 27px,
+            rgba(100, 140, 255, 0.05) 27px,
+            rgba(100, 140, 255, 0.05) 28px),
+        linear-gradient(160deg, #141410, #1c1c14);
+    border-top: 3px solid #FFD700;
+}
+
+.chart-panel:hover {
+    transform: translateY(-2px);
+    box-shadow: 4px 8px 24px rgba(0, 0, 0, 0.6);
+}
+
+/* Red pushpin top center */
+.chart-panel::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #ff9999, #cc2200);
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.7),
+        inset 0 1px 2px rgba(255, 255, 255, 0.4),
+        0 0 0 2px #8B1a00;
+    z-index: 3;
+}
+
+/* Pencil yellow top accent */
+.chart-panel::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg,
+            transparent 0%,
+            #FFD700 20%,
+            #F5A623 50%,
+            #FFD700 80%,
+            transparent 100%);
+}
+
+.chart-heading {
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #FFD700;
+    margin-bottom: 4px;
+    font-family: 'Courier New', Courier, monospace;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.section-hint {
+    font-size: 0.75rem;
+    color: #777;
+    margin-bottom: 14px;
+    font-style: italic;
+    font-family: 'Courier New', monospace;
+}
+
+.chart-desc {
+    font-size: 0.75rem;
+    color: #777;
+    margin-bottom: 14px;
+    font-style: italic;
+    font-family: 'Courier New', monospace;
+}
+
+/* ══ TARIFF STRIP — classroom rules ══ */
+.tariff-strip {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 14px 18px;
+    background: #100e00;
+    border: 2px solid #8B6914;
+    border-radius: 4px;
+    margin-bottom: 24px;
+    font-family: 'Courier New', Courier, monospace;
+    position: relative;
+    box-shadow: 2px 3px 10px rgba(0, 0, 0, 0.4);
+    animation: rulerSlide 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.4s both;
+}
+
+.tariff-strip::before {
+    content: '📋 TARIFF RULES';
+    position: absolute;
+    top: -11px;
+    left: 16px;
+    background: #8B6914;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 2px;
+    padding: 2px 10px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+}
+
+.tariff-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #FFD700;
+    margin-right: 6px;
+}
+
+.slab {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.slab.free {
+    background: rgba(46, 204, 139, 0.2);
+    color: #2ECC8B;
+}
+
+.slab.s1 {
+    background: rgba(91, 141, 239, 0.2);
+    color: #5B8DEF;
+}
+
+.slab.s2 {
+    background: rgba(245, 166, 35, 0.2);
+    color: #F5A623;
+}
+
+.slab.s3 {
+    background: rgba(255, 107, 107, 0.2);
+    color: #FF6B6B;
+}
+
+/* ══ PIXEL TOOLTIP ══ */
+.tt-header-pixel {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 8px 8px 0 0;
+    margin: -10px -10px 10px -10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tt-pixel-icon {
+    image-rendering: pixelated;
+    flex-shrink: 0;
+}
+
+.tt-name {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.tt-watts {
+    font-size: 0.75rem;
+    color: #FFD700;
+    font-family: 'Courier New', monospace;
+}
+
+/* ══ REPORT CARD ══ */
+.kids-score-card {
+    margin-top: 28px;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 2px solid #8B6914;
+    box-shadow:
+        0 0 0 4px #5a3a08,
+        4px 4px 20px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(160deg, #13120a, #1c1a10);
+}
+
+.ksc-title {
+    text-align: center;
+    font-size: 0.9rem;
+    font-weight: 900;
+    color: #1a1200;
+    padding: 14px 20px;
+    background: repeating-linear-gradient(90deg,
+            #FFD700 0px, #F5C400 20px,
+            #FFD700 20px, #FFE040 40px);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    border-bottom: 3px solid #c0a000;
+}
+
+.ksc-scores {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid rgba(139, 105, 20, 0.3);
+}
+
+.ksc-item {
+    flex: 1;
+    padding: 20px 14px;
+    text-align: center;
+    border-right: 2px dashed rgba(139, 105, 20, 0.3);
+    transition: background 0.2s;
+    perspective: 600px;
+    animation: reportCardFlip 0.55s ease both;
+}
+
+.ksc-item:nth-child(1) {
+    animation-delay: 0.3s;
+}
+
+.ksc-item:nth-child(2) {
+    animation-delay: 0.45s;
+}
+
+.ksc-item:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.ksc-item:last-child {
+    border-right: none;
+}
+
+.ksc-item:hover {
+    background: rgba(255, 215, 0, 0.04);
+}
+
+.ksc-icon {
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+}
+
+.ksc-label {
+    font-size: 0.65rem;
+    color: #777;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.ksc-value {
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 8px;
+}
+
+.ksc-grade {
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 3px;
+    display: inline-block;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 0.5px;
+}
+
+.grade-a {
+    background: rgba(46, 204, 139, 0.2);
+    color: #2ECC8B;
+    border: 1px solid rgba(46, 204, 139, 0.4);
+    animation: starSpin 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.8s both, starPulse 2s ease 1.4s infinite;
+}
+
+.grade-b {
+    background: rgba(245, 166, 35, 0.2);
+    color: #F5A623;
+    border: 1px solid rgba(245, 166, 35, 0.4);
+}
+
+.grade-c {
+    background: rgba(255, 107, 107, 0.2);
+    color: #FF6B6B;
+    border: 1px solid rgba(255, 107, 107, 0.4);
+}
+
+.grade-info {
+    background: rgba(91, 141, 239, 0.2);
+    color: #5B8DEF;
+    border: 1px solid rgba(91, 141, 239, 0.4);
+}
+
+.ksc-tip {
+    text-align: center;
+    font-size: 0.8rem;
+    color: #aaa;
+    background: rgba(255, 215, 0, 0.04);
+    border-top: 2px dashed rgba(139, 105, 20, 0.3);
+    padding: 12px 20px;
+    font-family: 'Courier New', monospace;
+}
+
+/* ══ ALL ANIMATIONS ══ */
+@keyframes modalBookOpen {
+    0% {
+        opacity: 0;
+        transform: perspective(1000px) rotateX(-15deg) scale(0.9) translateY(-30px);
+    }
+
+    60% {
+        transform: perspective(1000px) rotateX(3deg) scale(1.01) translateY(4px);
+        opacity: 1;
+    }
+
+    80% {
+        transform: perspective(1000px) rotateX(-1deg) scale(1);
+    }
+
+    100% {
+        transform: perspective(1000px) rotateX(0deg) scale(1) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Animation assignments */
+.s-card:nth-child(1) {
+    animation: pinDrop 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.1s both;
+}
+
+.s-card:nth-child(2) {
+    animation: pinDrop 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.2s both;
+}
+
+.s-card:nth-child(3) {
+    animation: pinDrop 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.3s both;
+}
+
+.s-card:nth-child(4) {
+    animation: pinDrop 0.6s cubic-bezier(.34, 1.56, .64, 1) 0.4s both;
+}
+
+.s-card:hover::before {
+    animation: pushpinWobble 0.5s ease;
+}
+
+.chart-panel:hover::before {
+    animation: pushpinWobble 0.5s ease;
+}
+
+.chart-panel {
+    animation: paperSlideUp 0.55s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+.chart-panel.main-chart {
+    animation-delay: 0.15s;
+}
+
+.chart-panel.half:nth-child(1) {
+    animation-delay: 0.25s;
+}
+
+.chart-panel.half:nth-child(2) {
+    animation-delay: 0.35s;
+}
+
+.learn-step:nth-child(1) {
+    animation: stepWrite 0.4s ease 0.1s both;
+}
+
+.learn-step:nth-child(2) {
+    animation: stepWrite 0.4s ease 0.25s both;
+}
+
+.learn-step:nth-child(3) {
+    animation: stepWrite 0.4s ease 0.4s both;
+}
+
+.learn-step:nth-child(4) {
+    animation: stepWrite 0.4s ease 0.55s both;
+}
+
+.learn-step:nth-child(5) {
+    animation: stepWrite 0.4s ease 0.7s both;
+}
+
+.calc-result {
+    animation: answerPop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.3s both;
+}
+
+.calc-result.cost {
+    animation: answerPop 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.5s both;
+}
+
+.energy-tooltip {
+    animation: stickyNoteSlap 0.35s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+.tt-funfact {
+    animation: highlightPulse 2s ease infinite;
+}
+
+.ls-fun-compare {
+    animation: highlightPulse 3s ease 1s infinite;
+}
+
+.hs-tab:nth-child(1) {
+    animation: tabBounceIn 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.1s both;
+}
+
+.hs-tab:nth-child(3) {
+    animation: tabBounceIn 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.25s both;
+}
+
+.hs-vs {
+    animation: tabBounceIn 0.5s cubic-bezier(.34, 1.56, .64, 1) 0.18s both;
+}
+
+.learn-panel.visible {
+    animation: bookOpen 0.45s cubic-bezier(.34, 1.56, .64, 1) both;
+}
+
+.nz-fill {
+    animation: barFillChalk 1.4s cubic-bezier(.34, 1.56, .64, 1) 0.5s both;
+}
+
+.hs-tab-active {
+    background-size: 200% auto;
+    background-image: linear-gradient(90deg, #2d5016 0%, #3a6b1e 40%, #5a9e30 50%, #3a6b1e 60%, #2d5016 100%);
+    animation: pencilShimmer 2.5s linear infinite;
+}
+.learn-step {
+    background: rgba(255,255,255,0.04);
+    border-left: 3px solid #5B8DEF;
+    border-radius: 4px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+}
+.ls-step-num {
+    font-size: 0.62rem;
+    font-weight: 900;
+    color: #FFD700;
+    font-family: 'Courier New', monospace;
+    letter-spacing: 2px;
+    margin-bottom: 3px;
+}
+.ls-step-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    font-family: 'Courier New', monospace;
+    margin-bottom: 6px;
+}
+.ls-step-body {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+}
+.ls-formula {
+    font-size: 0.78rem;
+    color: #aaccff;
+    font-family: 'Courier New', monospace;
+    background: rgba(91,141,239,0.12);
+    padding: 3px 8px;
+    border-radius: 3px;
+}
+.ls-equals {
+    font-size: 0.85rem;
+    color: #FFD700;
+    font-weight: 900;
+}
+.ls-result {
+    font-size: 0.85rem;
+    font-weight: 900;
+    color: #2ECC8B;
+    font-family: 'Courier New', monospace;
+}
+.ls-hint {
+    font-size: 0.68rem;
+    color: #666;
+    font-style: italic;
+    font-family: 'Courier New', monospace;
+    line-height: 1.4;
 }
