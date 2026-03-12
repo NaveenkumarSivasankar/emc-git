@@ -1,10 +1,11 @@
-// ═══════════════════════════════════════════════
-//  WALL TRANSPARENCY SYSTEM
-// ═══════════════════════════════════════════════
-function updateWallTransparency() {
-    const camPos = camera.position.clone();
+// Cached vector for camera position (avoid clone per frame)
+const _camPos = new THREE.Vector3();
 
-    // When indoor, make outer walls fully transparent so interior is visible
+function updateWallTransparency() {
+    // Skip visibility updates during entry/exit transition
+    if (typeof boyState !== 'undefined' && boyState.mode === 'transitioning') return;
+
+    // When indoor, hide roof and other house, but keep walls and doors visible
     if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
         if (boyState.insideHouse === '1bhk') {
             transparentWalls.forEach(wall => {
@@ -12,71 +13,70 @@ function updateWallTransparency() {
                 wall.material.transparent = true;
                 wall.material.needsUpdate = true;
             });
-            roofMat.opacity = 0; roofMat.needsUpdate = true;
-            doorMat.opacity = 0; doorMat.needsUpdate = true;
+            roofMat.opacity = 1; roofMat.needsUpdate = true; // Keep roof SOLID to hide objects above
+            // Keep door visible (don't set doorMat.opacity to 0)
             labels.forEach(label => {
                 label.element.style.opacity = 1;
                 label.element.style.display = 'block';
             });
             environmentGroup.visible = false;
             bhk2Group.visible = false;
+            if (typeof poleGroup !== 'undefined') poleGroup.visible = false;
+            if (typeof entry1BHK !== 'undefined') entry1BHK.visible = false;
+            if (typeof entry2BHK !== 'undefined') entry2BHK.visible = false;
         } else if (boyState.insideHouse === '2bhk') {
             bhk2TransWalls.forEach(wall => {
                 wall.material.opacity = 0;
                 wall.material.transparent = true;
                 wall.material.needsUpdate = true;
             });
-            bhk2RoofMat.opacity = 0; bhk2RoofMat.needsUpdate = true;
-            bhk2DoorMat.opacity = 0; bhk2DoorMat.needsUpdate = true;
-            bhk2WallMat.opacity = 0; bhk2WallMat.needsUpdate = true;
+            bhk2RoofMat.opacity = 1; bhk2RoofMat.needsUpdate = true; // Keep roof SOLID
+            // Keep door visible (don't set bhk2DoorMat.opacity to 0)
             roomLabels.forEach(label => {
                 label.element.style.opacity = 1;
                 label.element.style.display = 'block';
             });
             environmentGroup.visible = false;
             houseGroup.visible = false;
+            if (typeof poleGroup !== 'undefined') poleGroup.visible = false;
+            if (typeof entry1BHK !== 'undefined') entry1BHK.visible = false;
+            if (typeof entry2BHK !== 'undefined') entry2BHK.visible = false;
         }
         return;
     }
 
-    // Outdoor: restore visibility
+    // Outdoor: restore visibility — walls stay SOLID (no camera-distance transparency)
     houseGroup.visible = true;
     bhk2Group.visible = true;
     environmentGroup.visible = true;
+    if (typeof poleGroup !== 'undefined') poleGroup.visible = true;
+    if (typeof entry1BHK !== 'undefined') entry1BHK.visible = true;
+    if (typeof entry2BHK !== 'undefined') entry2BHK.visible = true;
 
-    // Camera-distance-based transparency for 1BHK
-    const distSimple = camPos.distanceTo(new THREE.Vector3(-22, 4, -4));
-    const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
-    if (tSimple < 1.0 && typeof window.load1BHKFurniture === 'function') window.load1BHKFurniture();
-
+    // Restore wall opacity to full (solid)
     transparentWalls.forEach(wall => {
-        wall.material.opacity = tSimple;
-        wall.material.transparent = true;
+        wall.material.opacity = 1;
+        wall.material.transparent = false;
         wall.material.needsUpdate = true;
     });
-    roofMat.opacity = tSimple; roofMat.needsUpdate = true;
-    doorMat.opacity = tSimple; doorMat.needsUpdate = true;
+    roofMat.opacity = 1; roofMat.needsUpdate = true;
+    doorMat.opacity = 1; doorMat.needsUpdate = true;
     labels.forEach(label => {
-        label.element.style.opacity = 1 - tSimple;
-        label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
+        label.element.style.opacity = 0;
+        label.element.style.display = 'none';
     });
-
-    // Camera-distance-based transparency for 2BHK
-    const dist2BHK = camPos.distanceTo(new THREE.Vector3(24, 4, -4));
-    const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
-    if (t2BHK < 1.0 && typeof window.load2BHKFurniture === 'function') window.load2BHKFurniture();
 
     bhk2TransWalls.forEach(wall => {
-        wall.material.opacity = t2BHK;
-        wall.material.transparent = true;
+        wall.material.opacity = 1;
+        wall.material.transparent = false;
         wall.material.needsUpdate = true;
     });
-    bhk2RoofMat.opacity = t2BHK; bhk2RoofMat.needsUpdate = true;
-    bhk2DoorMat.opacity = t2BHK; bhk2DoorMat.needsUpdate = true;
-    bhk2WallMat.opacity = t2BHK; bhk2WallMat.needsUpdate = true;
+    bhk2RoofMat.opacity = 1; bhk2RoofMat.needsUpdate = true;
+    bhk2DoorMat.opacity = 1; bhk2DoorMat.needsUpdate = true;
+    bhk2WallMat.opacity = 1; bhk2WallMat.needsUpdate = true;
     roomLabels.forEach(label => {
-        label.element.style.opacity = 1 - t2BHK;
-        label.element.style.display = (1 - t2BHK) > 0.2 ? 'block' : 'none';
+        label.element.style.opacity = 0;
+        label.element.style.display = 'none';
     });
 }
 
@@ -95,35 +95,33 @@ function animate() {
 
     controls.update();
 
-    // Clouds
-    clouds.forEach((cloud, i) => {
-        cloud.position.x += delta * (0.3 + i * 0.1);
-        if (cloud.position.x > 45) cloud.position.x = -45;
-    });
+    const isIndoor = typeof boyState !== 'undefined' && boyState.mode === 'indoor';
 
-    // Sun
-    sunMesh.position.y = 35 + Math.sin(elapsed * 0.1) * 2;
-    sunGlow.position.copy(sunMesh.position);
-    sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
+    // Clouds, sun, birds — skip when indoor (invisible objects)
+    if (!isIndoor) {
+        clouds.forEach((cloud, i) => {
+            cloud.position.x += delta * (0.3 + i * 0.1);
+            if (cloud.position.x > 45) cloud.position.x = -45;
+        });
 
-    // ─── BIRDS ANIMATION ───
-    birds.forEach(bird => {
-        const angle = bird.startAngle + elapsed * bird.circleSpeed;
-        bird.group.position.x = bird.circleRadius * Math.cos(angle);
-        bird.group.position.z = -10 + bird.circleRadius * Math.sin(angle) * 0.5;
-        bird.group.position.y = bird.baseY + Math.sin(elapsed * 0.5 + bird.flapPhase) * bird.bobAmount;
+        sunMesh.position.y = 35 + Math.sin(elapsed * 0.1) * 2;
+        sunGlow.position.copy(sunMesh.position);
+        sunGlow.scale.setScalar(1 + Math.sin(elapsed * 2) * 0.1);
 
-        // Wing flapping
-        const flapAngle = Math.sin(elapsed * bird.flapSpeed + bird.flapPhase) * 0.5;
-        bird.leftWing.rotation.z = flapAngle;
-        bird.rightWing.rotation.z = -flapAngle;
-
-        // Face movement direction
-        const nextAngle = angle + 0.01;
-        const dx = Math.cos(nextAngle) - Math.cos(angle);
-        const dz = Math.sin(nextAngle) - Math.sin(angle);
-        bird.group.rotation.y = Math.atan2(dx, dz);
-    });
+        birds.forEach(bird => {
+            const angle = bird.startAngle + elapsed * bird.circleSpeed;
+            bird.group.position.x = bird.circleRadius * Math.cos(angle);
+            bird.group.position.z = -10 + bird.circleRadius * Math.sin(angle) * 0.5;
+            bird.group.position.y = bird.baseY + Math.sin(elapsed * 0.5 + bird.flapPhase) * bird.bobAmount;
+            const flapAngle = Math.sin(elapsed * bird.flapSpeed + bird.flapPhase) * 0.5;
+            bird.leftWing.rotation.z = flapAngle;
+            bird.rightWing.rotation.z = -flapAngle;
+            const nextAngle = angle + 0.01;
+            const dx = Math.cos(nextAngle) - Math.cos(angle);
+            const dz = Math.sin(nextAngle) - Math.sin(angle);
+            bird.group.rotation.y = Math.atan2(dx, dz);
+        });
+    }
 
     // Determine which house to animate (skip inactive house for performance)
     const activeHouse = (typeof boyState !== 'undefined' && boyState.mode === 'indoor')
@@ -184,24 +182,19 @@ function animate() {
         });
     }
 
-    // Solar panels animation (with sparkles on landing)
-    solarPanels.forEach(p => {
-        if (p.animating) {
-            p.frame++;
-            if (p.frame > p.delay) {
-                const dy = (p.targetY - p.group.position.y) * 0.08;
-                p.group.position.y += dy;
-                if (Math.abs(p.group.position.y - p.targetY) < 0.05) {
-                    p.group.position.y = p.targetY;
-                    p.animating = false;
-                    // Spawn golden sparkles on panel landing
-                    if (typeof spawnSparkles === 'function') {
-                        spawnSparkles(p.group.position);
-                    }
-                }
-            }
+    // Solar panels animation
+    for (let i = 0; i < solarPanels.length; i++) {
+        const p = solarPanels[i];
+        if (!p.animating) continue;
+        p.frame++;
+        const t = Math.min(p.frame / 30, 1);
+        const eased = 1 - Math.pow(1 - t, 3);
+        p.group.position.y = p.targetY + 14 * (1 - eased);
+        if (t >= 1) {
+            p.group.position.y = p.targetY;
+            p.animating = false;
         }
-    });
+    }
 
     // Boy character animation — works in EXTERIOR and INTERIOR states
     updateBoy(delta);

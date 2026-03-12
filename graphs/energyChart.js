@@ -2,6 +2,173 @@
 //  APEXCHARTS ENERGY DASHBOARD — v2
 //  Clean 4-section layout for kids
 // ═══════════════════════════════════════════════
+
+const PIXEL_ICONS = {
+    fan: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="7" y="1" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="7" y="12" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="1" y="7" width="3" height="2" fill="#5B8DEF"/>
+        <rect x="12" y="7" width="3" height="2" fill="#5B8DEF"/>
+        <rect x="6" y="6" width="4" height="4" fill="#818CF8"/>
+        <rect x="5" y="5" width="6" height="1" fill="#5B8DEF"/>
+        <rect x="5" y="10" width="6" height="1" fill="#5B8DEF"/>
+        <rect x="5" y="5" width="1" height="6" fill="#5B8DEF"/>
+        <rect x="10" y="5" width="1" height="6" fill="#5B8DEF"/>
+    </svg>`,
+    bulb: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="6" y="1" width="4" height="1" fill="#FFD700"/>
+        <rect x="4" y="2" width="8" height="1" fill="#FFD700"/>
+        <rect x="3" y="3" width="10" height="4" fill="#FFE066"/>
+        <rect x="4" y="7" width="8" height="2" fill="#FFD700"/>
+        <rect x="5" y="9" width="6" height="1" fill="#FFD700"/>
+        <rect x="5" y="10" width="6" height="2" fill="#cccccc"/>
+        <rect x="6" y="12" width="4" height="1" fill="#aaaaaa"/>
+        <rect x="2" y="4" width="1" height="2" fill="#fff5aa"/>
+        <rect x="13" y="4" width="1" height="2" fill="#fff5aa"/>
+    </svg>`,
+    ac: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="3" width="14" height="8" fill="#5B8DEF"/>
+        <rect x="2" y="4" width="12" height="6" fill="#818CF8"/>
+        <rect x="3" y="5" width="10" height="1" fill="#c8d8ff"/>
+        <rect x="3" y="7" width="10" height="1" fill="#c8d8ff"/>
+        <rect x="13" y="5" width="1" height="3" fill="#FFD700"/>
+        <rect x="2" y="11" width="2" height="2" fill="#5B8DEF"/>
+        <rect x="7" y="11" width="2" height="2" fill="#5B8DEF"/>
+        <rect x="12" y="11" width="2" height="2" fill="#5B8DEF"/>
+    </svg>`,
+    tv: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="2" width="14" height="10" fill="#222"/>
+        <rect x="2" y="3" width="12" height="8" fill="#1a3a5c"/>
+        <rect x="3" y="4" width="10" height="6" fill="#225588"/>
+        <rect x="4" y="5" width="3" height="2" fill="#5B8DEF" opacity="0.6"/>
+        <rect x="6" y="12" width="4" height="1" fill="#555"/>
+        <rect x="4" y="13" width="8" height="1" fill="#444"/>
+    </svg>`,
+    fridge: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="3" y="1" width="10" height="14" fill="#dddddd"/>
+        <rect x="4" y="2" width="8" height="5" fill="#eeeeee"/>
+        <rect x="4" y="8" width="8" height="6" fill="#f5f5f5"/>
+        <rect x="7" y="7" width="2" height="1" fill="#888"/>
+        <rect x="11" y="4" width="1" height="2" fill="#888"/>
+        <rect x="11" y="10" width="1" height="2" fill="#888"/>
+    </svg>`,
+    laptop: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="2" y="3" width="12" height="8" fill="#555"/>
+        <rect x="3" y="4" width="10" height="6" fill="#225588"/>
+        <rect x="4" y="5" width="4" height="2" fill="#5B8DEF" opacity="0.5"/>
+        <rect x="1" y="11" width="14" height="2" fill="#444"/>
+        <rect x="5" y="11" width="6" height="1" fill="#333"/>
+    </svg>`,
+    phone: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="4" y="1" width="8" height="14" fill="#333"/>
+        <rect x="5" y="2" width="6" height="10" fill="#225588"/>
+        <rect x="6" y="13" width="4" height="1" fill="#555"/>
+        <rect x="6" y="3" width="3" height="2" fill="#5B8DEF" opacity="0.5"/>
+    </svg>`,
+    heater: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="2" y="5" width="12" height="8" fill="#888"/>
+        <rect x="3" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="6" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="9" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="12" y="6" width="2" height="6" fill="#ff6b35"/>
+        <rect x="4" y="2" width="2" height="3" fill="#FF6B6B"/>
+        <rect x="8" y="1" width="2" height="4" fill="#FF6B6B"/>
+        <rect x="10" y="2" width="2" height="3" fill="#FF6B6B"/>
+    </svg>`,
+    microwave: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="3" width="14" height="10" fill="#555"/>
+        <rect x="2" y="4" width="9" height="8" fill="#222"/>
+        <rect x="3" y="5" width="7" height="6" fill="#1a1a2e"/>
+        <rect x="11" y="4" width="3" height="8" fill="#444"/>
+        <rect x="12" y="5" width="1" height="1" fill="#FF6B6B"/>
+        <rect x="12" y="7" width="1" height="1" fill="#2ECC8B"/>
+        <rect x="12" y="9" width="1" height="1" fill="#5B8DEF"/>
+    </svg>`,
+    stove: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="2" width="14" height="12" fill="#444"/>
+        <rect x="3" y="4" width="4" height="4" fill="#333"/>
+        <rect x="9" y="4" width="4" height="4" fill="#333"/>
+        <rect x="4" y="5" width="2" height="2" fill="#FF6B35"/>
+        <rect x="10" y="5" width="2" height="2" fill="#FF6B35"/>
+        <rect x="3" y="9" width="10" height="2" fill="#555"/>
+    </svg>`,
+    wifi: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="1" y="4" width="14" height="2" fill="#5B8DEF" opacity="0.4"/>
+        <rect x="3" y="6" width="10" height="2" fill="#5B8DEF" opacity="0.6"/>
+        <rect x="5" y="8" width="6" height="2" fill="#5B8DEF" opacity="0.8"/>
+        <rect x="7" y="10" width="2" height="3" fill="#5B8DEF"/>
+        <rect x="6" y="13" width="4" height="1" fill="#5B8DEF"/>
+    </svg>`,
+    generic: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="3" y="2" width="10" height="12" fill="#555"/>
+        <rect x="4" y="3" width="8" height="8" fill="#333"/>
+        <rect x="5" y="4" width="6" height="6" fill="#225588"/>
+        <rect x="4" y="12" width="3" height="1" fill="#888"/>
+        <rect x="9" y="12" width="3" height="1" fill="#FF6B6B"/>
+    </svg>`,
+    solar: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="6" y="1" width="4" height="1" fill="#FFD700"/>
+        <rect x="7" y="2" width="2" height="1" fill="#FFD700"/>
+        <rect x="1" y="6" width="1" height="4" fill="#FFD700"/>
+        <rect x="2" y="7" width="1" height="2" fill="#FFD700"/>
+        <rect x="14" y="6" width="1" height="4" fill="#FFD700"/>
+        <rect x="13" y="7" width="1" height="2" fill="#FFD700"/>
+        <rect x="3" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="4" y="4" width="8" height="8" fill="#FFE066"/>
+        <rect x="5" y="5" width="6" height="6" fill="#FFD700"/>
+        <rect x="6" y="6" width="4" height="4" fill="#fff5aa"/>
+    </svg>`,
+    house: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="8" y="1" width="1" height="1" fill="#FF6B6B"/>
+        <rect x="6" y="2" width="5" height="1" fill="#FF6B6B"/>
+        <rect x="4" y="3" width="9" height="1" fill="#FF6B6B"/>
+        <rect x="2" y="4" width="13" height="1" fill="#c0392b"/>
+        <rect x="3" y="5" width="11" height="9" fill="#e8d5b7"/>
+        <rect x="6" y="9" width="4" height="5" fill="#5c3a1e"/>
+        <rect x="4" y="6" width="3" height="3" fill="#88ccee"/>
+        <rect x="10" y="6" width="3" height="3" fill="#88ccee"/>
+    </svg>`,
+    star: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="7" y="1" width="2" height="3" fill="#FFD700"/>
+        <rect x="7" y="12" width="2" height="3" fill="#FFD700"/>
+        <rect x="1" y="7" width="3" height="2" fill="#FFD700"/>
+        <rect x="12" y="7" width="3" height="2" fill="#FFD700"/>
+        <rect x="3" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="2" fill="#FFD700"/>
+        <rect x="3" y="11" width="2" height="2" fill="#FFD700"/>
+        <rect x="11" y="11" width="2" height="2" fill="#FFD700"/>
+        <rect x="5" y="5" width="6" height="6" fill="#FFE066"/>
+        <rect x="6" y="6" width="4" height="4" fill="#fff5aa"/>
+    </svg>`,
+    trophy: `<svg viewBox="0 0 16 16" width="20" height="20" style="image-rendering:pixelated">
+        <rect x="5" y="1" width="6" height="1" fill="#FFD700"/>
+        <rect x="4" y="2" width="8" height="5" fill="#FFE066"/>
+        <rect x="3" y="3" width="2" height="3" fill="#FFD700"/>
+        <rect x="11" y="3" width="2" height="3" fill="#FFD700"/>
+        <rect x="5" y="7" width="6" height="2" fill="#FFD700"/>
+        <rect x="6" y="9" width="4" height="2" fill="#FFD700"/>
+        <rect x="5" y="11" width="6" height="1" fill="#c0a020"/>
+        <rect x="4" y="12" width="8" height="2" fill="#c0a020"/>
+    </svg>`
+};
+
+function getAppliancePixelIcon(name) {
+    const n = name.toLowerCase();
+    if (n.includes('fan')) return PIXEL_ICONS.fan;
+    if (n.includes('bulb') || n.includes('light')) return PIXEL_ICONS.bulb;
+    if (n.includes('ac') || n.includes('air')) return PIXEL_ICONS.ac;
+    if (n.includes('tv') || n.includes('tele')) return PIXEL_ICONS.tv;
+    if (n.includes('fridge') || n.includes('refrig')) return PIXEL_ICONS.fridge;
+    if (n.includes('laptop')) return PIXEL_ICONS.laptop;
+    if (n.includes('mobile') || n.includes('phone')) return PIXEL_ICONS.phone;
+    if (n.includes('heater') || n.includes('geyser')) return PIXEL_ICONS.heater;
+    if (n.includes('micro')) return PIXEL_ICONS.microwave;
+    if (n.includes('stove') || n.includes('induct')) return PIXEL_ICONS.stove;
+    if (n.includes('wifi') || n.includes('router')) return PIXEL_ICONS.wifi;
+    return PIXEL_ICONS.generic;
+}
+
 let chartInstances = [];
 let currentEnergyData = [];
 
@@ -15,8 +182,34 @@ function openEnergyModal() {
     const modal = document.getElementById('energy-modal');
     if (!modal) return;
 
-    const appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+    // Determine which house data to show based on boy's current location
+    let appliancesList;
+    let modalHouseLabel;
+
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
+        if (boyState.insideHouse === '1bhk') {
+            appliancesList = simpleAppliances;
+            modalHouseLabel = '🏠 1BHK House';
+        } else if (boyState.insideHouse === '2bhk') {
+            appliancesList = bhk2Appliances;
+            modalHouseLabel = '🏠 2BHK House';
+        } else {
+            appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+            modalHouseLabel = is2BHK ? '🏠 2BHK House' : '🏠 1BHK House';
+        }
+    } else {
+        // Outdoor or fallback — use current selected house
+        appliancesList = is2BHK ? bhk2Appliances : simpleAppliances;
+        modalHouseLabel = is2BHK ? '🏠 2BHK House' : '🏠 1BHK House';
+    }
+
     const data = getApplianceEnergyData(appliancesList);
+    window._currentModalHouseLabel = modalHouseLabel;
+
+    // When outdoors, store which house is selected for switching
+    if (typeof boyState !== 'undefined' && boyState.mode !== 'indoor') {
+        window._outdoorSelectedHouse = is2BHK ? '2bhk' : '1bhk';
+    }
 
     if (data.length === 0) {
         alert('⚡ No active appliances! Turn on some appliances first.');
@@ -32,18 +225,31 @@ function openEnergyModal() {
     const totalDailyUnits = data.reduce((s, d) => s + d.perDay, 0);
     const totalBill = calculateTNTariffCost(totalMonthlyUnits);
     const weeklyBill = calculateTNTariffCost(totalWeeklyUnits);
-    const solarKW = (typeof currentPanelCount !== 'undefined' ? currentPanelCount : 0) * 0.35;
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION (0.35 kW per generic panel)
+    const activeHouseKey = (window._currentModalHouseLabel && window._currentModalHouseLabel.includes('2BHK')) ? '2bhk' : '1bhk';
+    const panelCount = (typeof houseState !== 'undefined' && houseState[activeHouseKey]) ? houseState[activeHouseKey].count : 0;
+    const solarKW = panelCount * 0.35;
 
     destroyAllCharts();
 
     const content = document.getElementById('energy-modal-body');
-    content.innerHTML = buildDashboardHTML(data, totalDailyUnits, totalWeeklyUnits, totalMonthlyUnits, weeklyBill, totalBill, solarKW);
+    content.innerHTML = buildDashboardHTML(data, totalDailyUnits, totalWeeklyUnits, totalMonthlyUnits, weeklyBill, totalBill, solarKW, window._currentModalHouseLabel);
+    
+    document.getElementById('energy-modal-body').insertAdjacentHTML('beforeend', buildLearnPanelHTML());
+    requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+            if (typeof window.recalcLearningSteps === 'function') {
+                window.recalcLearningSteps();
+            }
+        });
+    });
 
     setTimeout(() => {
         renderBarChart(data);
         renderPieChart(data);
         renderDonutChart(data);
-        renderLineChart(data);
+
         animateNetZeroBar(solarKW, totalMonthlyUnits);
     }, 150);
 }
@@ -59,18 +265,172 @@ function closeEnergyModal() {
     currentEnergyData = [];
 }
 
+function switchModalHouse(houseId) {
+    window._outdoorSelectedHouse = houseId;
+
+    // Determine appliance list for selected house
+    const appliancesList = (houseId === '2bhk') ? bhk2Appliances : simpleAppliances;
+    const houseLabel = (houseId === '2bhk') ? '🏠 2BHK House' : '🏠 1BHK House';
+    window._currentModalHouseLabel = houseLabel;
+
+    const data = getApplianceEnergyData(appliancesList);
+    if (data.length === 0) return;
+
+    currentEnergyData = data;
+
+    const totalMonthlyUnits = data.reduce((s, d) => s + d.perMonth, 0);
+    const totalWeeklyUnits = data.reduce((s, d) => s + d.perWeek, 0);
+    const totalDailyUnits = data.reduce((s, d) => s + d.perDay, 0);
+    const totalBill = calculateTNTariffCost(totalMonthlyUnits);
+    const weeklyBill = calculateTNTariffCost(totalWeeklyUnits);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION (0.35 kW per generic panel)
+    const panelCount = (typeof houseState !== 'undefined' && houseState[houseId]) ? houseState[houseId].count : 0;
+    const solarKW = panelCount * 0.35;
+
+    destroyAllCharts();
+
+    const content = document.getElementById('energy-modal-body');
+    content.innerHTML = buildDashboardHTML(
+        data, totalDailyUnits, totalWeeklyUnits,
+        totalMonthlyUnits, weeklyBill, totalBill,
+        solarKW, houseLabel
+    );
+
+    setTimeout(() => {
+        renderBarChart(data);
+        renderPieChart(data);
+        renderDonutChart(data);
+
+        animateNetZeroBar(solarKW, totalMonthlyUnits);
+    }, 150);
+}
+
 // ═══════════════════════════════════════════════
 //  SECTION BUILDER
 // ═══════════════════════════════════════════════
-function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthlyBill, solarKW) {
-    const houseName = is2BHK ? '2BHK' : '1BHK';
+function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthlyBill, solarKW, houseLabel) {
+    const houseName = houseLabel || (is2BHK ? '2BHK' : '1BHK');
     const nz = calculateNetZero(monthlyU, solarKW);
     const netZeroNeeded = Math.max(0, Math.ceil(monthlyU - nz.solarMonthly));
 
     return '' +
 
+        // ── Chalkboard Header ──
+        '<div class="chalkboard-header">' +
+        '<div class="chalkboard-wood-top"></div>' +
+        '<div class="chalkboard-surface">' +
+        '<div class="chalk-tray"></div>' +
+        '<div class="chalkboard-inner">' +
+        '<div class="chalk-decoration chalk-star">★</div>' +
+        '<div class="chalk-decoration chalk-star right">★</div>' +
+        '<div class="chalkboard-title">⚡ Energy Learning Dashboard</div>' +
+        '<div class="chalkboard-subtitle">' + (houseName || 'House') + ' — Electricity Report Card</div>' +
+        '<div class="chalk-line"></div>' +
+        '<div class="chalk-items-row">' +
+        '<div class="chalk-item">📏 Learn</div>' +
+        '<div class="chalk-item">✏️ Calculate</div>' +
+        '<div class="chalk-item">🔔 Discover</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="chalk-tray bottom-tray">' +
+        '<div class="chalk-piece"></div>' +
+        '<div class="chalk-piece yellow"></div>' +
+        '<div class="chalk-piece"></div>' +
+        '<div class="chalk-piece pink"></div>' +
+        '<div class="chalk-piece"></div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="chalkboard-wood-bottom"></div>' +
+        '</div>' +
+
+        // ── House Switcher (outdoor only) ──
+        (typeof boyState !== 'undefined' && boyState.mode !== 'indoor' ?
+            '<div class="house-switcher">' +
+            '<div class="hs-label">👇 Pick a house to explore!</div>' +
+            '<div class="hs-tabs">' +
+            '<button class="hs-tab ' + (window._outdoorSelectedHouse !== '2bhk' ? 'hs-tab-active' : '') + '" onclick="switchModalHouse(\'1bhk\')">' +
+            '<span class="hs-tab-icon">�</span>' +
+            '<span class="hs-tab-name">1BHK</span>' +
+            '<span class="hs-tab-sub">Small Home</span>' +
+            '</button>' +
+            '<div class="hs-vs">VS</div>' +
+            '<button class="hs-tab ' + (window._outdoorSelectedHouse === '2bhk' ? 'hs-tab-active' : '') + '" onclick="switchModalHouse(\'2bhk\')">' +
+            '<span class="hs-tab-icon">🏠</span>' +
+            '<span class="hs-tab-name">2BHK</span>' +
+            '<span class="hs-tab-sub">Big Home</span>' +
+            '</button>' +
+            '</div>' +
+            '</div>'
+            : '')
+        +
+
+        // ── Kids Comparison (outdoor only) ──
+        (typeof boyState !== 'undefined' && boyState.mode !== 'indoor' ?
+            (function () {
+                const bhk1Data = getApplianceEnergyData(simpleAppliances);
+                const bhk2Data = getApplianceEnergyData(bhk2Appliances);
+                const bhk1Units = bhk1Data.reduce((s, d) => s + d.perMonth, 0);
+                const bhk2Units = bhk2Data.reduce((s, d) => s + d.perMonth, 0);
+                const bhk1Bill = calculateTNTariffCost(bhk1Units);
+                const bhk2Bill = calculateTNTariffCost(bhk2Units);
+                const winner = bhk1Units < bhk2Units ? '1BHK' : '2BHK';
+                const bhk1Pct = Math.round((bhk1Units / (bhk1Units + bhk2Units)) * 100);
+                const bhk2Pct = 100 - bhk1Pct;
+                return (
+                    '<div class="kids-compare">' +
+                    '<div class="section-label" data-icon="🏆">KIDS COMPARISON</div>' +
+
+                    '<div class="kc-title">⚡ Which house uses MORE electricity?</div>' +
+
+                    '<div class="kc-houses">' +
+
+                    '<div class="kc-house ' + (winner === '1BHK' ? 'kc-loser' : 'kc-winner') + '">' +
+                    '<div class="kc-house-icon">🏡</div>' +
+                    '<div class="kc-house-name">1BHK</div>' +
+                    '<div class="kc-house-units">' + bhk1Units.toFixed(0) + ' <small>units/mo</small></div>' +
+                    '<div class="kc-house-bill">₹' + bhk1Bill + '/month</div>' +
+                    '<div class="kc-badge">' + (winner === '1BHK' ? '🌟 Energy Saver!' : '⚠️ Uses More!') + '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-vs-col">' +
+                    '<div class="kc-vs-text">VS</div>' +
+                    '<div class="kc-diff">' +
+                    '<div class="kc-diff-label">Difference</div>' +
+                    '<div class="kc-diff-value">+' + Math.abs(bhk1Units - bhk2Units).toFixed(0) + ' units</div>' +
+                    '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-house ' + (winner === '2BHK' ? 'kc-loser' : 'kc-winner') + '">' +
+                    '<div class="kc-house-icon">🏠</div>' +
+                    '<div class="kc-house-name">2BHK</div>' +
+                    '<div class="kc-house-units">' + bhk2Units.toFixed(0) + ' <small>units/mo</small></div>' +
+                    '<div class="kc-house-bill">₹' + bhk2Bill + '/month</div>' +
+                    '<div class="kc-badge">' + (winner === '2BHK' ? '🌟 Energy Saver!' : '⚠️ Uses More!') + '</div>' +
+                    '</div>' +
+
+                    '</div>' +
+
+                    '<div class="kc-bar-label">Energy Usage Comparison</div>' +
+                    '<div class="kc-bar-track">' +
+                    '<div class="kc-bar-fill kc-bar-1bhk" style="width:' + bhk1Pct + '%">' +
+                    '<span>1BHK ' + bhk1Pct + '%</span>' +
+                    '</div>' +
+                    '<div class="kc-bar-fill kc-bar-2bhk" style="width:' + bhk2Pct + '%">' +
+                    '<span>2BHK ' + bhk2Pct + '%</span>' +
+                    '</div>' +
+                    '</div>' +
+
+                    '<div class="kc-fun-fact">🧠 <b>Did you know?</b> A bigger house usually needs more electricity because it has more rooms and appliances!</div>' +
+
+                    '</div>'
+                );
+            })()
+            : '')
+        +
+
         // ═══ SECTION 1: SUMMARY CARDS ═══
-        '<div class="section-label"><span>📋</span> Overview</div>' +
+        '<div class="section-label" data-icon="⚡">OVERVIEW</div>' +
         '<div class="summary-cards">' +
 
         '<div class="s-card blue">' +
@@ -116,6 +476,7 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ── Tariff Reference ──
+        '<div class="section-label" data-icon="📋">TARIFF RULES</div>' +
         '<div class="tariff-strip">' +
         '<span class="tariff-title">📋 TN Electricity Tariff:</span>' +
         '<span class="slab free">0-100 units = Free</span>' +
@@ -125,14 +486,14 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
 
         // ═══ SECTION 2: MAIN BAR CHART ═══
-        '<div class="section-label"><span>📊</span> Energy Consumption by Appliance</div>' +
+        '<div class="section-label" data-icon="📊">CONSUMPTION BY APPLIANCE</div>' +
         '<div class="section-hint">👆 Click any bar to learn how the calculation works!</div>' +
         '<div class="chart-panel main-chart">' +
         '<div id="chart-bar"></div>' +
         '</div>' +
 
         // ═══ SECTION 3: DISTRIBUTION CHARTS ═══
-        '<div class="section-label"><span>🔍</span> Energy Distribution</div>' +
+        '<div class="section-label" data-icon="🥧">ENERGY DISTRIBUTION</div>' +
         '<div class="distribution-row">' +
         '<div class="chart-panel half">' +
         '<h3 class="chart-heading">🥧 Energy Share by Appliance</h3>' +
@@ -146,14 +507,10 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '</div>' +
         '</div>' +
 
-        // ── Line Chart ──
-        '<div class="chart-panel main-chart">' +
-        '<h3 class="chart-heading">📈 Energy Growth: Day → Week → Month</h3>' +
-        '<div id="chart-line"></div>' +
-        '</div>' +
+
 
         // ═══ SECTION 4: NET ZERO PANEL ═══
-        '<div class="section-label"><span>🌞</span> Net Zero Energy Goal</div>' +
+        '<div class="section-label" data-icon="🌱">NET ZERO GOAL</div>' +
         '<div class="netzero-panel">' +
         '<div class="nz-stats">' +
         '<div class="nz-stat">' +
@@ -181,13 +538,93 @@ function buildDashboardHTML(data, dailyU, weeklyU, monthlyU, weeklyBill, monthly
         '<div id="netzero-message" class="nz-message"></div>' +
         '</div>' +
 
-        // ── Learning Panel (slide-in, hidden) ──
-        '<div id="learn-panel" class="learn-panel">' +
-        '<button class="learn-close" onclick="closeLearningPanel()">✕</button>' +
-        '<h3 class="learn-title">🎓 How is this calculated?</h3>' +
-        '<div id="learn-appliance-name" class="learn-appliance-name"></div>' +
-        '<div id="learn-steps"></div>' +
+        // ── Kids Energy Report Card ──
+        '<div class="section-label" data-icon="📝">REPORT CARD</div>' +
+        '<div class="kids-score-card">' +
+        '<div class="ksc-title">' + PIXEL_ICONS.trophy + ' Your Energy Report Card</div>' +
+        '<div class="ksc-scores">' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">⚡</div>' +
+        '<div class="ksc-label">Daily Usage</div>' +
+        '<div class="ksc-value">' + dailyU.toFixed(1) + ' units</div>' +
+        '<div class="ksc-grade ' + (dailyU < 5 ? 'grade-a' : dailyU < 10 ? 'grade-b' : 'grade-c') + '">' +
+        (dailyU < 5 ? '🌟 A+ Excellent' : dailyU < 10 ? '👍 B Good' : '⚠️ C Save More') +
+        '</div>' +
+        '</div>' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">💰</div>' +
+        '<div class="ksc-label">Monthly Bill</div>' +
+        '<div class="ksc-value">₹' + monthlyBill + '</div>' +
+        '<div class="ksc-grade ' + (monthlyBill < 200 ? 'grade-a' : monthlyBill < 500 ? 'grade-b' : 'grade-c') + '">' +
+        (monthlyBill < 200 ? '🌟 A+ Super Saver' : monthlyBill < 500 ? '👍 B Average' : '⚠️ C High Bill') +
+        '</div>' +
+        '</div>' +
+
+        '<div class="ksc-item">' +
+        '<div class="ksc-icon">🌍</div>' +
+        '<div class="ksc-label">CO₂ Impact</div>' +
+        '<div class="ksc-value">' + (monthlyU * 0.82).toFixed(1) + ' kg</div>' +
+        '<div class="ksc-grade grade-info">🌱 Plant ' + Math.ceil(monthlyU * 0.82 / 21) + ' trees to offset!</div>' +
+        '</div>' +
+
+        '</div>' +
+        '<div class="ksc-tip">💡 <b>Pro Tip:</b> Turn off lights when leaving a room — it saves ₹' +
+        Math.round(60 / 1000 * 8 * 30 * 3) + ' every month!</div>' +
         '</div>';
+}
+
+function buildLearnPanelHTML() {
+    return `
+        <div id="learn-panel" class="learn-panel">
+            <div class="lp-header">
+                <span style="font-family:'Courier New';font-size:0.9rem;font-weight:900;color:#FFD700;letter-spacing:2px;">📚 HOW IS THIS CALCULATED?</span>
+                <button onclick="document.getElementById('learn-panel').classList.remove('visible')"
+                    style="background:none;border:none;color:#aaa;font-size:1.2rem;cursor:pointer;float:right;">✕</button>
+            </div>
+
+            <div id="ls-appliance-title" style="
+                font-family:'Courier New',monospace;
+                font-size:0.85rem;
+                color:#fff;
+                padding:10px 14px;
+                background:rgba(255,215,0,0.08);
+                border-radius:4px;
+                margin-bottom:12px;
+                border-left:3px solid #FFD700;
+            ">💡 Click any bar to load an appliance</div>
+
+            <div style="display:flex;gap:10px;margin-bottom:14px;">
+                <div style="flex:1;background:rgba(91,141,239,0.12);border-radius:6px;padding:10px 12px;border:1px solid rgba(91,141,239,0.3);">
+                    <div style="font-size:0.65rem;font-weight:900;color:#5B8DEF;font-family:'Courier New',monospace;letter-spacing:1.5px;margin-bottom:6px;">⚡ WATTS</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="adjustLearningValue('watts',-10)"
+                            style="width:28px;height:28px;border-radius:50%;background:#1a2744;border:1px solid #5B8DEF;color:#5B8DEF;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                        <input id="ls-watts" type="number" value="100" min="1" max="5000"
+                            oninput="recalcLearningSteps()"
+                            style="width:60px;text-align:center;background:transparent;border:none;color:#FFD700;font-size:1.1rem;font-weight:900;font-family:'Courier New',monospace;" />
+                        <button onclick="adjustLearningValue('watts',10)"
+                            style="width:28px;height:28px;border-radius:50%;background:#1a2744;border:1px solid #5B8DEF;color:#5B8DEF;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                    </div>
+                </div>
+                <div style="flex:1;background:rgba(46,204,139,0.12);border-radius:6px;padding:10px 12px;border:1px solid rgba(46,204,139,0.3);">
+                    <div style="font-size:0.65rem;font-weight:900;color:#2ECC8B;font-family:'Courier New',monospace;letter-spacing:1.5px;margin-bottom:6px;">🕐 HOURS/DAY</div>
+                    <div style="display:flex;align-items:center;gap:6px;">
+                        <button onclick="adjustLearningValue('hours',-0.5)"
+                            style="width:28px;height:28px;border-radius:50%;background:#0e2d1a;border:1px solid #2ECC8B;color:#2ECC8B;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">−</button>
+                        <input id="ls-hours" type="number" value="5" min="0.5" max="24" step="0.5"
+                            oninput="recalcLearningSteps()"
+                            style="width:60px;text-align:center;background:transparent;border:none;color:#FFD700;font-size:1.1rem;font-weight:900;font-family:'Courier New',monospace;" />
+                        <button onclick="adjustLearningValue('hours',0.5)"
+                            style="width:28px;height:28px;border-radius:50%;background:#0e2d1a;border:1px solid #2ECC8B;color:#2ECC8B;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">+</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="ls-steps-output" style="margin-top:12px;min-height:100px;"></div>
+        </div>
+    `;
 }
 
 // ─── ANIMATE NET ZERO BAR ─────────────────────
@@ -237,6 +674,11 @@ function showLearningPanel(dataIndex) {
     const stepsEl = document.getElementById('learn-steps');
     if (nameEl) nameEl.innerHTML = '💡 ' + d.name + ' <span>(' + d.watts + 'W, ' + d.hoursPerDay + ' hrs/day)</span>';
     if (stepsEl) stepsEl.innerHTML = generateLearningSteps(d);
+    
+    setTimeout(() => {
+        if (typeof recalcLearningSteps === 'function') recalcLearningSteps();
+    }, 50);
+
     if (panel) panel.classList.add('visible');
 }
 
@@ -300,8 +742,31 @@ function renderBarChart(data) {
             type: 'bar',
             height: 380,
             events: {
-                dataPointSelection: function (e, ctx, cfg) {
-                    showLearningPanel(cfg.dataPointIndex);
+                dataPointSelection: function(event, chartContext, config) {
+                    const idx = config.dataPointIndex;
+                    const seriesIdx = config.seriesIndex;
+                    const appList = window._currentModalAppList || simpleAppliances;
+                    const appliance = appList[idx];
+                    if (!appliance) return;
+
+                    const watts = appliance.watt || 100;
+                    const hours = appliance.hours || appliance.hoursPerDay || 5;
+
+                    // Set the learning panel inputs to this appliance
+                    const wInput = document.getElementById('ls-watts');
+                    const hInput = document.getElementById('ls-hours');
+                    const titleEl = document.getElementById('ls-appliance-title');
+
+                    if (wInput) wInput.value = watts;
+                    if (hInput) hInput.value = hours;
+                    if (titleEl) titleEl.innerHTML = `<b>${appliance.name}</b> <span style="color:#888;font-size:0.8rem">(${watts}W, ${hours} hrs/day)</span>`;
+
+                    // Show the panel if hidden
+                    const panel = document.getElementById('learn-panel');
+                    if (panel) panel.classList.add('visible');
+
+                    // Recalculate steps immediately
+                    setTimeout(window.recalcLearningSteps, 200);
                 }
             }
         },
@@ -344,15 +809,30 @@ function renderBarChart(data) {
             theme: 'dark',
             custom: function ({ dataPointIndex }) {
                 const d = data[dataPointIndex];
-                return '<div class="energy-tooltip">' +
-                    '<div class="tt-header">' + d.name + ' <span>' + d.watts + 'W</span></div>' +
-                    '<div class="tt-row"><span>⚡ Monthly</span><b>' + d.perMonth + ' kWh</b></div>' +
-                    '<div class="tt-row"><span>📅 Weekly</span><b>' + d.perWeek + ' kWh</b></div>' +
-                    '<div class="tt-row"><span>🕐 Daily</span><b>' + d.perDay + ' kWh</b></div>' +
-                    '<div class="tt-divider"></div>' +
-                    '<div class="tt-cost">💰 ₹' + d.monthlyCost + '/month</div>' +
-                    '<div class="tt-hint">👆 Click to see step-by-step math!</div>' +
-                    '</div>';
+                const icon = getAppliancePixelIcon(d.name);
+                const funFacts = [
+                    'Uses same power as ' + Math.round(d.watts / 10) + ' phone chargers running together',
+                    'In a month uses ' + d.perMonth + ' units — enough to charge ' + Math.round(d.perMonth * 83) + ' phones!',
+                    'Saving 1 hour per day saves ' + (d.watts / 1000).toFixed(2) + ' units daily',
+                    'Costs only \u20b9' + (d.monthlyCost / 30).toFixed(1) + ' every single day'
+                ];
+                const fact = funFacts[dataPointIndex % funFacts.length];
+                return `<div class="energy-tooltip">
+                    <div class="tt-header-pixel">
+                        <div class="tt-pixel-icon">${icon}</div>
+                        <div class="tt-header-text">
+                            <div class="tt-name">${d.name}</div>
+                            <div class="tt-watts">${d.watts}W</div>
+                        </div>
+                    </div>
+                    <div class="tt-row"><span>Monthly</span><b>${d.perMonth} kWh</b></div>
+                    <div class="tt-row"><span>Weekly</span><b>${d.perWeek} kWh</b></div>
+                    <div class="tt-row"><span>Daily</span><b>${d.perDay} kWh</b></div>
+                    <div class="tt-divider"></div>
+                    <div class="tt-cost">Cost: Rs.${d.monthlyCost}/month</div>
+                    <div class="tt-funfact">${fact}</div>
+                    <div class="tt-hint">Click to learn the maths!</div>
+                </div>`;
             }
         },
         responsive: [{
@@ -468,42 +948,3 @@ function renderDonutChart(data) {
     chartInstances.push(chart);
 }
 
-// ── 4. LINE CHART ─────────────────────────────
-function renderLineChart(data) {
-    const el = document.getElementById('chart-line');
-    if (!el) return;
-
-    const base = chartBase();
-    const series = data.map(d => ({
-        name: d.name,
-        data: [parseFloat(d.perDay.toFixed(2)), parseFloat(d.perWeek.toFixed(2)), parseFloat(d.perMonth.toFixed(2))]
-    }));
-
-    const config = {
-        ...base,
-        series: series,
-        chart: { ...base.chart, type: 'line', height: 340, zoom: { enabled: false } },
-        stroke: { curve: 'smooth', width: 3 },
-        markers: { size: 7, strokeWidth: 2, strokeColors: '#1a1a2e', hover: { size: 10 } },
-        xaxis: {
-            categories: ['📅 1 Day', '📅 1 Week', '📅 1 Month'],
-            labels: { style: { colors: '#aaa', fontSize: '14px', fontWeight: 600 } }
-        },
-        yaxis: {
-            title: { text: 'Units (kWh)', style: { color: '#777', fontSize: '13px' } },
-            labels: { style: { colors: '#777', fontSize: '12px' }, formatter: v => v.toFixed(1) }
-        },
-        tooltip: {
-            theme: 'dark', shared: true, intersect: false,
-            y: { formatter: v => v.toFixed(2) + ' kWh' }
-        },
-        legend: {
-            position: 'top', labels: { colors: '#bbb' },
-            fontSize: '12px', fontWeight: 500, itemMargin: { horizontal: 10 }
-        }
-    };
-
-    const chart = new ApexCharts(el, config);
-    chart.render();
-    chartInstances.push(chart);
-}

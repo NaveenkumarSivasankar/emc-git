@@ -7,7 +7,7 @@ scene.add(environmentGroup);
 // ═══════════════════════════════════════════════
 //  GROUND
 // ═══════════════════════════════════════════════
-const groundGeo = new THREE.PlaneGeometry(120, 120);
+const groundGeo = new THREE.PlaneGeometry(240, 240);
 const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a8c3f, roughness: 0.9, metalness: 0.0 });
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
@@ -293,7 +293,7 @@ function createBush(x, y, z, scale) {
 }
 
 // Far side trees (across the road — varied types)
-createPineTree(-30, 0, 19, 1.3); createRoundTree(-22, 0, 18, 1.1); createBushyTree(-12, 0, 20, 1.4);
+createPineTree(-30, 0, 19, 1.3); /* createRoundTree(-22, 0, 18, 1.1); REMOVED */ createBushyTree(-12, 0, 20, 1.4);
 createTallTree(-2, 0, 19, 1.0); createTallTree(8, 0, 20, 1.5); createPineTree(18, 0, 18, 1.2);
 createBushyTree(28, 0, 19, 1.3); createRoundTree(35, 0, 20, 1.1);
 
@@ -330,8 +330,9 @@ function createFlowerPatch(x, z) {
     g.position.set(x, 0, z);
     environmentGroup.add(g);
 }
-createFlowerPatch(-20, 2); createFlowerPatch(-10, 1.5);
-createFlowerPatch(10, 2); createFlowerPatch(22, 1.5);
+// Flower patches near house entrances removed to avoid blocking
+createFlowerPatch(-10, 1.5);
+createFlowerPatch(10, 2);
 
 // ═══════════════════════════════════════════════
 //  BIRDS IN THE SKY
