@@ -84,6 +84,48 @@ const roof = new THREE.Mesh(roofGeo, roofMat);
 roof.position.set(0, H + 0.3, -D / 2 - 0.8); roof.castShadow = true; roof.receiveShadow = true;
 houseGroup.add(roof);
 
+// ── "Naveen" name etched on front roof face ──
+(function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    // Transparent background
+    ctx.clearRect(0, 0, 512, 256);
+    // Gold etched text
+    ctx.font = 'bold 72px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#DAA520';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 18;
+    ctx.fillText('Naveen', 256, 128);
+    ctx.shadowBlur = 0;
+    // Thin border stroke for engraved look
+    ctx.strokeStyle = '#8B6914'; ctx.lineWidth = 1.5;
+    ctx.strokeText('Naveen', 256, 128);
+
+    const nameTexture = new THREE.CanvasTexture(canvas);
+    nameTexture.needsUpdate = true;
+
+    // Front roof face is a triangle: base = W + 1.6, height = roofH
+    // Place a plane on the front face of the extruded roof
+    const nameW = 10, nameH = 3;
+    const nameMat = new THREE.MeshStandardMaterial({
+        map: nameTexture, transparent: true, alphaTest: 0.05,
+        emissive: 0xDAA520, emissiveIntensity: 0.3,
+        roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide,
+        depthWrite: false
+    });
+    const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(nameW, nameH), nameMat);
+    // Position on front face of roof — front face is at z = -D/2 - 0.8 (extrude starts there)
+    // Actually the extrude goes from z = -D/2 - 0.8 toward +z with depth D+1.6
+    // So the front face (facing +z) is at z = -D/2 - 0.8 + D + 1.6 = D/2 + 0.8
+    // Roof peak is at center x=0, y = H + 0.3 + roofH, base at y = H + 0.3
+    namePlane.position.set(0, H + 0.3 + roofH * 0.45, D / 2 + 0.82);
+    houseGroup.add(namePlane);
+
+    // Glow animation
+    window._1bhkNameMat = nameMat;
+})();
+
 // Chimney
 const chimneyMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.85 });
 const chimney = new THREE.Mesh(new THREE.BoxGeometry(1.3, 3.5, 1.3), chimneyMat);

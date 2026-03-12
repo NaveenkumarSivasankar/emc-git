@@ -228,6 +228,11 @@ function animate() {
         waterStream.material.opacity = 0.5 + Math.sin(elapsed * 15) * 0.1;
     }
 
+    // Roof name glow pulse animation
+    const nameGlow = 0.35 + Math.sin(elapsed * 1.5) * 0.2;
+    if (window._1bhkNameMat) window._1bhkNameMat.emissiveIntensity = nameGlow;
+    if (window._2bhkNameMat) window._2bhkNameMat.emissiveIntensity = nameGlow;
+
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 }

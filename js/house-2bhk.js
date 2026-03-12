@@ -58,6 +58,42 @@ bhk2RoofShape.moveTo(-W2 / 2 - 0.8, 0); bhk2RoofShape.lineTo(0, roofH + 1); bhk2
 const bhk2Roof = new THREE.Mesh(new THREE.ExtrudeGeometry(bhk2RoofShape, { depth: D2 + 1.6, bevelEnabled: false }), bhk2RoofMat);
 bhk2Roof.position.set(0, H + 0.3, -D2 / 2 - 0.8); bhk2Roof.castShadow = true; roomGroups['Structure'].add(bhk2Roof);
 
+// ── "Murali" name etched on front roof face ──
+(function() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 512, 256);
+    // Gold etched text
+    ctx.font = 'bold 72px Georgia, serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#DAA520';
+    ctx.shadowColor = '#FFD700'; ctx.shadowBlur = 18;
+    ctx.fillText('Murali', 256, 128);
+    ctx.shadowBlur = 0;
+    // Thin border stroke for engraved look
+    ctx.strokeStyle = '#8B6914'; ctx.lineWidth = 1.5;
+    ctx.strokeText('Murali', 256, 128);
+
+    const nameTexture = new THREE.CanvasTexture(canvas);
+    nameTexture.needsUpdate = true;
+
+    const nameW = 10, nameH = 3;
+    const nameMat = new THREE.MeshStandardMaterial({
+        map: nameTexture, transparent: true, alphaTest: 0.05,
+        emissive: 0xDAA520, emissiveIntensity: 0.3,
+        roughness: 0.6, metalness: 0.4, side: THREE.DoubleSide,
+        depthWrite: false
+    });
+    const namePlane = new THREE.Mesh(new THREE.PlaneGeometry(nameW, nameH), nameMat);
+    // Front face at z = D2/2 + 0.8, roof peak at y = H + 0.3 + roofH + 1
+    namePlane.position.set(0, H + 0.3 + (roofH + 1) * 0.45, D2 / 2 + 0.82);
+    bhk2Group.add(namePlane);
+
+    // Glow animation
+    window._2bhkNameMat = nameMat;
+})();
+
 // Windows
 function addBhk2Window(x, y, z, ry) {
     const wg = new THREE.Group();
