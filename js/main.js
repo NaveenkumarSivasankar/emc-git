@@ -92,7 +92,7 @@ function animate() {
     const elapsed = clock.getElapsedTime();
     frameCount++;
 
-    if (gameState !== STATE.INSIDE && typeof controls !== 'undefined') controls.update();
+    if (typeof boyState === 'undefined' || boyState.mode !== 'indoor') { if (typeof controls !== 'undefined') controls.update(); }
 
     const isIndoor = typeof boyState !== 'undefined' && boyState.mode === 'indoor';
 

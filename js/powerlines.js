@@ -200,7 +200,7 @@ function createWattLabel(name, watt, isOn, worldPos) {
 //  TOGGLE ENERGY VISION
 // ═══════════════════════════════════════════════
 function toggleEnergyVision() {
-  if (gameState !== STATE.INSIDE) {
+  if (typeof boyState === 'undefined' || boyState.mode !== 'indoor') {
     if (typeof showToast === 'function') showToast('⚠️ Enter a house first to use Energy Vision!');
     return;
   }

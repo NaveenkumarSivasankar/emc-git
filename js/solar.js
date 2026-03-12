@@ -193,35 +193,19 @@ function updateStats() {
         if (btn) btn.className = 'grid-mode bottom-action-btn';
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
-        if (pc) pc.classList.remove('visible');
+        if (panelCounter) panelCounter.classList.remove('visible');
     }
     if (typeof updatePowerLines === 'function') updatePowerLines();
-    if (typeof updateStats === 'function') updateStats();
-}
-
-function toggleSolar() {
-    if (isSolarMode) {
-        isSolarMode = false;
-        const btn = document.getElementById('solar-btn');
-        const btnText = document.getElementById('solar-btn-text');
-        const btnIcon = document.getElementById('solar-btn-icon');
-        const panelCounter = document.getElementById('panel-counter');
-        if (btn) btn.className = 'grid-mode bottom-action-btn';
-        if (btnText) btnText.textContent = 'Add Solar Panels';
-        if (btnIcon) btnIcon.textContent = '☀️';
-        if (panelCounter) panelCounter.classList.remove('visible');
-
-    }
-
-    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
 function openSolarModal() {
-    document.getElementById('solar-selection-modal').classList.remove('modal-hidden');
+    const modal = document.getElementById('solar-selection-modal');
+    if (modal) modal.classList.remove('modal-hidden');
 }
 
 function closeSolarModal() {
-    document.getElementById('solar-selection-modal').classList.add('modal-hidden');
+    const modal = document.getElementById('solar-selection-modal');
+    if (modal) modal.classList.add('modal-hidden');
 }
 
 function selectSolarHouse(houseKey) {
@@ -330,24 +314,12 @@ function changePanelCount(delta) {
     const config = getRoofConfig(activeKey);
 
     if (delta > 0) {
-        const idx = state.count; // the zero-based index of the panel being added
-        // Fill left side fully (colsPerSide * rows), then right side
-        const panelsPerSide = config.colsPerSide * config.rows;
-        const side = idx < panelsPerSide ? -1 : 1; // -1 for left, 1 for right
-        const sideIdx = idx < panelsPerSide ? idx : idx - panelsPerSide;
-        const col = Math.floor(sideIdx / config.rows);
-        const row = sideIdx % config.rows;
-
+        const idx = state.count;
         const g = createSolarPanel();
-
-        // Calculate position with clean grid alignment (no 1.05 multiplier)
-        const xOffset = config.startX + col * config.panelGapX + 2.8;
-        const xPos = xOffset * side;
-        const zPos = config.startZ + row * config.panelGapZ + 2.2;
 
         const hFallback = typeof H !== 'undefined' ? H : 7;
         const roofHval = typeof roofH !== 'undefined' ? roofH : 4.5;
-        const ridgeY = hFallback + roofHval; // absolute Y of roof ridge peak
+        const ridgeY = hFallback + roofHval;
 
         const panelsPerRow = 3;
         const colSpacing = 3.0;
@@ -390,9 +362,8 @@ function changePanelCount(delta) {
         const slopeAngle = Math.atan2(roofHval, config.roofWidthHalf);
         const tiltZ = isLeft ? slopeAngle : -slopeAngle;
 
-        g.rotation.set(0, 0, side * -config.slopeAngle);
-        g.position.set(xPos, roofLocalY - 0.15, zPos);
-        g.translateY(0.55); // lift panel so mounting stands are visible above roof
+        g.rotation.set(0, 0, tiltZ);
+        g.position.set(clampedX, yPos, clampedZ);
 
         config.targetGroup.add(g);
         g.visible = true;

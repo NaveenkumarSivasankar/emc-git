@@ -758,8 +758,7 @@ function createViewModeBadge() {
     b.innerHTML = '<span id="view-mode-icon">👁️</span><span id="view-mode-label">First Person</span><span class="view-mode-switch">⇄ Switch</span>';
     document.body.appendChild(b);
     b.addEventListener('click', () => {
-        if (typeof window.gameState === 'undefined' || typeof window.STATE === 'undefined') return;
-        if (window.gameState !== window.STATE.INSIDE) return;
+        if (typeof boyState === 'undefined' || boyState.mode !== 'indoor') return;
         const next = window.cameraMode === 'firstperson' ? 'thirdperson' : 'firstperson';
         if (typeof window.setCameraMode === 'function') window.setCameraMode(next);
     });
