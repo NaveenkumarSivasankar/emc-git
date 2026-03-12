@@ -225,7 +225,11 @@ function openEnergyModal() {
     const totalDailyUnits = data.reduce((s, d) => s + d.perDay, 0);
     const totalBill = calculateTNTariffCost(totalMonthlyUnits);
     const weeklyBill = calculateTNTariffCost(totalWeeklyUnits);
-    const solarKW = (typeof currentPanelCount !== 'undefined' ? currentPanelCount : 0) * 0.35;
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION (0.35 kW per generic panel)
+    const activeHouseKey = (window._currentModalHouseLabel && window._currentModalHouseLabel.includes('2BHK')) ? '2bhk' : '1bhk';
+    const panelCount = (typeof houseState !== 'undefined' && houseState[activeHouseKey]) ? houseState[activeHouseKey].count : 0;
+    const solarKW = panelCount * 0.35;
 
     destroyAllCharts();
 
@@ -279,7 +283,10 @@ function switchModalHouse(houseId) {
     const totalDailyUnits = data.reduce((s, d) => s + d.perDay, 0);
     const totalBill = calculateTNTariffCost(totalMonthlyUnits);
     const weeklyBill = calculateTNTariffCost(totalWeeklyUnits);
-    const solarKW = (typeof currentPanelCount !== 'undefined' ? currentPanelCount : 0) * 0.35;
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION (0.35 kW per generic panel)
+    const panelCount = (typeof houseState !== 'undefined' && houseState[houseId]) ? houseState[houseId].count : 0;
+    const solarKW = panelCount * 0.35;
 
     destroyAllCharts();
 

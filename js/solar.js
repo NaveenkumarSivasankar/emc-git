@@ -283,14 +283,23 @@ function updateStats() {
     if (statPanels) statPanels.textContent = activeState.count + ' / ' + panelsNeeded + ' needed';
 
     const coverageRatio = Math.min(activeState.count / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = activeState.count;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
 
     const statSavings = document.getElementById('stat-savings');
     if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
 
     const statCo2 = document.getElementById('stat-co2');
-    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+    if (statCo2) statCo2.textContent = co2Saved.toLocaleString() + ' kg/yr';
 
     const statFact = document.getElementById('stat-fact');
     if (statFact) statFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -317,7 +326,7 @@ function updateStats() {
 
     }
 
-    updateBarChart(total, coverageRatio);
+    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
 function openSolarModal() {
