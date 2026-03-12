@@ -37,6 +37,17 @@ for (let i = 0; i < 30; i++) {
     environmentGroup.add(patch);
 }
 
+// ═══════════════════════════════════════════════
+//  ROAD IN FRONT OF HOUSES
+// ═══════════════════════════════════════════════
+const roadGeo = new THREE.PlaneGeometry(90, 7);
+const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.95 });
+const road = new THREE.Mesh(roadGeo, roadMat);
+road.rotation.x = -Math.PI / 2;
+road.position.set(1, 0.03, 13);
+road.receiveShadow = true;
+environmentGroup.add(road);
+
 // ── ROADS TO NEW BUILDINGS ──
 // Vertical road from houses to school+office area
 const roadSouth1 = new THREE.Mesh(new THREE.PlaneGeometry(7, 60), roadMat);
@@ -56,17 +67,6 @@ roadSouth2.receiveShadow = true; environmentGroup.add(roadSouth2);
 const crossRoad1 = new THREE.Mesh(new THREE.PlaneGeometry(60, 7), roadMat);
 crossRoad1.rotation.x = -Math.PI / 2; crossRoad1.position.set(0, 0.03, -28);
 crossRoad1.receiveShadow = true; environmentGroup.add(crossRoad1);
-
-// ═══════════════════════════════════════════════
-//  ROAD IN FRONT OF HOUSES
-// ═══════════════════════════════════════════════
-const roadGeo = new THREE.PlaneGeometry(90, 7);
-const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.95 });
-const road = new THREE.Mesh(roadGeo, roadMat);
-road.rotation.x = -Math.PI / 2;
-road.position.set(1, 0.03, 13);
-road.receiveShadow = true;
-environmentGroup.add(road);
 
 // Yellow dashed center line
 for (let i = -20; i <= 20; i++) {
