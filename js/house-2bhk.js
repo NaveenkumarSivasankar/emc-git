@@ -411,3 +411,18 @@ simpleTvFrame.position.set(5, 4, -4.8); houseGroup.add(simpleTvFrame);
 const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x000000 }));
 simpleTvScreen.position.set(5, 4, -4.73); houseGroup.add(simpleTvScreen);
 simpleAppliances[3].mesh = { frame: simpleTvFrame, screen: simpleTvScreen };
+
+// ═══════════════════════════════════════════════
+//  ROOF DATA — used by solar.js for panel placement
+// ═══════════════════════════════════════════════
+const ROOF_DATA_2BHK = {
+    centerX: 0,           // local to bhk2Group
+    centerZ: 0,
+    y: H + 0.3,           // exact roof base height
+    peakY: H + 0.3 + roofH + 1,
+    width: W2,
+    depth: D2,
+    slopeAngle: Math.atan2(roofH + 1, W2 / 2 + 0.8),
+    slopeAxis: 'x',
+};
+console.log('[HOUSE-2BHK] Built — roof data exported');

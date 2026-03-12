@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-//  SOLAR PANELS (adjusted for enlarged 1BHK)
+//  SOLAR PANELS — Photorealistic PV Cells + Roof Placement
 // ═══════════════════════════════════════════════
 const solarPanels = [];
 const houseState = {
@@ -7,8 +7,125 @@ const houseState = {
     '2bhk': { panels: [], count: 0, max: 0, isSolarMode: false }
 };
 
-const panelMat = new THREE.MeshStandardMaterial({ color: 0x1a237e, roughness: 0.25, metalness: 0.8 });
-const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalness: 0.9, roughness: 0.3 });
+// ═══════════════════════════════════════════════
+//  ROOF DATA CONSTANTS
+// ═══════════════════════════════════════════════
+const ROOF_1BHK = {
+    centerX: -22,
+    centerZ: 0,
+    y: 7.3,
+    width: 28,
+    depth: 22,
+    slopeAngle: 0.35,
+    slopeAxis: 'x',
+};
+
+const ROOF_2BHK = {
+    centerX: 24,
+    centerZ: 0,
+    y: 7.3,
+    width: 28,
+    depth: 24,
+    slopeAngle: 0.35,
+    slopeAxis: 'x',
+};
+
+// ═══════════════════════════════════════════════
+//  PV CELL CANVAS TEXTURE
+// ═══════════════════════════════════════════════
+function createPVTexture() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512; canvas.height = 308;
+    const ctx = canvas.getContext('2d');
+
+    // Dark blue base
+    ctx.fillStyle = '#0a1628';
+    ctx.fillRect(0, 0, 512, 308);
+
+    // Individual PV cells (6x10 grid)
+    const cellW = 512 / 10 - 2;
+    const cellH = 308 / 6 - 2;
+    for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 10; col++) {
+            const x = col * (512 / 10) + 1;
+            const y = row * (308 / 6) + 1;
+            // Cell with slight blue variation
+            const shade = 15 + Math.random() * 8;
+            ctx.fillStyle = `rgb(${Math.floor(shade)}, ${Math.floor(shade + 10)}, ${Math.floor(shade + 35)})`;
+            ctx.fillRect(x, y, cellW, cellH);
+
+            // Cell border lines (finger electrodes)
+            ctx.strokeStyle = '#1a3a6e';
+            ctx.lineWidth = 0.5;
+            ctx.strokeRect(x, y, cellW, cellH);
+
+            // Subtle cell shimmer
+            const shimmer = ctx.createLinearGradient(x, y, x + cellW, y + cellH);
+            shimmer.addColorStop(0, 'rgba(40, 80, 140, 0.15)');
+            shimmer.addColorStop(0.5, 'rgba(60, 100, 160, 0.05)');
+            shimmer.addColorStop(1, 'rgba(30, 60, 120, 0.15)');
+            ctx.fillStyle = shimmer;
+            ctx.fillRect(x, y, cellW, cellH);
+        }
+    }
+
+    // Silver busbars (horizontal)
+    ctx.strokeStyle = '#8899AA';
+    ctx.lineWidth = 1.5;
+    [0.33, 0.66].forEach(f => {
+        ctx.beginPath();
+        ctx.moveTo(0, 308 * f);
+        ctx.lineTo(512, 308 * f);
+        ctx.stroke();
+    });
+
+    // Vertical busbars every cell
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i <= 10; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * 51.2, 0);
+        ctx.lineTo(i * 51.2, 308);
+        ctx.stroke();
+    }
+
+    // Metallic frame
+    ctx.strokeStyle = '#C0C8D0';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, 504, 300);
+
+    // Inner frame bevel
+    ctx.strokeStyle = '#A0AAB0';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(8, 8, 496, 292);
+
+    return new THREE.CanvasTexture(canvas);
+}
+
+const panelTexture = createPVTexture();
+const panelMat = new THREE.MeshStandardMaterial({
+    map: panelTexture,
+    roughness: 0.15,
+    metalness: 0.4,
+    envMapIntensity: 0.8,
+});
+const panelFrameMat = new THREE.MeshStandardMaterial({
+    color: 0xC0C8D0,
+    metalness: 0.7,
+    roughness: 0.3
+});
+const panelBackMat = new THREE.MeshStandardMaterial({
+    color: 0xC0C8D0,
+    roughness: 0.5,
+    metalness: 0.6
+});
+
+// ═══════════════════════════════════════════════
+//  CREATE SOLAR PANEL WITH MOUNTING
+// ═══════════════════════════════════════════════
+const PANEL_W = 1.65;
+const PANEL_H = 0.992;
+const PANEL_THICKNESS = 0.04;
+const GAP = 0.06;
 
 function createSolarPanel() {
     const g = new THREE.Group();
@@ -30,7 +147,18 @@ function createSolarPanel() {
     const framePositions = [[0, 0, 1.8], [0, 0, -1.8], [-2.6, 0, 0], [2.6, 0, 0]];
     frameParts.forEach((geo, i) => {
         const mesh = new THREE.Mesh(geo, panelFrameMat);
-        mesh.position.set(...framePositions[i]); g.add(mesh);
+        mesh.position.set(...framePositions[i]);
+        mesh.castShadow = true;
+        g.add(mesh);
+    });
+
+    // Mounting legs
+    const legGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.12, 6);
+    const legMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8, roughness: 0.3 });
+    [-0.5, 0.5].forEach(lx => {
+        const leg = new THREE.Mesh(legGeo, legMat);
+        leg.position.set(lx, -PANEL_THICKNESS / 2 - 0.06, 0);
+        g.add(leg);
     });
 
     // ── MOUNTING STAND (scaled for doubled panel) ──
@@ -106,23 +234,60 @@ function getRoofConfig(houseKey) {
     return { roofWidthHalf, roofDepthHalf, startX, startZ, slopeAngle, baseRoofH, targetGroup, panelGapX, panelGapZ, colsPerSide, rows, max };
 }
 
-function initializeHouseSolar(houseKey) {
-    const state = houseState[houseKey];
-    const config = getRoofConfig(houseKey);
-    state.max = config.max;
+function removeEnergyFlow() {
+    if (energyFlowLine) { scene.remove(energyFlowLine); energyFlowLine = null; }
+    if (energyFlowSphere) { scene.remove(energyFlowSphere); energyFlowSphere = null; }
+    if (energyFlowTube) { scene.remove(energyFlowTube); energyFlowTube = null; }
+    if (energyFlowOrb) { scene.remove(energyFlowOrb); energyFlowOrb = null; }
+    energyFlowCurve = null;
 }
 
-setTimeout(() => {
-    initializeHouseSolar('1bhk');
-    initializeHouseSolar('2bhk');
-}, 500);
+function updateEnergyFlow(delta) {
+    if (!energyFlowSphere || !energyFlowSphere.userData.points) return;
+    if (!isDayTime || !isSolarMode || currentPanelCount === 0) {
+        if (energyFlowLine) energyFlowLine.visible = false;
+        if (energyFlowTube) energyFlowTube.visible = false;
+        if (energyFlowOrb) energyFlowOrb.visible = false;
+        energyFlowSphere.visible = false;
+        return;
+    }
+
+    if (energyFlowLine) energyFlowLine.visible = true;
+    if (energyFlowTube) energyFlowTube.visible = true;
+    if (energyFlowOrb) energyFlowOrb.visible = true;
+    energyFlowSphere.visible = true;
+
+    energyFlowProgress += delta * 0.5;
+    if (energyFlowProgress > 1) energyFlowProgress = 0;
+
+    // Animate orb along curve
+    if (energyFlowCurve && energyFlowOrb) {
+        const pos = energyFlowCurve.getPoint(energyFlowProgress);
+        energyFlowOrb.position.copy(pos);
+        energyFlowOrb.scale.setScalar(0.8 + Math.sin(energyFlowProgress * Math.PI * 4) * 0.3);
+    }
+
+    // Legacy sphere animation
+    const pts = energyFlowSphere.userData.points;
+    const totalSegments = pts.length - 1;
+    const segProgress = energyFlowProgress * totalSegments;
+    const segIndex = Math.min(Math.floor(segProgress), totalSegments - 1);
+    const segT = segProgress - segIndex;
+    const p = new THREE.Vector3().lerpVectors(pts[segIndex], pts[segIndex + 1], segT);
+    energyFlowSphere.position.copy(p);
+    energyFlowSphere.scale.setScalar(0.8 + Math.sin(energyFlowProgress * Math.PI * 4) * 0.3);
+}
 
 
 
+    // Create energy flow
+    createEnergyFlow(is2BHK ? '2bhk' : '1bhk');
 
+    console.log(`[SOLAR] Panels placed on ${is2BHK ? '2BHK' : '1BHK'}: ${count} panels`);
+}
 
 // ═══════════════════════════════════════════════
-//  SOLAR / GRID TOGGLE (Modal interaction handles specific house)
+//  STATS & TOGGLE
 // ═══════════════════════════════════════════════
 const funFacts = [
     "The sun produces enough energy in 1 hour to power the entire Earth for a year!",
@@ -149,7 +314,7 @@ function updateStats() {
     if (statConsumption) statConsumption.textContent = total.toLocaleString() + ' W';
 
     const statPanels = document.getElementById('stat-panels');
-    if (statPanels) statPanels.textContent = activeState.count + ' / ' + panelsNeeded + ' needed';
+    if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
 
     const coverageRatio = Math.min(activeState.count / panelsNeeded, 1);
     
@@ -176,18 +341,13 @@ function updateStats() {
     const panelNum = document.getElementById('panel-num');
     if (panelNum) panelNum.textContent = activeState.count;
 
-    const btnText = document.getElementById('solar-btn-text');
-    const btnIcon = document.getElementById('solar-btn-icon');
-    const btn = document.getElementById('solar-btn');
-    const panelCounter = document.getElementById('panel-counter');
-
-    if (activeState.isSolarMode) {
-        if (btn) btn.className = 'solar-mode bottom-action-btn';
-        if (btnText) btnText.textContent = 'Remove Solar (' + activeKey.toUpperCase() + ')';
-        if (btnIcon) btnIcon.textContent = '⚡';
-        if (panelCounter) panelCounter.classList.add('visible');
-
-    } else {
+function toggleSolar() {
+    if (isSolarMode) {
+        isSolarMode = false;
+        const btn = document.getElementById('solar-btn');
+        const btnText = document.getElementById('solar-btn-text');
+        const btnIcon = document.getElementById('solar-btn-icon');
+        const panelCounter = document.getElementById('panel-counter');
         if (btn) btn.className = 'grid-mode bottom-action-btn';
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
@@ -256,7 +416,7 @@ function toggleSolar() {
         updatePowerLines();
         updateStats();
     } else {
-        openSolarModal();
+        showSolarSelector();
     }
 }
 
