@@ -188,3 +188,17 @@ const labels = [
 // ═══════════════════════════════════════════════
 let currentPanelCount = 0;
 let isSolarMode = false;
+
+// ═══════════════════════════════════════════════
+//  APPLIANCE TOGGLED EVENT — for live grid + achievements
+// ═══════════════════════════════════════════════
+function dispatchApplianceToggle(name, watt, isOn) {
+    window.dispatchEvent(new CustomEvent('applianceToggled', {
+        detail: { name, watt, isOn }
+    }));
+    // Track for achievements
+    if (window.playerProgress) {
+        window.playerProgress.appliancesToggled = (window.playerProgress.appliancesToggled || 0) + 1;
+    }
+}
+window.dispatchApplianceToggle = dispatchApplianceToggle;

@@ -7,12 +7,23 @@ scene.add(environmentGroup);
 // ═══════════════════════════════════════════════
 //  GROUND
 // ═══════════════════════════════════════════════
-const groundGeo = new THREE.PlaneGeometry(120, 120);
+const groundGeo = new THREE.PlaneGeometry(250, 250);
 const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a8c3f, roughness: 0.9, metalness: 0.0 });
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 environmentGroup.add(ground);
+
+// ── BUILDING POSITIONS (world coords) ──
+const BUILDING_POSITIONS = {
+    '1bhk':        { x: -22, z: 0 },
+    '2bhk':        { x: 24,  z: 0 },
+    'school':      { x: -20, z: -40 },
+    'office':      { x: 20,  z: -40 },
+    'grid-office': { x: 0,   z: -70 },
+    'solar-office': { x: 0,  z: -100 },
+};
+window.BUILDING_POSITIONS = BUILDING_POSITIONS;
 
 // Grass patches for natural look
 for (let i = 0; i < 30; i++) {
@@ -22,9 +33,29 @@ for (let i = 0; i < 30; i++) {
         new THREE.MeshStandardMaterial({ color: new THREE.Color().setHSL(0.28 + Math.random() * 0.06, 0.6 + Math.random() * 0.2, 0.25 + Math.random() * 0.1), roughness: 0.95 })
     );
     patch.rotation.x = -Math.PI / 2;
-    patch.position.set((Math.random() - 0.5) * 100, 0.01, (Math.random() - 0.5) * 100);
+    patch.position.set((Math.random() - 0.5) * 200, 0.01, (Math.random() - 0.5) * 200);
     environmentGroup.add(patch);
 }
+
+// ── ROADS TO NEW BUILDINGS ──
+// Vertical road from houses to school+office area
+const roadSouth1 = new THREE.Mesh(new THREE.PlaneGeometry(7, 60), roadMat);
+roadSouth1.rotation.x = -Math.PI / 2; roadSouth1.position.set(0, 0.03, -25);
+roadSouth1.receiveShadow = true; environmentGroup.add(roadSouth1);
+// Dashed center line for south road
+for (let d = 0; d < 30; d++) {
+    const dm = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 1.5), new THREE.MeshStandardMaterial({ color: 0xffcc00, roughness: 0.8 }));
+    dm.rotation.x = -Math.PI / 2; dm.position.set(0, 0.04, 5 - d * 2);
+    environmentGroup.add(dm);
+}
+// Road from grid office to solar office
+const roadSouth2 = new THREE.Mesh(new THREE.PlaneGeometry(7, 40), roadMat);
+roadSouth2.rotation.x = -Math.PI / 2; roadSouth2.position.set(0, 0.03, -85);
+roadSouth2.receiveShadow = true; environmentGroup.add(roadSouth2);
+// Cross road at z=-40 connecting school and office
+const crossRoad1 = new THREE.Mesh(new THREE.PlaneGeometry(60, 7), roadMat);
+crossRoad1.rotation.x = -Math.PI / 2; crossRoad1.position.set(0, 0.03, -28);
+crossRoad1.receiveShadow = true; environmentGroup.add(crossRoad1);
 
 // ═══════════════════════════════════════════════
 //  ROAD IN FRONT OF HOUSES

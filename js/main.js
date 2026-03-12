@@ -836,6 +836,10 @@ function animate() {
         if (typeof animateOrbs === 'function') animateOrbs(delta);
     }
 
+    // Animated canvas displays for new buildings
+    if (typeof window.updateGridDisplays === 'function') window.updateGridDisplays(elapsed);
+    if (typeof window.updateSolarDisplays === 'function') window.updateSolarDisplays(elapsed);
+
     labelRenderer.render(scene, camera);
     renderer.render(scene, camera);
 }

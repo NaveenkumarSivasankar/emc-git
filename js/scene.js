@@ -1,5 +1,6 @@
 // ═══════════════════════════════════════════════
 //  SCENE SETUP — PBR Photorealistic Lighting
+//  FIXED: Global ambient + hemisphere so walls never appear black
 // ═══════════════════════════════════════════════
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
@@ -45,7 +46,6 @@ const skyMat = new THREE.ShaderMaterial({
         void main() {
             float h = normalize(vWorldPosition + offset).y;
             float t = max(pow(max(h, 0.0), exponent), 0.0);
-            // Blend: bottom → horizon → top
             vec3 color = mix(horizonColor, bottomColor, smoothstep(0.0, 0.3, t));
             color = mix(color, topColor, smoothstep(0.3, 1.0, t));
             gl_FragColor = vec4(color, 1.0);
@@ -56,7 +56,7 @@ const sky = new THREE.Mesh(skyGeo, skyMat);
 scene.add(sky);
 
 // Fog (atmospheric)
-scene.fog = new THREE.FogExp2(0x87CEEB, 0.008);
+scene.fog = new THREE.FogExp2(0x87CEEB, 0.004);
 
 // ─── CAMERA ───
 const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -89,8 +89,22 @@ controls.addEventListener('start', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  PBR LIGHTING
+//  PBR LIGHTING — STEP 3 FIX
+//  Global ambient ensures nothing is pitch black
+//  Hemisphere light adds warm fill
 // ═══════════════════════════════════════════════
+
+// GLOBAL AMBIENT — nothing should be pitch black
+const globalAmbient = new THREE.AmbientLight(0xFFFFFF, 0.7);
+scene.add(globalAmbient);
+
+// Global fill hemisphere light
+const hemi = new THREE.HemisphereLight(
+    0xFFF4E0,  // sky warm white
+    0x8B7355,  // ground warm brown
+    0.5
+);
+scene.add(hemi);
 
 // Sun (directional light) — main light source
 const sunLight = new THREE.DirectionalLight(0xFFF4E0, 2.5);
@@ -100,19 +114,19 @@ sunLight.shadow.mapSize.width = 4096;
 sunLight.shadow.mapSize.height = 4096;
 sunLight.shadow.camera.near = 0.5;
 sunLight.shadow.camera.far = 300;
-sunLight.shadow.camera.left = -60;
-sunLight.shadow.camera.right = 60;
-sunLight.shadow.camera.top = 60;
-sunLight.shadow.camera.bottom = -60;
+sunLight.shadow.camera.left = -80;
+sunLight.shadow.camera.right = 80;
+sunLight.shadow.camera.top = 80;
+sunLight.shadow.camera.bottom = -80;
 sunLight.shadow.bias = -0.001;
 sunLight.shadow.normalBias = 0.02;
 scene.add(sunLight);
 
-// Hemisphere light (sky/ground bounce)
+// Hemisphere light (sky/ground bounce) — legacy kept for compat
 const ambientLight = new THREE.HemisphereLight(
     0x87CEEB,  // sky color
     0x4a3728,  // ground color
-    0.6
+    0.4
 );
 scene.add(ambientLight);
 
@@ -132,4 +146,4 @@ const interiorLight3 = new THREE.PointLight(0xfff5e0, 0.8, 15);
 interiorLight3.position.set(3, 4, 2);
 scene.add(interiorLight3);
 
-console.log('[SCENE] PBR lighting initialized — ACESFilmic tonemapping, 4096 shadow maps');
+console.log('[SCENE] PBR lighting initialized — ACESFilmic tonemapping, 4096 shadow maps, global ambient 0.7');

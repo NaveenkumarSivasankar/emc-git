@@ -31,6 +31,7 @@ function toggleAppliance(idx, isOn) {
     buildAppliancePanel();
     updateDynamicEnergy();
     if (typeof updateEnergyVisionWires === 'function') updateEnergyVisionWires();
+    if (typeof dispatchApplianceToggle === 'function') dispatchApplianceToggle(a.name, a.watt, isOn);
 }
 
 function toggleSimpleAppliance(idx, isOn) {
@@ -61,6 +62,7 @@ function toggleSimpleAppliance(idx, isOn) {
     buildAppliancePanel();
     updateDynamicEnergy();
     if (typeof updateEnergyVisionWires === 'function') updateEnergyVisionWires();
+    if (typeof dispatchApplianceToggle === 'function') dispatchApplianceToggle(a.name, a.watt, isOn);
 }
 
 // ═══════════════════════════════════════════════
