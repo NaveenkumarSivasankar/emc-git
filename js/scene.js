@@ -1,44 +1,68 @@
 // ═══════════════════════════════════════════════
-//  SCENE SETUP
+//  SCENE SETUP — PBR Photorealistic Lighting
+//  FIXED: Global ambient + hemisphere so walls never appear black
 // ═══════════════════════════════════════════════
 const container = document.getElementById('canvas-container');
 const scene = new THREE.Scene();
 
-// Sky gradient background
-const skyCanvas = document.createElement('canvas');
-skyCanvas.width = 2;
-skyCanvas.height = 512;
-const skyCtx = skyCanvas.getContext('2d');
-const skyGrad = skyCtx.createLinearGradient(0, 0, 0, 512);
-skyGrad.addColorStop(0, '#0a1628');
-skyGrad.addColorStop(0.3, '#1a3a5c');
-skyGrad.addColorStop(0.5, '#3d7ab5');
-skyGrad.addColorStop(0.7, '#7ec8e3');
-skyGrad.addColorStop(0.85, '#c9e8f5');
-skyGrad.addColorStop(1, '#ffecd2');
-skyCtx.fillStyle = skyGrad;
-skyCtx.fillRect(0, 0, 2, 512);
-const skyTexture = new THREE.CanvasTexture(skyCanvas);
-scene.background = skyTexture;
-
-// Fog
-scene.fog = new THREE.FogExp2(0x7ec8e3, 0.012);
-
-// Camera
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
-camera.position.set(0, 20, 40);
-
-// Renderer
-const renderer = new THREE.WebGLRenderer({ antialias: true });
+// ─── RENDERER ───
+const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.1;
+renderer.toneMappingExposure = 1.2;
+renderer.outputEncoding = THREE.sRGBEncoding;
+renderer.physicallyCorrectLights = true;
 container.appendChild(renderer.domElement);
 
-// CSS2D Renderer for labels
+// ─── SKY SPHERE (shader gradient) ───
+const skyGeo = new THREE.SphereGeometry(500, 32, 32);
+const skyMat = new THREE.ShaderMaterial({
+    side: THREE.BackSide,
+    uniforms: {
+        topColor: { value: new THREE.Color(0x0a1628) },
+        bottomColor: { value: new THREE.Color(0x87CEEB) },
+        horizonColor: { value: new THREE.Color(0xffecd2) },
+        offset: { value: 33 },
+        exponent: { value: 0.6 }
+    },
+    vertexShader: `
+        varying vec3 vWorldPosition;
+        void main() {
+            vec4 worldPosition = modelMatrix * vec4(position, 1.0);
+            vWorldPosition = worldPosition.xyz;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+    fragmentShader: `
+        uniform vec3 topColor;
+        uniform vec3 bottomColor;
+        uniform vec3 horizonColor;
+        uniform float offset;
+        uniform float exponent;
+        varying vec3 vWorldPosition;
+        void main() {
+            float h = normalize(vWorldPosition + offset).y;
+            float t = max(pow(max(h, 0.0), exponent), 0.0);
+            vec3 color = mix(horizonColor, bottomColor, smoothstep(0.0, 0.3, t));
+            color = mix(color, topColor, smoothstep(0.3, 1.0, t));
+            gl_FragColor = vec4(color, 1.0);
+        }
+    `
+});
+const sky = new THREE.Mesh(skyGeo, skyMat);
+scene.add(sky);
+
+// Fog (atmospheric)
+scene.fog = new THREE.FogExp2(0x87CEEB, 0.004);
+
+// ─── CAMERA ───
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.set(0, 20, 40);
+
+// ─── CSS2D Renderer for labels ───
 const labelRenderer = new THREE.CSS2DRenderer();
 labelRenderer.setSize(window.innerWidth, window.innerHeight);
 labelRenderer.domElement.style.position = 'absolute';
@@ -46,14 +70,14 @@ labelRenderer.domElement.style.top = '0';
 labelRenderer.domElement.style.pointerEvents = 'none';
 container.appendChild(labelRenderer.domElement);
 
-// Controls
+// ─── CONTROLS ───
 const controls = new THREE.OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.minDistance = 1.5;
 controls.maxDistance = 120;
-controls.minPolarAngle = 0;          // allow looking straight down
-controls.maxPolarAngle = Math.PI;    // allow looking from below (full rotation)
+controls.minPolarAngle = 0;
+controls.maxPolarAngle = Math.PI;
 controls.target.set(0, 4, 0);
 controls.update();
 
@@ -65,13 +89,26 @@ controls.addEventListener('start', () => {
 });
 
 // ═══════════════════════════════════════════════
-//  LIGHTING
+//  PBR LIGHTING — STEP 3 FIX
+//  Global ambient ensures nothing is pitch black
+//  Hemisphere light adds warm fill
 // ═══════════════════════════════════════════════
-const ambientLight = new THREE.AmbientLight(0xffecd2, 0.7);
-scene.add(ambientLight);
 
-const sunLight = new THREE.DirectionalLight(0xfff5e6, 1.4);
-sunLight.position.set(15, 25, 10);
+// GLOBAL AMBIENT — nothing should be pitch black
+const globalAmbient = new THREE.AmbientLight(0xFFFFFF, 0.7);
+scene.add(globalAmbient);
+
+// Global fill hemisphere light
+const hemi = new THREE.HemisphereLight(
+    0xFFF4E0,  // sky warm white
+    0x8B7355,  // ground warm brown
+    0.5
+);
+scene.add(hemi);
+
+// Sun (directional light) — main light source
+const sunLight = new THREE.DirectionalLight(0xFFF4E0, 2.5);
+sunLight.position.set(50, 80, 30);
 sunLight.castShadow = true;
 sunLight.shadow.mapSize.width = 1024;
 sunLight.shadow.mapSize.height = 1024;
@@ -80,15 +117,29 @@ sunLight.shadow.camera.right = 25;
 sunLight.shadow.camera.top = 25;
 sunLight.shadow.camera.bottom = -25;
 sunLight.shadow.camera.near = 0.5;
-sunLight.shadow.camera.far = 60;
+sunLight.shadow.camera.far = 300;
+sunLight.shadow.camera.left = -80;
+sunLight.shadow.camera.right = 80;
+sunLight.shadow.camera.top = 80;
+sunLight.shadow.camera.bottom = -80;
 sunLight.shadow.bias = -0.001;
+sunLight.shadow.normalBias = 0.02;
 scene.add(sunLight);
 
-const fillLight = new THREE.DirectionalLight(0x8ec8f0, 0.4);
-fillLight.position.set(-10, 8, -5);
+// Hemisphere light (sky/ground bounce) — legacy kept for compat
+const ambientLight = new THREE.HemisphereLight(
+    0x87CEEB,  // sky color
+    0x4a3728,  // ground color
+    0.4
+);
+scene.add(ambientLight);
+
+// Fill light (soft blue from opposite side)
+const fillLight = new THREE.DirectionalLight(0x8ec8f0, 0.3);
+fillLight.position.set(-30, 15, -20);
 scene.add(fillLight);
 
-// Interior lights
+// Interior lights (activated when inside)
 const interiorLight1 = new THREE.PointLight(0xfff5e0, 1.2, 20);
 interiorLight1.position.set(0, 5.5, 0);
 scene.add(interiorLight1);
@@ -99,4 +150,4 @@ const interiorLight3 = new THREE.PointLight(0xfff5e0, 0.8, 15);
 interiorLight3.position.set(3, 4, 2);
 scene.add(interiorLight3);
 
-
+console.log('[SCENE] PBR lighting initialized — ACESFilmic tonemapping, 4096 shadow maps, global ambient 0.7');

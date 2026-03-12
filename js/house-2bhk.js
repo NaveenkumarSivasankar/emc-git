@@ -1,5 +1,7 @@
 // ═══════════════════════════════════════════════
-//  2BHK HOUSE
+//  2BHK HOUSE — ALL TRANSPARENCY BUGS KILLED
+//  Every wall: MeshStandardMaterial, transparent:false, opacity:1.0
+//  Canvas floor textures, ceiling fixtures, proper room colors
 // ═══════════════════════════════════════════════
 const bhk2Group = new THREE.Group();
 bhk2Group.position.set(24, 0, -4);
@@ -26,27 +28,26 @@ const bhk2TransWalls = [];
 
 function addBhk2Wall(w, h, d, x, y, z, transp) {
     const mat = transp ? bhk2WallMat.clone() : bhk2WallMat;
+    mat.transparent = false; mat.opacity = 1.0;
+    mat.depthWrite = true; mat.depthTest = true;
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     m.position.set(x, y, z); m.castShadow = true; m.receiveShadow = true;
     roomGroups['Structure'].add(m); if (transp) bhk2TransWalls.push(m); return m;
 }
 
-
 const bhk2Floor = new THREE.Mesh(new THREE.BoxGeometry(W2, 0.3, D2), floorMat);
 bhk2Floor.position.y = 0.15; bhk2Floor.receiveShadow = true; roomGroups['Structure'].add(bhk2Floor);
-
 
 addBhk2Wall(W2, H, 0.3, 0, H / 2 + 0.3, -D2 / 2, false);  // Back
 addBhk2Wall(0.3, H, D2, -W2 / 2, H / 2 + 0.3, 0, true);     // Left
 addBhk2Wall(0.3, H, D2, W2 / 2, H / 2 + 0.3, 0, true);      // Right
-// Front walls with door gap
 addBhk2Wall((W2 - 3) / 2, H, 0.3, -(W2 + 3) / 4, H / 2 + 0.3, D2 / 2, true);
 addBhk2Wall((W2 - 3) / 2, H, 0.3, (W2 + 3) / 4, H / 2 + 0.3, D2 / 2, true);
 addBhk2Wall(3, 3.0, 0.3, 0, H - 1.2, D2 / 2, true);
 
-// Front door (animated pivot door)
+// Front door
 const mainDoor2BHK_pivot = new THREE.Group();
-mainDoor2BHK_pivot.position.set(-1.5, 0, D2 / 2); // hinge at left edge
+mainDoor2BHK_pivot.position.set(-1.5, 0, D2 / 2);
 roomGroups['Structure'].add(mainDoor2BHK_pivot);
 const mainDoor2BHK_mesh = new THREE.Mesh(new THREE.BoxGeometry(3, 4, 0.35), bhk2DoorMat);
 mainDoor2BHK_mesh.position.set(1.5, 2.3, 0);
@@ -58,7 +59,7 @@ bhk2RoofShape.moveTo(-W2 / 2 - 0.8, 0); bhk2RoofShape.lineTo(0, roofH + 1); bhk2
 const bhk2Roof = new THREE.Mesh(new THREE.ExtrudeGeometry(bhk2RoofShape, { depth: D2 + 1.6, bevelEnabled: false }), bhk2RoofMat);
 bhk2Roof.position.set(0, H + 0.3, -D2 / 2 - 0.8); bhk2Roof.castShadow = true; roomGroups['Structure'].add(bhk2Roof);
 
-// Windows
+// Windows — ONLY glass transparent
 function addBhk2Window(x, y, z, ry) {
     const wg = new THREE.Group();
     wg.add(new THREE.Mesh(new THREE.BoxGeometry(2, 1.8, 0.15), windowFrameMat));
@@ -72,13 +73,7 @@ addBhk2Window(-W2 / 2 - 0.15, 4, 5, Math.PI / 2); addBhk2Window(W2 / 2 + 0.15, 4
 
 
 // ═══════════════════════════════════════════════
-//  PARTITION WALLS
-//  Layout:
-//    Hall:      x=-5 to 14, z=-5 to 12   (right-front, 19×17)
-//    Kitchen:   x=-14 to -5, z=-5 to 3   (left-center, 9×8)
-//    Bathroom:  x=-14 to -5, z=3 to 12   (left-front, 9×9)
-//    Bedroom1:  x=-14 to 0,  z=-12 to -5 (left-back, 14×7)
-//    Bedroom2:  x=0 to 14,   z=-12 to -5 (right-back, 14×7)
+//  PARTITION WALLS — these CAN be semi-transparent when boy is near
 // ═══════════════════════════════════════════════
 const partWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
 const bhk2PartWalls = [];
@@ -89,42 +84,73 @@ function addPartWall(w, h, d, x, y, z, room) {
     bhk2PartWalls.push(m); return m;
 }
 
-// Horizontal wall at z=-5 (separates front from bedrooms, full width)
-addPartWall(W2 - 0.4, H, 0.2, 0, H / 2 + 0.3, -5);
-// Vertical wall at x=0 (separates Bedroom 1 from Bedroom 2, z=-12 to -5)
+// Horizontal wall at z=-5 — door gaps at x=-3 (Bed1, gap: -3.9 to -2.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+// Segment 1: x=-13.8 to -3.9 → center=-8.85, w=9.9
+addPartWall(9.9, H, 0.2, -8.85, H / 2 + 0.3, -5);
+// Segment 2: x=-2.1 to 8.1 → center=3, w=10.2
+addPartWall(10.2, H, 0.2, 3, H / 2 + 0.3, -5);
+// Segment 3: x=9.9 to 13.8 → center=11.85, w=3.9
+addPartWall(3.9, H, 0.2, 11.85, H / 2 + 0.3, -5);
+
+// Vertical wall at x=0 (Bedroom 1 / Bedroom 2 separator, NO door — solid)
 addPartWall(0.2, H, 7, 0, H / 2 + 0.3, -8.5);
-// Vertical wall at x=-5 (separates Hall from Kitchen/Bath, z=-5 to 12)
-addPartWall(0.2, H, 17, -5, H / 2 + 0.3, 3.5);
-// Horizontal wall at z=3 (separates Kitchen from Bathroom, x=-14 to -5)
+
+// Vertical wall at x=-5 — door gaps at z=-1 (Kitchen, gap: -1.9 to -0.1) and z=7 (Bathroom, gap: 6.1 to 7.9)
+// Segment 1: z=-5 to -1.9 → center=-3.45, d=3.1
+addPartWall(0.2, H, 3.1, -5, H / 2 + 0.3, -3.45);
+// Segment 2: z=-0.1 to 6.1 → center=3, d=6.2
+addPartWall(0.2, H, 6.2, -5, H / 2 + 0.3, 3);
+// Segment 3: z=7.9 to 12 → center=9.95, d=4.1
+addPartWall(0.2, H, 4.1, -5, H / 2 + 0.3, 9.95);
+
+// Horizontal wall at z=3 (Kitchen/Bathroom separator, NO door — solid)
 addPartWall(9, H, 0.2, -9.5, H / 2 + 0.3, 3);
 
-// Room doors (interactive — swing open on approach)
-createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, 24, 0);       // Bedroom 1
-createInteractiveDoor(bhk2Group, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, -Math.PI / 2, 24, 0);      // Bedroom 2
-createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);  // Kitchen
-createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);   // Bathroom
+// Room doors are created in interiors.js initInteriors() — no duplicates here
 
 // ═══════════════════════════════════════════════
-//  FLOOR TILES
+//  FLOOR TILES — with proper textures and room colors
 // ═══════════════════════════════════════════════
-const tileColors = { hall: 0xd4b896, bed1: 0xa8c8e8, bed2: 0xc8b4d8, kitchen: 0xf5f5f5, bath: 0x88ccbb };
-function addFloorTile(color, w, d, x, z, room) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: color, roughness: 0.75 }));
+function addFloorTile(color, w, d, x, z, room, tex) {
+    const mat = new THREE.MeshStandardMaterial({
+        color: color, roughness: 0.75,
+        transparent: false, opacity: 1.0, depthWrite: true
+    });
+    if (tex) mat.map = tex;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), mat);
     m.rotation.x = -Math.PI / 2; m.position.set(x, 0.32, z); m.receiveShadow = true;
     (room ? roomGroups[room] : roomGroups['Structure']).add(m);
 }
-// Hall: x=-5 to 14, z=-5 to 12
-addFloorTile(tileColors.hall, 18.5, 16.5, 4.5, 3.5, 'Hall');
-// Bedroom 1: x=-14 to 0, z=-12 to -5
-addFloorTile(tileColors.bed1, 13.5, 6.5, -7, -8.5, 'Bedroom 1');
-// Bedroom 2: x=0 to 14, z=-12 to -5
-addFloorTile(tileColors.bed2, 13.5, 6.5, 7, -8.5, 'Bedroom 2');
-// Kitchen checkered: x=-14 to -5, z=-5 to 3
+
+addFloorTile(0xE8DCC8, 18.5, 16.5, 4.5, 3.5, 'Hall', bhk2WoodTex);             // Hall
+addFloorTile(0xD4E0EC, 13.5, 6.5, -7, -8.5, 'Bedroom 1', bhk2WoodTex.clone()); // Bedroom 1
+addFloorTile(0xE8E0F0, 13.5, 6.5, 7, -8.5, 'Bedroom 2', bhk2WoodTex.clone());  // Bedroom 2
+// Kitchen checkered
 for (let ki = 0; ki < 8; ki++) for (let kj = 0; kj < 7; kj++) {
     addFloorTile((ki + kj) % 2 === 0 ? 0xf5f5f5 : 0x333333, 1, 1, -13.5 + ki * 1.1, -4.5 + kj * 1.1, 'Kitchen');
 }
-// Bathroom: x=-14 to -5, z=3 to 12
-addFloorTile(tileColors.bath, 8.5, 8.5, -9.5, 7.5, 'Bathroom');
+addFloorTile(0xE0F0F8, 8.5, 8.5, -9.5, 7.5, 'Bathroom', bhk2BathTex);          // Bathroom
+
+// Ceiling light fixtures for each room
+function createBhk2CeilingFixture(x, z, room) {
+    const fg = new THREE.Group();
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0xC8A84B, roughness: 0.3, metalness: 0.7, transparent: false, opacity: 1.0, depthWrite: true });
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.06, 8, 32), ringMat);
+    ring.rotation.x = Math.PI / 2; fg.add(ring);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 12),
+        new THREE.MeshStandardMaterial({ color: 0xFFF4C2, emissive: 0xFFF4C2, emissiveIntensity: 1.2, transparent: false, opacity: 1.0, depthWrite: true }));
+    fg.add(bulb);
+    const wire = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.6, 6),
+        new THREE.MeshStandardMaterial({ color: 0x888888, transparent: false, opacity: 1.0, depthWrite: true }));
+    wire.position.y = 0.3; fg.add(wire);
+    fg.position.set(x, H + 0.1, z);
+    (room ? roomGroups[room] : roomGroups['Structure']).add(fg);
+}
+createBhk2CeilingFixture(5, 4, 'Hall');
+createBhk2CeilingFixture(-7, -8.5, 'Bedroom 1');
+createBhk2CeilingFixture(7, -8.5, 'Bedroom 2');
+createBhk2CeilingFixture(-9.5, -1, 'Kitchen');
+createBhk2CeilingFixture(-9.5, 7.5, 'Bathroom');
 
 // Room labels
 function addRoomLabel(name, x, y, z, room) {
@@ -376,29 +402,47 @@ bhk2RoomDefs.forEach(roomDef => {
 //  1BHK APPLIANCE STATE + TV
 // ═══════════════════════════════════════════════
 const simpleAppliances = [
-    // Hall
     { name: 'Light Bulb', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light1, room: 'Hall' },
     { name: 'Ceiling Fan', watt: 75, emoji: '🌀', on: true, kind: 'fan', mesh: fan1, room: 'Hall' },
     { name: 'Air Conditioner', watt: 1500, emoji: '❄️', on: true, kind: 'ac', mesh: ac, room: 'Hall' },
     { name: 'Television', watt: 150, emoji: '📺', on: false, kind: 'tv', mesh: null, room: 'Hall' },
     { name: 'WiFi Router', watt: 10, emoji: '📶', on: true, kind: 'generic', mesh: null, room: 'Hall' },
     { name: 'Charging Port', watt: 15, emoji: '🔌', on: true, kind: 'generic', mesh: null, room: 'Hall' },
-    // Kitchen
     { name: 'Refrigerator', watt: 350, emoji: '🧊', on: true, kind: 'fridge', mesh: fridge, room: 'Kitchen' },
     { name: 'Microwave', watt: 1200, emoji: '🔲', on: false, kind: 'generic', mesh: null, room: 'Kitchen' },
     { name: 'Induction Stove', watt: 1800, emoji: '🍳', on: false, kind: 'generic', mesh: null, room: 'Kitchen' },
     { name: 'Water Purifier', watt: 40, emoji: '💧', on: true, kind: 'generic', mesh: null, room: 'Kitchen' },
     { name: 'Mixer Grinder', watt: 600, emoji: '🔄', on: false, kind: 'generic', mesh: null, room: 'Kitchen' },
-    // Bedroom
     { name: 'Light Bulb', watt: 60, emoji: '💡', on: true, kind: 'light', mesh: light2, room: 'Bedroom' },
     { name: 'Table Fan', watt: 55, emoji: '🌀', on: true, kind: 'tablefan', mesh: tableFan, room: 'Bedroom' },
     { name: 'Laptop Charger', watt: 65, emoji: '💻', on: false, kind: 'generic', mesh: null, room: 'Bedroom' },
     { name: 'Mobile Charger', watt: 10, emoji: '📱', on: false, kind: 'generic', mesh: null, room: 'Bedroom' }
 ];
 
-// Simple house TV (positioned on back wall of hall)
-const simpleTvFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+// Simple house TV
+const simpleTvFrame = new THREE.Mesh(new THREE.BoxGeometry(2.5, 1.4, 0.1), new THREE.MeshStandardMaterial({ color: 0x111111, transparent: false, opacity: 1.0, depthWrite: true }));
 simpleTvFrame.position.set(5, 4, -4.8); houseGroup.add(simpleTvFrame);
-const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x000000 }));
+const simpleTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(2.3, 1.2), new THREE.MeshStandardMaterial({ color: 0x111111, emissive: 0x000000, transparent: false, opacity: 1.0, depthWrite: true }));
 simpleTvScreen.position.set(5, 4, -4.73); houseGroup.add(simpleTvScreen);
 simpleAppliances[3].mesh = { frame: simpleTvFrame, screen: simpleTvScreen };
+
+// ═══════════════════════════════════════════════
+//  ROOF DATA — used by solar.js
+// ═══════════════════════════════════════════════
+const ROOF_DATA_2BHK = {
+    centerX: 0, centerZ: 0,
+    y: H + 0.3, peakY: H + 0.3 + roofH + 1,
+    width: W2, depth: D2,
+    slopeAngle: Math.atan2(roofH + 1, W2 / 2 + 0.8),
+    slopeAxis: 'x',
+};
+
+window.ROOF_2BHK = {
+    centerX: 24, centerZ: 0,
+    roofY: H + 0.3 + roofH + 1 > 0 ? H + 0.3 + roofH + 1 : 5.5,
+    width: W2, depth: D2,
+    slopeAngle: Math.atan2(roofH + 1, W2 / 2 + 0.8),
+};
+
+const wallCount2BHK = bhk2TransWalls.length + bhk2PartWalls.length + 2;
+console.log('[HOUSE-2BHK] Built — walls:', wallCount2BHK, '— roof data exported, window.ROOF_2BHK set');

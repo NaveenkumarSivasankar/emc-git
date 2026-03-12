@@ -30,6 +30,8 @@ function toggleAppliance(idx, isOn) {
     recalcWattage();
     buildAppliancePanel();
     updateDynamicEnergy();
+    if (typeof updateEnergyVisionWires === 'function') updateEnergyVisionWires();
+    if (typeof dispatchApplianceToggle === 'function') dispatchApplianceToggle(a.name, a.watt, isOn);
 }
 
 function toggleSimpleAppliance(idx, isOn) {
@@ -59,6 +61,8 @@ function toggleSimpleAppliance(idx, isOn) {
     recalcWattage();
     buildAppliancePanel();
     updateDynamicEnergy();
+    if (typeof updateEnergyVisionWires === 'function') updateEnergyVisionWires();
+    if (typeof dispatchApplianceToggle === 'function') dispatchApplianceToggle(a.name, a.watt, isOn);
 }
 
 // ═══════════════════════════════════════════════
@@ -83,20 +87,35 @@ function recalcWattage() {
     setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
 
     const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
 
     setText('stat-savings', '₹' + monthlySaving.toLocaleString());
-    setText('stat-co2', co2Saved + ' kg/yr');
+    setText('stat-co2', co2Saved.toLocaleString() + ' kg/yr');
 
-    updateBarChart(total, coverageRatio);
+    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
-function updateBarChart(totalW, coverageRatio) {
+function updateBarChart(totalW, coverageRatio, effectiveSolarUnits, totalDailyUnits) {
     const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
     const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
 
-    const solarPct = Math.round(coverageRatio * 100);
+    // If effectiveSolarUnits is not passed (from older calls), calculate a generic one based on coverage ratio for fallback
+    if (typeof effectiveSolarUnits === 'undefined' || typeof totalDailyUnits === 'undefined') {
+        totalDailyUnits = (totalW * 8) / 1000;
+        effectiveSolarUnits = totalDailyUnits * coverageRatio;
+    }
+
+    const solarPct = totalDailyUnits > 0 ? Math.round((effectiveSolarUnits / totalDailyUnits) * 100) : 0;
     const gridPct = 100 - solarPct;
 
     setWidth('grid-bar', Math.max(gridPct, 5) + '%');
@@ -105,9 +124,8 @@ function updateBarChart(totalW, coverageRatio) {
     setWidth('solar-bar', Math.max(solarPct, 5) + '%');
     setText('solar-bar', solarPct + '%');
 
-    const dailyKwh = totalW * 8 / 1000;
-    const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
-    const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
+    const gridCostDaily = Math.round((totalDailyUnits - effectiveSolarUnits) * 6.5); // generic 6.5 INR rate
+    const solarSavingsDaily = Math.round(effectiveSolarUnits * 6.5);
     const monthlyBill = Math.round(gridCostDaily * 30);
 
     setText('calc-grid', '₹' + gridCostDaily);
@@ -303,10 +321,86 @@ function zoomOutToHouse() {
 }
 
 // ═══════════════════════════════════════════════
-//  ENERGY CHART TOGGLE
+//  ENERGY CHART TOGGLE (Bug #3: Side-by-side 1BHK / 2BHK)
 // ═══════════════════════════════════════════════
 function toggleEnergyChart() {
     openEnergyModal();
+}
+
+function openEnergyModal() {
+    // Remove existing if present
+    let existing = document.getElementById('energy-compare-panel');
+    if (existing) { existing.remove(); return; }
+
+    const panel = document.createElement('div');
+    panel.id = 'energy-compare-panel';
+
+    // 1BHK room data
+    const rooms1 = [
+        { name: 'Hall', watts: 95, color: '#6C5CE7' },
+        { name: 'Bedroom', watts: 90, color: '#A29BFE' },
+        { name: 'Kitchen', watts: 230, color: '#0984E3' },
+        { name: 'Bathroom', watts: 10, color: '#74B9FF' },
+    ];
+    const total1 = rooms1.reduce((s, r) => s + r.watts, 0);
+    const daily1 = (total1 * 8 / 1000 * 8).toFixed(2);
+
+    // 2BHK room data
+    const rooms2 = [
+        { name: 'Hall', watts: 95, color: '#00B894' },
+        { name: 'Bedroom 1', watts: 90, color: '#55EFC4' },
+        { name: 'Bedroom 2', watts: 75, color: '#81ECEC' },
+        { name: 'Kitchen', watts: 230, color: '#00CEC9' },
+        { name: 'Bathroom', watts: 10, color: '#FFEAA7' },
+    ];
+    const total2 = rooms2.reduce((s, r) => s + r.watts, 0);
+    const daily2 = (total2 * 8 / 1000 * 8).toFixed(2);
+
+    const maxW = Math.max(...rooms1.map(r => r.watts), ...rooms2.map(r => r.watts));
+    const savings = total2 - total1;
+    const yearlySavings = Math.round(savings * 8 / 1000 * 8 * 365);
+
+    function makeBarChart(rooms, maxVal) {
+        return rooms.map(r => {
+            const pct = Math.round((r.watts / maxVal) * 100);
+            return `<div class="ecp-bar-row">
+                <span class="ecp-bar-label">${r.name}</span>
+                <div class="ecp-bar-track">
+                    <div class="ecp-bar-fill" style="width:${pct}%;background:${r.color}">${r.watts}W</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    panel.innerHTML = `
+    <div class="ecp-close" onclick="document.getElementById('energy-compare-panel').remove()">✕</div>
+    <div class="ecp-title">⚡ Energy Comparison</div>
+    <div class="ecp-body">
+        <div class="ecp-section ecp-1bhk">
+            <div class="ecp-section-header ecp-header-1bhk">🏠 1BHK House</div>
+            <div class="ecp-bars">${makeBarChart(rooms1, maxW)}</div>
+            <div class="ecp-total">Total: <strong>${total1}W</strong></div>
+            <div class="ecp-daily">≈ ₹${daily1} / day</div>
+        </div>
+        <div class="ecp-divider">
+            <div class="ecp-vs-line"></div>
+            <div class="ecp-vs-badge">VS</div>
+            <div class="ecp-vs-line"></div>
+        </div>
+        <div class="ecp-section ecp-2bhk">
+            <div class="ecp-section-header ecp-header-2bhk">🏘️ 2BHK House</div>
+            <div class="ecp-bars">${makeBarChart(rooms2, maxW)}</div>
+            <div class="ecp-total">Total: <strong>${total2}W</strong></div>
+            <div class="ecp-daily">≈ ₹${daily2} / day</div>
+        </div>
+    </div>
+    <div class="ecp-comparison">
+        💡 1BHK saves <strong>${savings}W</strong> more than 2BHK — that's <strong>₹${yearlySavings.toLocaleString()}/year!</strong>
+    </div>`;
+
+    document.body.appendChild(panel);
+    // Slide-in animation
+    requestAnimationFrame(() => panel.classList.add('open'));
 }
 
 function toggleRoomNav() {
@@ -349,16 +443,86 @@ function resetToStreetOverview() {
 //  ROOM ENTRY POPUP HUD
 //  Glassmorphism popup when character enters a room
 // ═══════════════════════════════════════════════
-let roomPopupEl = null;
-let roomPopupTimeout = null;
-let roomPopupInterval = null;
 
-function createRoomPopupElement() {
-    if (roomPopupEl) return;
-    roomPopupEl = document.createElement('div');
-    roomPopupEl.id = 'room-popup';
-    roomPopupEl.innerHTML = '';
-    document.body.appendChild(roomPopupEl);
+// Room data for popups
+const ROOM_DATA = {
+    'Hall': {
+        icon: '🛋️',
+        name: 'LIVING HALL',
+        appliances: [
+            { name: 'Ceiling Fan', watts: 75, isOn: true },
+            { name: 'LED Lights', watts: 20, isOn: true },
+            { name: 'Television', watts: 150, isOn: false },
+        ],
+        tip: '💡 Using a 5-star fan saves ₹800/year!'
+    },
+    'Bedroom': {
+        icon: '🛏️',
+        name: 'BEDROOM',
+        appliances: [
+            { name: 'Ceiling Fan', watts: 75, isOn: true },
+            { name: 'Bedside Lamp', watts: 15, isOn: true },
+            { name: 'Air Conditioner', watts: 1500, isOn: false },
+        ],
+        tip: '❄️ Set AC to 24°C to save 6% energy per degree!'
+    },
+    'Bedroom 1': {
+        icon: '🛏️',
+        name: 'BEDROOM 1',
+        appliances: [
+            { name: 'Ceiling Fan', watts: 75, isOn: true },
+            { name: 'LED Light', watts: 60, isOn: true },
+            { name: 'Air Conditioner', watts: 1500, isOn: false },
+        ],
+        tip: '❄️ Set AC to 24°C to save 6% energy per degree!'
+    },
+    'Bedroom 2': {
+        icon: '🛏️',
+        name: 'BEDROOM 2',
+        appliances: [
+            { name: 'Ceiling Fan', watts: 75, isOn: true },
+            { name: 'Table Fan', watts: 55, isOn: true },
+            { name: 'LED Light', watts: 60, isOn: true },
+        ],
+        tip: '🌀 Using a fan instead of AC saves 95% energy!'
+    },
+    'Kitchen': {
+        icon: '🍳',
+        name: 'KITCHEN',
+        appliances: [
+            { name: 'Refrigerator', watts: 200, isOn: true },
+            { name: 'Microwave', watts: 1200, isOn: false },
+            { name: 'Exhaust Fan', watts: 30, isOn: true },
+        ],
+        tip: '🧊 Keep fridge 75% full for best efficiency!'
+    },
+    'Bathroom': {
+        icon: '🚿',
+        name: 'BATHROOM',
+        appliances: [
+            { name: 'Exhaust Fan', watts: 25, isOn: false },
+            { name: 'Geyser/Heater', watts: 2000, isOn: false },
+            { name: 'LED Light', watts: 10, isOn: true },
+        ],
+        tip: '🚿 A 5-min shower saves 50L water vs a bath!'
+    }
+};
+
+// Map room display names (with emojis from getBoyRoom) to keys
+function normalizeRoomName(roomName) {
+    if (!roomName) return null;
+    // Strip emoji prefix if present
+    const stripped = roomName.replace(/^[^\w]+\s*/, '').trim();
+    // Try exact match first
+    if (ROOM_DATA[stripped]) return stripped;
+    if (ROOM_DATA[roomName]) return roomName;
+    // Fuzzy match
+    for (const key in ROOM_DATA) {
+        if (stripped.toLowerCase().includes(key.toLowerCase()) || key.toLowerCase().includes(stripped.toLowerCase())) {
+            return key;
+        }
+    }
+    return stripped;
 }
 
 function showRoomPopup(roomName, houseId) {
@@ -492,26 +656,11 @@ function performSolarToggle(target) {
 // ═══════════════════════════════════════════════
 //  DYNAMIC ENERGY DATA (live updating)
 // ═══════════════════════════════════════════════
-const dynamicEnergy = {
-    sessionStart: Date.now(),
-    cumulativeWh: 0,
-    lastTick: Date.now(),
-    perMinuteW: 0,
-    perHourW: 0,
-    intervalId: null
-};
-
+const dynamicEnergy = { sessionStart: Date.now(), cumulativeWh: 0, lastTick: Date.now(), intervalId: null };
 function startEnergyTracking() {
-    if (dynamicEnergy.intervalId) return;
-    dynamicEnergy.sessionStart = Date.now();
-    dynamicEnergy.cumulativeWh = 0;
-    dynamicEnergy.lastTick = Date.now();
-
-    dynamicEnergy.intervalId = setInterval(() => {
-        updateDynamicEnergy();
-    }, 1000);
+    if (dynamicEnergy.intervalId) return; dynamicEnergy.sessionStart = Date.now(); dynamicEnergy.cumulativeWh = 0; dynamicEnergy.lastTick = Date.now();
+    dynamicEnergy.intervalId = setInterval(updateDynamicEnergy, 1000);
 }
-
 function updateDynamicEnergy() {
     const now = Date.now();
     const dtHours = (now - dynamicEnergy.lastTick) / 3600000; // ms to hours
@@ -540,70 +689,30 @@ function updateDynamicEnergy() {
     // Track per-appliance duration for analytics
     if (typeof trackApplianceDuration === 'function') trackApplianceDuration();
 }
-
-// Start tracking on load
-window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(startEnergyTracking, 500);
-});
+window.addEventListener('DOMContentLoaded', () => { setTimeout(startEnergyTracking, 500); });
 
 // ═══════════════════════════════════════════════
 //  FLOOR SELECTOR FOR 2BHK
 // ═══════════════════════════════════════════════
 let current2BHKFloor = 1;
-
 function showFloorSelector() {
     let el = document.getElementById('floor-selector');
-    if (!el) {
-        el = document.createElement('div');
-        el.id = 'floor-selector';
-        el.innerHTML =
-            '<span class="fs-label">🏢 Floor:</span>' +
-            '<button class="fs-btn active" id="fs-btn-1" onclick="selectFloor(1)">1st Floor</button>' +
-            '<button class="fs-btn" id="fs-btn-2" onclick="selectFloor(2)">2nd Floor</button>';
-        document.body.appendChild(el);
-    }
+    if (!el) { el = document.createElement('div'); el.id = 'floor-selector'; el.innerHTML = '<span class="fs-label">🏢 Floor:</span><button class="fs-btn active" id="fs-btn-1" onclick="selectFloor(1)">1st</button><button class="fs-btn" id="fs-btn-2" onclick="selectFloor(2)">2nd</button>'; document.body.appendChild(el); }
     el.classList.add('visible');
 }
-
-function hideFloorSelector() {
-    const el = document.getElementById('floor-selector');
-    if (el) el.classList.remove('visible');
-}
-
-function selectFloor(floorNum) {
-    current2BHKFloor = floorNum;
-
-    // Update button states
-    document.getElementById('fs-btn-1').classList.toggle('active', floorNum === 1);
-    document.getElementById('fs-btn-2').classList.toggle('active', floorNum === 2);
-
-    // Show/hide floor groups if they exist
-    if (typeof floor1Group !== 'undefined' && typeof floor2Group !== 'undefined') {
-        floor1Group.visible = (floorNum === 1);
-        floor2Group.visible = (floorNum === 2);
-    }
-
-    // Fade transition effect
-    if (boyState.mode === 'indoor' && boyState.insideHouse === '2bhk') {
-        const yOffset = (floorNum - 1) * (H + 0.3);
-        boyGroup.position.y = 0.15 + yOffset;
-        camera.position.y = boyGroup.position.y + 6;
-        controls.target.y = boyGroup.position.y + 1.5;
-        controls.update();
-    }
-
-    buildAppliancePanel();
-    recalcWattage();
+function hideFloorSelector() { const el = document.getElementById('floor-selector'); if (el) el.classList.remove('visible'); }
+function selectFloor(n) {
+    current2BHKFloor = n;
+    document.getElementById('fs-btn-1').classList.toggle('active', n === 1); document.getElementById('fs-btn-2').classList.toggle('active', n === 2);
+    if (typeof floor1Group !== 'undefined' && typeof floor2Group !== 'undefined') { floor1Group.visible = (n === 1); floor2Group.visible = (n === 2); }
+    if (typeof boyState !== 'undefined' && boyState.mode === 'indoor' && boyState.insideHouse === '2bhk') { const yo = (n - 1) * (H + 0.3); boyGroup.position.y = 0.15 + yo; camera.position.y = boyGroup.position.y + 6; controls.target.y = boyGroup.position.y + 1.5; controls.update(); }
+    buildAppliancePanel(); recalcWattage();
 }
 
 // ═══════════════════════════════════════════════
 //  GAMIFIED TASK LIST & SAVINGS MODE
 // ═══════════════════════════════════════════════
-const savingsBaseline = {
-    totalWatts: 3500,
-    dailyCost: 224 // approx ₹ for 3500W
-};
-
+const savingsBaseline = { totalWatts: 3500, dailyCost: 224 };
 const gameTasks = [
     { id: 'ac_off', text: 'Turn off AC when leaving room', done: false, icon: '❄️' },
     { id: 'solar_peak', text: 'Use solar during peak hours', done: false, icon: '☀️' },
@@ -611,32 +720,92 @@ const gameTasks = [
     { id: 'fan_off', text: 'Turn off fan when not needed', done: false, icon: '🌀' },
     { id: 'unplug', text: 'Unplug unused chargers', done: false, icon: '🔌' }
 ];
-
 function buildSavingsPanel() {
-    let activeW = 0;
-    const list = is2BHK ? bhk2Appliances : simpleAppliances;
-    list.forEach(a => { if (a.on) activeW += a.watt; });
-
-    const currentDailyCost = Math.round(activeW * 8 / 1000 * 8);
-    const saved = Math.max(0, savingsBaseline.dailyCost - currentDailyCost);
-    const weeklySaved = saved * 7;
-
-    let html = '<div class="savings-header">🌱 Savings Mode</div>';
-    html += '<div class="savings-compare">';
-    html += '<div class="sc-item"><span class="sc-label">Baseline</span><span class="sc-value">₹' + savingsBaseline.dailyCost + '/day</span></div>';
-    html += '<div class="sc-item"><span class="sc-label">Current</span><span class="sc-value sc-current">₹' + currentDailyCost + '/day</span></div>';
-    html += '<div class="sc-item sc-saved"><span class="sc-label">Weekly Saved</span><span class="sc-value">₹' + weeklySaved + '</span></div>';
-    html += '</div>';
-
-    // Gamified tasks
-    html += '<div class="game-tasks-header">🎮 Energy Challenges</div>';
-    gameTasks.forEach(t => {
-        html += '<div class="game-task ' + (t.done ? 'done' : '') + '">' +
-            '<span class="gt-icon">' + t.icon + '</span>' +
-            '<span class="gt-text">' + t.text + '</span>' +
-            '<span class="gt-check">' + (t.done ? '✓' : '○') + '</span>' +
-            '</div>';
-    });
-
-    return html;
+    let aw = 0; (is2BHK ? bhk2Appliances : simpleAppliances).forEach(a => { if (a.on) aw += a.watt; });
+    const dc = Math.round(aw * 8 / 1000 * 8), saved = Math.max(0, savingsBaseline.dailyCost - dc);
+    let h = '<div class="savings-header">🌱 Savings Mode</div><div class="savings-compare"><div class="sc-item"><span class="sc-label">Baseline</span><span class="sc-value">₹' + savingsBaseline.dailyCost + '/day</span></div><div class="sc-item"><span class="sc-label">Current</span><span class="sc-value sc-current">₹' + dc + '/day</span></div><div class="sc-item sc-saved"><span class="sc-label">Weekly Saved</span><span class="sc-value">₹' + (saved * 7) + '</span></div></div><div class="game-tasks-header">🎮 Energy Challenges</div>';
+    gameTasks.forEach(t => { h += '<div class="game-task ' + (t.done ? 'done' : '') + '"><span class="gt-icon">' + t.icon + '</span><span class="gt-text">' + t.text + '</span><span class="gt-check">' + (t.done ? '✓' : '○') + '</span></div>'; });
+    return h;
 }
+function updateStats() { recalcWattage(); }
+
+// ═══════════════════════════════════════════════
+//  DOOR HINT
+// ═══════════════════════════════════════════════
+function showDoorHint(show, houseId) {
+    let h = document.getElementById('door-hint');
+    if (!h) { h = document.createElement('div'); h.id = 'door-hint'; h.innerHTML = '<span class="hint-key">E</span><span id="hint-text">Enter House</span>'; document.body.appendChild(h); }
+    if (show && houseId) { const t = document.getElementById('hint-text'); if (t) t.textContent = houseId === '1bhk' ? 'Enter 1BHK House' : 'Enter 2BHK House'; h.className = ''; }
+    else { h.className = 'hidden'; }
+}
+
+// ═══════════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════════
+function showToast(msg, dur) {
+    dur = dur || 3000;
+    let t = document.getElementById('toast');
+    if (!t) { t = document.createElement('div'); t.id = 'toast'; document.body.appendChild(t); }
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(window._toastTimer); window._toastTimer = setTimeout(() => t.classList.remove('show'), dur);
+}
+
+// ═══════════════════════════════════════════════
+//  VIEW MODE BADGE
+// ═══════════════════════════════════════════════
+function createViewModeBadge() {
+    const b = document.createElement('div'); b.id = 'view-mode-badge';
+    b.innerHTML = '<span id="view-mode-icon">👁️</span><span id="view-mode-label">First Person</span><span class="view-mode-switch">⇄ Switch</span>';
+    document.body.appendChild(b);
+    b.addEventListener('click', () => {
+        if (typeof boyState === 'undefined' || boyState.mode !== 'indoor') return;
+        const next = window.cameraMode === 'firstperson' ? 'thirdperson' : 'firstperson';
+        if (typeof window.setCameraMode === 'function') window.setCameraMode(next);
+    });
+}
+function updateViewModeBadge(mode) {
+    const i = document.getElementById('view-mode-icon'), l = document.getElementById('view-mode-label');
+    if (!i || !l) return;
+    i.textContent = mode === 'firstperson' ? '👁️' : '🎮';
+    l.textContent = mode === 'firstperson' ? 'First Person' : 'Watch Boy';
+    const b = document.getElementById('view-mode-badge');
+    if (b) { b.classList.add('flash'); setTimeout(() => b.classList.remove('flash'), 400); }
+}
+function showViewModeBadge(v) { const b = document.getElementById('view-mode-badge'); if (b) b.style.display = v ? 'flex' : 'none'; }
+
+// ═══════════════════════════════════════════════
+//  ENERGY PANEL (legacy — kept for reference only)
+// ═══════════════════════════════════════════════
+function showEnergyPanel() {
+    openEnergyModal();
+}
+
+// ═══════════════════════════════════════════════
+//  INJECT CSS
+// ═══════════════════════════════════════════════
+(function () {
+    const s = document.createElement('style');
+    s.textContent = '#room-popup{position:fixed;bottom:80px;left:270px;width:260px;max-height:320px;background:linear-gradient(160deg,#3E2004,#6B3A0A);border:3px solid #C8860A;border-radius:14px;box-shadow:0 4px 24px rgba(0,0,0,0.7);padding:0;transform:translateY(120%);transition:transform .35s cubic-bezier(.34,1.56,.64,1);z-index:500;font-family:Georgia,serif}#room-popup.visible{transform:translateY(0)}#room-popup.hidden{display:none}.popup-banner{background:linear-gradient(90deg,#8B4513,#D2691E,#8B4513);border-radius:11px 11px 0 0;padding:8px 12px;display:flex;align-items:center;gap:8px}.popup-icon{font-size:1.2rem}.popup-title{font-size:0.95rem;font-weight:bold;color:#FFE066}.popup-body{padding:8px 12px}.appliance-item{display:flex;justify-content:space-between;font-size:.75rem;color:#F5DEB3;padding:2px 0;border-bottom:1px solid rgba(200,134,10,.2)}.status-on{color:#66FF88;font-weight:bold}.status-off{color:#888}.total-watts,.total-consumption{margin-top:6px;font-size:.85rem;color:#FFD700;font-weight:bold;text-align:center}.energy-tip{margin-top:4px;font-size:.72rem;color:#A8FFB0;font-style:italic;padding:4px 6px;background:rgba(0,100,0,.25);border-radius:6px}.popup-explore-btn{display:block;width:calc(100% - 16px);margin:6px 8px;padding:6px;background:linear-gradient(180deg,#FF9800,#E65100);border:2px solid #BF360C;border-radius:8px;color:#fff;font-size:.82rem;font-weight:bold;cursor:pointer;box-shadow:0 3px 0 #8B2000}#fade-overlay{position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:1500;transition:opacity .4s ease}#toast{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-60px);background:rgba(0,0,0,.82);color:#FFE066;padding:9px 22px;border-radius:20px;font-family:Georgia,serif;font-size:.9rem;transition:transform .35s ease;z-index:1800;border:1px solid rgba(255,224,102,.3)}#toast.show{transform:translateX(-50%) translateY(0)}#view-mode-badge{position:fixed;top:20px;right:20px;background:linear-gradient(135deg,#1a2a1a,#2d4a2d);border:2px solid #4CAF50;border-radius:24px;padding:8px 16px;display:none;align-items:center;gap:8px;cursor:pointer;z-index:800;font-family:Georgia,serif;box-shadow:0 4px 16px rgba(0,0,0,.5);transition:all .2s;user-select:none}#view-mode-badge:hover{border-color:#81C784;transform:scale(1.04)}#view-mode-icon{font-size:1.1rem}#view-mode-label{color:#FFE066;font-size:.82rem;font-weight:bold}.view-mode-switch{color:#81C784;font-size:.72rem;padding:2px 8px;border:1px solid #4CAF50;border-radius:10px}#view-mode-badge.flash{animation:badgeFlash .4s}@keyframes badgeFlash{0%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}50%{background:linear-gradient(135deg,#2E7D32,#388E3C)}100%{background:linear-gradient(135deg,#1a2a1a,#2d4a2d)}}#energy-panel{position:fixed;right:-520px;top:50%;transform:translateY(-50%);width:500px;background:linear-gradient(160deg,#0d1f0d,#1a3a1a);border:2px solid #4CAF50;border-radius:16px 0 0 16px;padding:16px;transition:right .4s;z-index:900;box-shadow:-4px 0 30px rgba(0,0,0,.6)}#energy-panel.open{right:0}.ep-header{color:#FFE066;font-family:Georgia,serif;font-size:1rem;font-weight:bold;display:flex;justify-content:space-between;margin-bottom:12px}.ep-header button{background:none;border:none;color:#FFE066;font-size:1rem;cursor:pointer}.ep-charts{display:flex;gap:12px}.ep-chart-wrap{flex:1}.ep-chart-title{color:#A8D5A2;font-size:.8rem;text-align:center;margin-bottom:6px;font-family:Georgia,serif}' +
+        /* Energy Comparison Panel */
+        '#energy-compare-panel{position:fixed;right:-660px;top:50%;transform:translateY(-50%);width:620px;max-height:85vh;overflow-y:auto;background:linear-gradient(160deg,#0d1a2e,#1a2d4a);border:2px solid #6C5CE7;border-radius:18px 0 0 18px;padding:20px 22px;transition:right .45s cubic-bezier(.4,0,.2,1);z-index:1100;box-shadow:-6px 0 40px rgba(0,0,0,.7);font-family:Georgia,serif}' +
+        '#energy-compare-panel.open{right:0}' +
+        '.ecp-close{position:absolute;top:12px;right:14px;background:none;border:none;color:#FFE066;font-size:1.3rem;cursor:pointer;z-index:10}' +
+        '.ecp-title{text-align:center;color:#FFE066;font-size:1.15rem;font-weight:bold;margin-bottom:14px}' +
+        '.ecp-body{display:flex;gap:8px;align-items:flex-start}' +
+        '.ecp-section{flex:1;background:rgba(255,255,255,.04);border-radius:12px;padding:10px 12px}' +
+        '.ecp-section-header{padding:8px 12px;border-radius:8px;text-align:center;font-size:.9rem;font-weight:bold;margin-bottom:10px}' +
+        '.ecp-header-1bhk{background:linear-gradient(135deg,#6C5CE7,#A29BFE);color:#fff}' +
+        '.ecp-header-2bhk{background:linear-gradient(135deg,#00B894,#55EFC4);color:#1a1a2e}' +
+        '.ecp-bar-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}' +
+        '.ecp-bar-label{width:70px;font-size:.72rem;color:#ccc;text-align:right;flex-shrink:0}' +
+        '.ecp-bar-track{flex:1;height:20px;background:rgba(255,255,255,.08);border-radius:6px;overflow:hidden}' +
+        '.ecp-bar-fill{height:100%;border-radius:6px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;font-size:.65rem;color:#fff;font-weight:bold;transition:width .5s ease}' +
+        '.ecp-total{text-align:center;color:#FFE066;font-size:.85rem;margin-top:10px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1)}' +
+        '.ecp-daily{text-align:center;color:#A8D5A2;font-size:.75rem;margin-top:4px}' +
+        '.ecp-divider{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px;gap:6px}' +
+        '.ecp-vs-line{width:2px;height:40px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.3),transparent)}' +
+        '.ecp-vs-badge{background:linear-gradient(135deg,#FF6B35,#F7C948);color:#1a1a2e;font-size:.7rem;font-weight:bold;padding:4px 8px;border-radius:10px}' +
+        '.ecp-comparison{margin-top:14px;text-align:center;color:#A8FFB0;font-size:.8rem;padding:10px;background:rgba(0,100,0,.2);border-radius:10px;border:1px solid rgba(76,175,80,.3)}' +
+        '.ecp-comparison strong{color:#FFE066}';
+    document.head.appendChild(s);
+})();

@@ -1,32 +1,45 @@
 // ═══════════════════════════════════════════════
-//  ANIMATED BOY CHARACTER — REALISTIC 3D + HOUSE NAVIGATION
+//  BOY CHARACTER — Cheerful Indian School Student
+//  1024×512 Canvas Face (UV-correct for sphere)
+//  Pure Three.js Geometry with School Uniform
 // ═══════════════════════════════════════════════
 const boyGroup = new THREE.Group();
 
-// ── MATERIALS ──
+// ── MATERIALS (School Uniform) ──
 const skinMat = new THREE.MeshStandardMaterial({ color: 0xFDBCB4, roughness: 0.7 });
-const hairMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
-const tshirtMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.65 });
-const pantsMat = new THREE.MeshStandardMaterial({ color: 0x37474F, roughness: 0.8 });
-const shoeMat = new THREE.MeshStandardMaterial({ color: 0xE53935, roughness: 0.6 });
-const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0xF5F5F5, roughness: 0.5 });
+const hairMat = new THREE.MeshStandardMaterial({ color: 0x1a0f05, roughness: 0.85 });
+const shirtMat = new THREE.MeshStandardMaterial({ color: 0xFAFAFA, roughness: 0.55 }); // White school shirt
+const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1a2744, roughness: 0.75 }); // Navy blue school pants
+const shoeMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.15 }); // Black polished shoes
+const shoeSoleMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.6 });
 const eyeWhiteMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.2 });
 const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.2 });
-const tshirtStripeMat = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, roughness: 0.65 });
+const tieMat = new THREE.MeshStandardMaterial({ color: 0xCC2222, roughness: 0.5 }); // Red school tie
+const collarMat = new THREE.MeshStandardMaterial({ color: 0xF0F0F0, roughness: 0.5 });
+const backpackMat = new THREE.MeshStandardMaterial({ color: 0x2244AA, roughness: 0.7 }); // Blue backpack
+const backpackStrapMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.6 });
 
 // ── HEAD ──
 const head = new THREE.Mesh(new THREE.SphereGeometry(0.32, 16, 16), skinMat);
 head.position.y = 2.1; head.castShadow = true; boyGroup.add(head);
 
-// Hair (main cap + side tufts)
-const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 16, 16), hairMat);
-hairMain.position.y = 2.22; hairMain.scale.set(1.04, 0.72, 1.04); boyGroup.add(hairMain);
-const hairFringe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.07, 0.14), hairMat);
-hairFringe.position.set(0, 2.14, 0.27); boyGroup.add(hairFringe);
-const hairSideL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
-hairSideL.position.set(-0.3, 2.1, 0); boyGroup.add(hairSideL);
-const hairSideR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.18, 0.2), hairMat);
-hairSideR.position.set(0.3, 2.1, 0); boyGroup.add(hairSideR);
+// Hair (short neat school haircut — smooth cap with textured top)
+const hairMain = new THREE.Mesh(new THREE.SphereGeometry(0.34, 20, 20), hairMat);
+hairMain.position.y = 2.22; hairMain.scale.set(1.05, 0.75, 1.08); boyGroup.add(hairMain);
+// Top volume layer for fullness
+const hairTop = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), hairMat);
+hairTop.position.set(0, 2.32, -0.03); hairTop.scale.set(1.1, 0.5, 1.0); boyGroup.add(hairTop);
+// Front fringe (neat, slightly swept right)
+const hairFringe = new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.05, 0.14), hairMat);
+hairFringe.position.set(0.02, 2.18, 0.26); hairFringe.rotation.z = -0.05; boyGroup.add(hairFringe);
+// Side coverage (covers above ears naturally)
+const hairSideL = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hairMat);
+hairSideL.position.set(-0.28, 2.15, 0.05); hairSideL.scale.set(0.5, 0.8, 0.7); boyGroup.add(hairSideL);
+const hairSideR = new THREE.Mesh(new THREE.SphereGeometry(0.12, 8, 8), hairMat);
+hairSideR.position.set(0.28, 2.15, 0.05); hairSideR.scale.set(0.5, 0.8, 0.7); boyGroup.add(hairSideR);
+// Back hair cover
+const hairBack = new THREE.Mesh(new THREE.SphereGeometry(0.30, 12, 12), hairMat);
+hairBack.position.set(0, 2.15, -0.18); hairBack.scale.set(1.1, 0.7, 0.5); boyGroup.add(hairBack);
 
 // Eyes (white + dark pupil)
 const leftEyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 8), eyeWhiteMat);
@@ -38,63 +51,90 @@ rightEyeWhite.position.set(0.11, 2.12, 0.27); boyGroup.add(rightEyeWhite);
 const rightEye = new THREE.Mesh(new THREE.SphereGeometry(0.035, 8, 8), eyeMat);
 rightEye.position.set(0.11, 2.12, 0.30); boyGroup.add(rightEye);
 
-// Mouth
+// Mouth (slight smile)
 const mouthMat = new THREE.MeshStandardMaterial({ color: 0xCC6666, roughness: 0.4 });
-const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.025, 0.03), mouthMat);
+const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), mouthMat);
 mouth.position.set(0, 1.97, 0.30); boyGroup.add(mouth);
 
 // Nose
-const nose = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.1, 6), skinMat);
+const nose = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.09, 6), skinMat);
 nose.position.set(0, 2.04, 0.33); nose.rotation.x = -Math.PI / 2; boyGroup.add(nose);
 
-// Ears (small, natural)
-const earGeo = new THREE.SphereGeometry(0.04, 8, 8);
-const leftEar = new THREE.Mesh(earGeo, skinMat);
-leftEar.position.set(-0.30, 2.10, 0.05); leftEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(leftEar);
-const rightEar = new THREE.Mesh(earGeo, skinMat);
-rightEar.position.set(0.30, 2.10, 0.05); rightEar.scale.set(0.5, 0.7, 0.6); boyGroup.add(rightEar);
+// Ears (natural rounded, flush against head)
+const earMat = new THREE.MeshStandardMaterial({ color: 0xF0B0A0, roughness: 0.7 });
+const leftEar = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), earMat);
+leftEar.position.set(-0.32, 2.08, 0.02); leftEar.scale.set(0.35, 0.55, 0.45); boyGroup.add(leftEar);
+const rightEar = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), earMat);
+rightEar.position.set(0.32, 2.08, 0.02); rightEar.scale.set(0.35, 0.55, 0.45); boyGroup.add(rightEar);
 
-// Eyebrows
-const browMat = new THREE.MeshStandardMaterial({ color: 0x2C1B0E, roughness: 0.9 });
-const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
-leftBrow.position.set(-0.11, 2.19, 0.29); boyGroup.add(leftBrow);
-const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.02, 0.03), browMat);
-rightBrow.position.set(0.11, 2.19, 0.29); boyGroup.add(rightBrow);
+// Eyebrows (thicker, slightly arched)
+const browMat = new THREE.MeshStandardMaterial({ color: 0x1a0f05, roughness: 0.9 });
+const leftBrow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.035), browMat);
+leftBrow.position.set(-0.11, 2.20, 0.28); leftBrow.rotation.z = 0.1; boyGroup.add(leftBrow);
+const rightBrow = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.03, 0.035), browMat);
+rightBrow.position.set(0.11, 2.20, 0.28); rightBrow.rotation.z = -0.1; boyGroup.add(rightBrow);
 
 // ── NECK ──
 const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 0.18, 8), skinMat);
 neck.position.y = 1.85; boyGroup.add(neck);
 
-// ── TORSO ──
-const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.65, 0.28), tshirtMat);
+// ── TORSO (White School Shirt) ──
+const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.65, 0.28), shirtMat);
 torso.position.y = 1.45; torso.castShadow = true; boyGroup.add(torso);
 
-// Collar
-const collar = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.07, 0.30), tshirtMat);
-collar.position.y = 1.80; boyGroup.add(collar);
+// Collar (folded shirt collar — two flaps)
+const collarL = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.15), collarMat);
+collarL.position.set(-0.10, 1.80, 0.10); collarL.rotation.z = 0.15; boyGroup.add(collarL);
+const collarR = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.06, 0.15), collarMat);
+collarR.position.set(0.10, 1.80, 0.10); collarR.rotation.z = -0.15; boyGroup.add(collarR);
 
-// Stripe detail
-const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.53, 0.06, 0.29), tshirtStripeMat);
-stripe.position.set(0, 1.45, 0); boyGroup.add(stripe);
+// Tie (red school tie — knot + body)
+const tieKnot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.05, 0.04), tieMat);
+tieKnot.position.set(0, 1.76, 0.15); boyGroup.add(tieKnot);
+const tieBody = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.30, 0.03), tieMat);
+tieBody.position.set(0, 1.56, 0.15); boyGroup.add(tieBody);
+const tieTip = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.06, 0.03), tieMat);
+tieTip.position.set(0, 1.39, 0.15); boyGroup.add(tieTip);
 
-// ── HIPS ──
+// Shirt buttons (small white dots down center)
+const buttonMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, roughness: 0.3, metalness: 0.2 });
+for (let bi = 0; bi < 3; bi++) {
+    const btn = new THREE.Mesh(new THREE.SphereGeometry(0.015, 6, 6), buttonMat);
+    btn.position.set(0, 1.65 - bi * 0.12, 0.15); boyGroup.add(btn);
+}
+
+// ── HIPS (Navy pants waist) ──
 const hips = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.18, 0.25), pantsMat);
 hips.position.y = 1.08; boyGroup.add(hips);
 
-// ── BELT ──
-const beltMat = new THREE.MeshStandardMaterial({ color: 0x3E2723, roughness: 0.5, metalness: 0.3 });
-const belt = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.06, 0.27), beltMat);
+// ── BELT (Black leather school belt) ──
+const beltMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.2 });
+const belt = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.05, 0.27), beltMat);
 belt.position.y = 1.15; boyGroup.add(belt);
-const buckleMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.8, roughness: 0.2 });
-const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.28), buckleMat);
+const buckleMat = new THREE.MeshStandardMaterial({ color: 0xC0C0C0, metalness: 0.8, roughness: 0.2 });
+const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.045, 0.28), buckleMat);
 buckle.position.set(0, 1.15, 0.01); boyGroup.add(buckle);
 
-// (backpack removed for a cleaner look)
+// ── SCHOOL BACKPACK ──
+const backpack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.40, 0.18), backpackMat);
+backpack.position.set(0, 1.55, -0.22); backpack.castShadow = true; boyGroup.add(backpack);
+// Backpack pocket
+const bpPocket = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.18, 0.04), new THREE.MeshStandardMaterial({ color: 0x1a3388, roughness: 0.7 }));
+bpPocket.position.set(0, 1.45, -0.33); boyGroup.add(bpPocket);
+// Backpack straps (visible from front shoulders)
+const strapL = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.04), backpackStrapMat);
+strapL.position.set(-0.18, 1.58, -0.05); strapL.rotation.x = 0.15; boyGroup.add(strapL);
+const strapR = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.45, 0.04), backpackStrapMat);
+strapR.position.set(0.18, 1.58, -0.05); strapR.rotation.x = 0.15; boyGroup.add(strapR);
+// Backpack zipper
+const zipMat = new THREE.MeshStandardMaterial({ color: 0xFFD700, metalness: 0.7, roughness: 0.3 });
+const zip = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.015, 0.04), zipMat);
+zip.position.set(0, 1.64, -0.33); boyGroup.add(zip);
 
 // ── ARMS (Cylinder-based with elbow pivots) ──
 const leftShoulderPivot = new THREE.Group();
 leftShoulderPivot.position.set(-0.34, 1.72, 0); boyGroup.add(leftShoulderPivot);
-const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+const leftUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), shirtMat);
 leftUpperArm.position.set(0, -0.18, 0); leftUpperArm.castShadow = true; leftShoulderPivot.add(leftUpperArm);
 const leftElbowPivot = new THREE.Group();
 leftElbowPivot.position.set(0, -0.36, 0); leftShoulderPivot.add(leftElbowPivot);
@@ -105,7 +145,7 @@ leftHand.position.set(0, -0.34, 0); leftElbowPivot.add(leftHand);
 
 const rightShoulderPivot = new THREE.Group();
 rightShoulderPivot.position.set(0.34, 1.72, 0); boyGroup.add(rightShoulderPivot);
-const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), tshirtMat);
+const rightUpperArm = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.055, 0.35, 8), shirtMat);
 rightUpperArm.position.set(0, -0.18, 0); rightUpperArm.castShadow = true; rightShoulderPivot.add(rightUpperArm);
 const rightElbowPivot = new THREE.Group();
 rightElbowPivot.position.set(0, -0.36, 0); rightShoulderPivot.add(rightElbowPivot);
@@ -182,7 +222,7 @@ const arrow1 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow1.position.set(0, 1.5, 0);
 arrow1.rotation.x = Math.PI;
 entry1BHK.add(arrow1);
-entry1BHK.position.set(-22, 0, 8);
+entry1BHK.position.set(-22, 0, 7);
 scene.add(entry1BHK);
 
 // 2BHK entry circle
@@ -199,67 +239,16 @@ const arrow2 = new THREE.Mesh(new THREE.ConeGeometry(0.3, 0.5, 4), arrowMat);
 arrow2.position.set(0, 1.5, 0);
 arrow2.rotation.x = Math.PI;
 entry2BHK.add(arrow2);
-entry2BHK.position.set(24, 0, 9);
+entry2BHK.position.set(24, 0, 8);
 scene.add(entry2BHK);
 
 
 // ═══════════════════════════════════════════════
-//  COLLISION SYSTEM — SOLID OBJECTS
+//  COLLISION SYSTEM — OPTIMIZED
+//  Uses pre-computed AABB boxes from interiors.js (furnitureBoxes)
+//  Legacy collisionBoxes removed to avoid duplicate data
 // ═══════════════════════════════════════════════
 const BOY_RADIUS = 0.35;
-const collisionBoxes = [
-    // ── 1BHK OUTER WALLS (house at x=-22, z=-4) ──
-    { xMin: -24, xMax: -4, zMin: -11.65, zMax: -11.35, house: '1bhk' },
-    { xMin: -24.15, xMax: -23.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
-    { xMin: -4.15, xMax: -3.85, zMin: -11.5, zMax: 3.5, house: '1bhk' },
-    { xMin: -24.15, xMax: -15.25, zMin: 3.35, zMax: 3.65, house: '1bhk' },
-    { xMin: -12.75, xMax: -3.85, zMin: 3.35, zMax: 3.65, house: '1bhk' },
-    // ── 1BHK PARTITIONS (with door gaps) ──
-    { xMin: -23.8, xMax: -11.85, zMin: -5.6, zMax: -5.4, house: '1bhk' },
-    { xMin: -10.15, xMax: -4.2, zMin: -5.6, zMax: -5.4, house: '1bhk' },
-    { xMin: -16.6, xMax: -16.4, zMin: -3.15, zMax: -1.35, house: '1bhk' },
-    { xMin: -16.6, xMax: -16.4, zMin: 0.35, zMax: 2.65, house: '1bhk' },
-    // ── 1BHK FURNITURE ──
-    { xMin: -19.5, xMax: -14.5, zMin: -9.75, zMax: -7.4, house: '1bhk' },
-    { xMin: -8.75, xMax: -6.25, zMin: -9.45, zMax: -8.55, house: '1bhk' },
-    { xMin: -15.75, xMax: -12.25, zMin: -10.65, zMax: -6.0, house: '1bhk' },
-    { xMin: -22.7, xMax: -20.3, zMin: -10, zMax: -9, house: '1bhk' },
-    { xMin: -21.75, xMax: -18.25, zMin: -4.95, zMax: -4.05, house: '1bhk' },
-    // ── 2BHK OUTER WALLS (house at x=24, z=-4) ──
-    { xMin: 6, xMax: 26, zMin: -12.15, zMax: -11.85, house: '2bhk' },
-    { xMin: 5.85, xMax: 6.15, zMin: -12, zMax: 4, house: '2bhk' },
-    { xMin: 25.85, xMax: 26.15, zMin: -12, zMax: 4, house: '2bhk' },
-    { xMin: 5.85, xMax: 14.75, zMin: 3.85, zMax: 4.15, house: '2bhk' },
-    { xMin: 17.25, xMax: 26.15, zMin: 3.85, zMax: 4.15, house: '2bhk' },
-    // ── 2BHK PARTITIONS (with door gaps) ──
-    { xMin: 6.2, xMax: 12.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
-    { xMin: 13.75, xMax: 18.25, zMin: -6.6, zMax: -6.4, house: '2bhk' },
-    { xMin: 19.75, xMax: 25.8, zMin: -6.6, zMax: -6.4, house: '2bhk' },
-    { xMin: 15.9, xMax: 16.1, zMin: -11.9, zMax: -6.6, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: -6.3, zMax: -4.25, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: -2.75, zMax: 0.75, house: '2bhk' },
-    { xMin: 10.9, xMax: 11.1, zMin: 2.25, zMax: 4.0, house: '2bhk' },
-    { xMin: 6.1, xMax: 10.9, zMin: -0.1, zMax: 0.1, house: '2bhk' },
-    // ── 2BHK FURNITURE ──
-    { xMin: 9.6, xMax: 12.4, zMin: -11, zMax: -7.5, house: '2bhk' },
-    { xMin: 19.6, xMax: 22.4, zMin: -11, zMax: -7.5, house: '2bhk' },
-    { xMin: 20.95, xMax: 25.45, zMin: -4, zMax: -1.8, house: '2bhk' },
-    { xMin: 17.25, xMax: 19.75, zMin: -3.6, zMax: -2.4, house: '2bhk' },
-    { xMin: 6.3, xMax: 9.3, zMin: -5.9, zMax: -5.1, house: '2bhk' },
-];
-
-function checkCollision(testX, testZ) {
-    const house = boyState.insideHouse;
-    for (const box of collisionBoxes) {
-        if (box.house !== house) continue;
-        const closestX = Math.max(box.xMin, Math.min(testX, box.xMax));
-        const closestZ = Math.max(box.zMin, Math.min(testZ, box.zMax));
-        const dx = testX - closestX;
-        const dz = testZ - closestZ;
-        if (dx * dx + dz * dz < BOY_RADIUS * BOY_RADIUS) return true;
-    }
-    return false;
-}
 
 // Door animation is handled by interiors.js updateDoors()
 
@@ -302,22 +291,22 @@ const boyState = {
 
 // Entry circle world positions
 const entryPositions = {
-    '1bhk': new THREE.Vector3(-22, 0, 8),
-    '2bhk': new THREE.Vector3(24, 0, 9)
+    '1bhk': new THREE.Vector3(-22, 0, 7),
+    '2bhk': new THREE.Vector3(24, 0, 8)
 };
 
 // Indoor spawn positions (world coords)
 const indoorSpawn = {
-    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 4), rot: Math.PI },
-    '2bhk': { pos: new THREE.Vector3(24, 0.15, 5), rot: Math.PI }
+    '1bhk': { pos: new THREE.Vector3(-22, 0.15, 6), rot: Math.PI },
+    '2bhk': { pos: new THREE.Vector3(24, 0.15, 7), rot: Math.PI }
 };
 
 // Indoor movement bounds (world coords) — matches wall positions exactly
 // 1BHK: houseGroup at (-22,0,-4), W=28, D=22 → walls at x[-36,-8] z[-15,7]
 // 2BHK: bhk2Group at (24,0,-4), W2=28, D2=24 → walls at x[10,38] z[-16,8]
 const indoorBounds = {
-    '1bhk': { xMin: -35.5, xMax: -8.5, zMin: -14.5, zMax: 6.5 },
-    '2bhk': { xMin: 10.5, xMax: 37.5, zMin: -15.5, zMax: 7.5 }
+    '1bhk': { xMin: -35.5, xMax: -8.5, zMin: -18.5, zMax: 6.8 },
+    '2bhk': { xMin: 10.5, xMax: 37.5, zMin: -19.5, zMax: 7.8 }
 };
 
 const indoorCameraOffset = new THREE.Vector3(0, 8, 10);
@@ -335,6 +324,13 @@ document.addEventListener('keydown', (e) => {
         if (boyState.mode === 'outdoor' && boyState.nearEntry) {
             enterHouse(boyState.nearEntry);
             e.preventDefault();
+        } else if (boyState.mode === 'outdoor') {
+            // Fallback: check distance directly at keypress moment
+            const bp = boyGroup.position;
+            const d1 = bp.distanceTo(entryPositions['1bhk']);
+            const d2 = bp.distanceTo(entryPositions['2bhk']);
+            if (d1 < 6) { enterHouse('1bhk'); e.preventDefault(); }
+            else if (d2 < 6) { enterHouse('2bhk'); e.preventDefault(); }
         }
     }
 
@@ -390,12 +386,24 @@ function enterHouse(houseId) {
 
     boyState.followTarget.copy(spawn.pos);
 
-    // Position camera for indoor view
+    // Position camera behind the boy (third-person perspective)
+    // Boy faces Math.PI (toward -Z / inward), so camera goes at +Z (behind)
     if (typeof controls !== 'undefined') {
         controls.enabled = true;
-        camera.position.set(spawn.pos.x, spawn.pos.y + 6, spawn.pos.z + 8);
-        controls.target.set(spawn.pos.x, spawn.pos.y + 1.5, spawn.pos.z);
+        camera.position.set(spawn.pos.x, spawn.pos.y + 4, spawn.pos.z + 5);
+        controls.target.set(spawn.pos.x, spawn.pos.y + 1.5, spawn.pos.z - 3);
         controls.update();
+    }
+
+    // Immediately hide outdoor objects to reduce rendering load
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = false;
+    if (typeof poleGroup !== 'undefined') poleGroup.visible = false;
+    if (typeof entry1BHK !== 'undefined') entry1BHK.visible = false;
+    if (typeof entry2BHK !== 'undefined') entry2BHK.visible = false;
+    if (houseId === '1bhk') {
+        if (typeof bhk2Group !== 'undefined') bhk2Group.visible = false;
+    } else {
+        if (typeof houseGroup !== 'undefined') houseGroup.visible = false;
     }
 
     // Focus on the right house
@@ -422,6 +430,22 @@ function enterHouse(houseId) {
 function exitHouse() {
     if (boyState.mode === 'transitioning') return;
 
+    // Only allow exit if boy is near the front door spawn position
+    const spawnPos = indoorSpawn[boyState.insideHouse].pos;
+    const distToDoor = Math.sqrt(
+        (boyGroup.position.x - spawnPos.x) ** 2 +
+        (boyGroup.position.z - spawnPos.z) ** 2
+    );
+    if (distToDoor > 3.5) {
+        const prompt = document.getElementById('interaction-popup');
+        if (prompt) {
+            prompt.textContent = '🚪 Walk to the front door to exit';
+            prompt.classList.add('visible');
+            setTimeout(() => prompt.classList.remove('visible'), 2000);
+        }
+        return;
+    }
+
     const houseId = boyState.insideHouse;
 
     // Animate main door open
@@ -447,6 +471,14 @@ function exitHouse() {
         controls.target.set(boyGroup.position.x, 1.5, boyGroup.position.z);
         controls.update();
     }
+
+    // Immediately restore outdoor object visibility
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = true;
+    if (typeof poleGroup !== 'undefined') poleGroup.visible = true;
+    if (typeof entry1BHK !== 'undefined') entry1BHK.visible = true;
+    if (typeof entry2BHK !== 'undefined') entry2BHK.visible = true;
+    if (typeof houseGroup !== 'undefined') houseGroup.visible = true;
+    if (typeof bhk2Group !== 'undefined') bhk2Group.visible = true;
 
     boyState.currentRoom = null;
 
@@ -481,6 +513,16 @@ function exitHouse() {
 }
 
 // ═══════════════════════════════════════════════
+//  CACHED VECTORS FOR MOVEMENT (avoid per-frame allocation)
+// ═══════════════════════════════════════════════
+const _moveForward = new THREE.Vector3();
+const _moveRight = new THREE.Vector3();
+const _moveDir = new THREE.Vector3();
+const _upVec = new THREE.Vector3(0, 1, 0);
+const _desiredTarget = new THREE.Vector3();
+const _lookAt = new THREE.Vector3();
+
+// ═══════════════════════════════════════════════
 //  UPDATE FUNCTION (called from animate loop)
 // ═══════════════════════════════════════════════
 function updateBoy(delta) {
@@ -498,84 +540,97 @@ function updateBoy(delta) {
     const isMoving = (inputX !== 0 || inputZ !== 0);
 
     if (isMoving) {
-        // Camera-relative movement
-        const forward = new THREE.Vector3();
-        forward.subVectors(controls.target, camera.position);
-        forward.y = 0;
-        if (forward.lengthSq() > 0.0001) {
-            forward.normalize();
+        // Camera-relative movement (reuse cached vectors)
+        _moveForward.subVectors(controls.target, camera.position);
+        _moveForward.y = 0;
+        if (_moveForward.lengthSq() > 0.0001) {
+            _moveForward.normalize();
         } else {
-            forward.set(0, 0, -1);
+            _moveForward.set(0, 0, -1);
         }
-        const right = new THREE.Vector3();
-        right.crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+        _moveRight.crossVectors(_moveForward, _upVec).normalize();
 
-        const moveDir = new THREE.Vector3();
-        moveDir.addScaledVector(forward, -inputZ);
-        moveDir.addScaledVector(right, inputX);
-        if (moveDir.lengthSq() > 0) moveDir.normalize();
+        _moveDir.set(0, 0, 0);
+        _moveDir.addScaledVector(_moveForward, -inputZ);
+        _moveDir.addScaledVector(_moveRight, inputX);
+        if (_moveDir.lengthSq() > 0) _moveDir.normalize();
 
         // Save position before move for collision rollback
         const prevX = boyGroup.position.x;
         const prevZ = boyGroup.position.z;
 
-        const dx = moveDir.x * boyState.speed * delta;
-        const dz = moveDir.z * boyState.speed * delta;
+        const dx = _moveDir.x * boyState.speed * delta;
+        const dz = _moveDir.z * boyState.speed * delta;
 
-        // Clamp helper
-        function clampPos(x, z) {
-            if (boyState.mode === 'outdoor') {
-                x = Math.max(-45, Math.min(48, x));
-                z = Math.max(9, Math.min(17, z));
-            } else if (boyState.mode === 'indoor') {
-                const bounds = indoorBounds[boyState.insideHouse];
-                if (bounds) {
-                    x = Math.max(bounds.xMin, Math.min(bounds.xMax, x));
-                    z = Math.max(bounds.zMin, Math.min(bounds.zMax, z));
-                }
+        // Clamp helper (inline, no function creation per frame)
+        let newX = prevX + dx;
+        let newZ = prevZ + dz;
+
+        // Clamp to world bounds
+        if (boyState.mode === 'outdoor') {
+            newX = Math.max(-45, Math.min(48, newX));
+            newZ = Math.max(5, Math.min(18, newZ));
+
+            // Outdoor collision with house walls (prevent walking through buildings)
+            const boyR = 0.5;
+            // 1BHK house: world x[-36,-8], z[-15,7]  (origin -22,-4, W=28, D=22)
+            const h1xMin = -36, h1xMax = -8, h1zMin = -15, h1zMax = 7;
+            if (newX > h1xMin - boyR && newX < h1xMax + boyR &&
+                newZ > h1zMin - boyR && newZ < h1zMax + boyR) {
+                // Push boy out of house bounds
+                if (prevX <= h1xMin - boyR) newX = h1xMin - boyR;
+                else if (prevX >= h1xMax + boyR) newX = h1xMax + boyR;
+                if (prevZ <= h1zMin - boyR) newZ = h1zMin - boyR;
+                else if (prevZ >= h1zMax + boyR) newZ = h1zMax + boyR;
             }
-            return { x, z };
+            // 2BHK house: world x[10,38], z[-16,8]  (origin 24,-4, W2=28, D2=24)
+            const h2xMin = 10, h2xMax = 38, h2zMin = -16, h2zMax = 8;
+            if (newX > h2xMin - boyR && newX < h2xMax + boyR &&
+                newZ > h2zMin - boyR && newZ < h2zMax + boyR) {
+                if (prevX <= h2xMin - boyR) newX = h2xMin - boyR;
+                else if (prevX >= h2xMax + boyR) newX = h2xMax + boyR;
+                if (prevZ <= h2zMin - boyR) newZ = h2zMin - boyR;
+                else if (prevZ >= h2zMax + boyR) newZ = h2zMax + boyR;
+            }
+            // Front wall between houses: world x[-8,10], z=6 (wall 0.4 thick)
+            if (newX > -8.5 && newX < 10.5 && newZ > 5.5 && newZ < 6.5) {
+                if (prevZ >= 6.5) newZ = 6.5;
+                else if (prevZ <= 5.5) newZ = 5.5;
+            }
         }
 
+        // Collision check (only uses the dedicated furniture/wall list)
         const collides = typeof checkFurnitureCollision === 'function'
             ? checkFurnitureCollision : () => false;
 
-        // Axis-separated sliding collision:
-        // Try moving both axes first
-        let newX = prevX + dx;
-        let newZ = prevZ + dz;
-        let clamped = clampPos(newX, newZ);
-        newX = clamped.x; newZ = clamped.z;
-
+        // Axis-split sliding collision with corner nudge
         if (collides(newX, newZ)) {
-            // Both blocked — try X-only movement (slide along Z wall)
-            newX = prevX + dx;
-            newZ = prevZ;
-            clamped = clampPos(newX, newZ);
-            newX = clamped.x; newZ = clamped.z;
-
-            if (collides(newX, newZ)) {
-                // X also blocked — try Z-only movement (slide along X wall)
+            if (!collides(newX, prevZ)) {
+                newZ = prevZ;
+            } else if (!collides(prevX, newZ)) {
                 newX = prevX;
-                newZ = prevZ + dz;
-                clamped = clampPos(newX, newZ);
-                newX = clamped.x; newZ = clamped.z;
-
-                if (collides(newX, newZ)) {
-                    // Fully stuck — no movement possible
-                    newX = prevX;
-                    newZ = prevZ;
-                }
+            } else {
+                newX = prevX;
+                newZ = prevZ;
             }
         }
+
+        // REMOVED Lightweight edge pushback
 
         boyGroup.position.x = newX;
         boyGroup.position.z = newZ;
 
+        // Hard clamp to indoor bounds — prevents escaping through outer walls
+        if (boyState.mode === 'indoor') {
+            const bounds = indoorBounds[boyState.insideHouse];
+            boyGroup.position.x = Math.max(bounds.xMin, Math.min(bounds.xMax, boyGroup.position.x));
+            boyGroup.position.z = Math.max(bounds.zMin, Math.min(bounds.zMax, boyGroup.position.z));
+        }
+
         // Face movement direction
-        const targetAngle = Math.atan2(moveDir.x, moveDir.z);
+        const targetAngle = Math.atan2(_moveDir.x, _moveDir.z);
         const diff = Math.atan2(Math.sin(targetAngle - boyGroup.rotation.y), Math.cos(targetAngle - boyGroup.rotation.y));
-        boyGroup.rotation.y += diff * 0.2;
+        boyGroup.rotation.y += diff * 0.25;
 
         // Walking animation — arm and leg swing with elbow/knee bend
         boyState.walkPhase += delta * 10;
@@ -624,24 +679,29 @@ function updateBoy(delta) {
         const boyPos = boyGroup.position;
         const dist1 = boyPos.distanceTo(entryPositions['1bhk']);
         const dist2 = boyPos.distanceTo(entryPositions['2bhk']);
-        const threshold = 3;
+        const threshold = 5;
 
         if (dist1 < threshold) {
             boyState.nearEntry = '1bhk';
             if (prompt) {
-                prompt.textContent = 'Press ENTER to enter 1BHK House';
+                prompt.textContent = '🏠 Press ENTER to enter 1BHK House';
                 prompt.classList.add('visible');
             }
         } else if (dist2 < threshold) {
             boyState.nearEntry = '2bhk';
             if (prompt) {
-                prompt.textContent = 'Press ENTER to enter 2BHK House';
+                prompt.textContent = '🏠 Press ENTER to enter 2BHK House';
                 prompt.classList.add('visible');
             }
         } else {
             boyState.nearEntry = null;
             if (prompt) prompt.classList.remove('visible');
         }
+
+        // Debug: always update nearEntry even if prompt missing
+        if (dist1 < threshold) boyState.nearEntry = '1bhk';
+        else if (dist2 < threshold) boyState.nearEntry = '2bhk';
+        else boyState.nearEntry = null;
     } else if (boyState.mode === 'indoor') {
         const boyPos = boyGroup.position;
         const distExit = boyPos.distanceTo(indoorSpawn[boyState.insideHouse].pos);
@@ -675,20 +735,20 @@ function updateBoy(delta) {
 
     // ── Smooth Camera Follow (only when boy is moving) ──
     if (isMoving && typeof camera !== 'undefined' && typeof controls !== 'undefined') {
-        const desiredTarget = new THREE.Vector3(
+        _desiredTarget.set(
             boyGroup.position.x,
             boyGroup.position.y + 1.5,
             boyGroup.position.z
         );
         const prevTarget = controls.target.clone();
-        controls.target.lerp(desiredTarget, 0.12);
+        controls.target.lerp(_desiredTarget, 0.15);
         const camDelta = controls.target.clone().sub(prevTarget);
         camera.position.add(camDelta);
         controls.update();
     } else if (boyState.mode === 'outdoor' && isMoving) {
         // Track the boy when moving outside
-        const lookAt = new THREE.Vector3(boyGroup.position.x, 2, boyGroup.position.z);
-        controls.target.lerp(lookAt, 0.05);
+        _lookAt.set(boyGroup.position.x, 2, boyGroup.position.z);
+        controls.target.lerp(_lookAt, 0.05);
         controls.update();
     }
 

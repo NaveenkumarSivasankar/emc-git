@@ -1,5 +1,5 @@
 // ═══════════════════════════════════════════════
-//  SOLAR PANELS (adjusted for enlarged 1BHK)
+//  SOLAR PANELS — Photorealistic PV Cells + Roof Placement
 // ═══════════════════════════════════════════════
 const solarPanels = [];
 const houseState = {
@@ -12,46 +12,67 @@ const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalnes
 
 function createSolarPanel() {
     const g = new THREE.Group();
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.10, 1.8), panelMat);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.12, 3.6), panelMat);
     g.add(panel);
     const gridMat = new THREE.MeshBasicMaterial({ color: 0x283593 });
     for (let i = -3; i <= 3; i++) {
-        const hLine = new THREE.Mesh(new THREE.BoxGeometry(2.55, 0.01, 0.02), gridMat);
-        hLine.position.set(0, 0.06, i * 0.25); g.add(hLine);
+        const hLine = new THREE.Mesh(new THREE.BoxGeometry(5.1, 0.01, 0.03), gridMat);
+        hLine.position.set(0, 0.07, i * 0.5); g.add(hLine);
     }
     for (let i = -4; i <= 4; i++) {
-        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.01, 1.75), gridMat);
-        vLine.position.set(i * 0.29, 0.06, 0); g.add(vLine);
+        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, 3.5), gridMat);
+        vLine.position.set(i * 0.58, 0.07, 0); g.add(vLine);
     }
     const frameParts = [
-        new THREE.BoxGeometry(2.65, 0.14, 0.06), new THREE.BoxGeometry(2.65, 0.14, 0.06),
-        new THREE.BoxGeometry(0.06, 0.14, 1.8), new THREE.BoxGeometry(0.06, 0.14, 1.8)
+        new THREE.BoxGeometry(5.3, 0.16, 0.08), new THREE.BoxGeometry(5.3, 0.16, 0.08),
+        new THREE.BoxGeometry(0.08, 0.16, 3.6), new THREE.BoxGeometry(0.08, 0.16, 3.6)
     ];
-    const framePositions = [[0, 0, 0.9], [0, 0, -0.9], [-1.3, 0, 0], [1.3, 0, 0]];
+    const framePositions = [[0, 0, 1.8], [0, 0, -1.8], [-2.6, 0, 0], [2.6, 0, 0]];
     frameParts.forEach((geo, i) => {
         const mesh = new THREE.Mesh(geo, panelFrameMat);
-        mesh.position.set(...framePositions[i]); g.add(mesh);
+        mesh.position.set(...framePositions[i]);
+        mesh.castShadow = true;
+        g.add(mesh);
     });
 
-    // ── MOUNTING STAND (two support legs) ──
+    // ── MOUNTING STAND (scaled for doubled panel) ──
     const standMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.4 });
-    // Front leg (shorter — panel tilts toward sun)
-    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, 0.08), standMat);
-    frontLeg.position.set(0, -0.22, 0.6); g.add(frontLeg);
-    // Back leg (taller — supports the high side)
-    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.55, 0.08), standMat);
-    backLeg.position.set(0, -0.32, -0.6); g.add(backLeg);
-    // Cross rail connecting both legs at the base
-    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.06, 1.4), standMat);
-    crossRail.position.set(0, -0.45, 0); g.add(crossRail);
-    // Two additional side supports for stability
-    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
-    sideLegL.position.set(-0.9, -0.25, 0); g.add(sideLegL);
-    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.4, 0.06), standMat);
-    sideLegR.position.set(0.9, -0.25, 0); g.add(sideLegR);
+    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, 0.12), standMat);
+    frontLeg.position.set(0, -0.50, 1.2); g.add(frontLeg);
+    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.12), standMat);
+    backLeg.position.set(0, -0.75, -1.2); g.add(backLeg);
+    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.8), standMat);
+    crossRail.position.set(0, -0.95, 0); g.add(crossRail);
+    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegL.position.set(-1.8, -0.52, 0); g.add(sideLegL);
+    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegR.position.set(1.8, -0.52, 0); g.add(sideLegR);
 
     g.visible = false;
     return g;
+}
+
+function flashPanelGlint(panelGroup) {
+    // Find the glass surface mesh (second child)
+    const glass = panelGroup.children[1];
+    if (!glass || !glass.material) return;
+
+    const originalEmissive = glass.material.emissive
+        ? glass.material.emissive.getHex()
+        : 0x000000;
+
+    glass.material.emissive = new THREE.Color(0x4488ff);
+    glass.material.emissiveIntensity = 1.2;
+
+    let glintFrame = 0;
+    const glintAnim = setInterval(() => {
+        glintFrame++;
+        glass.material.emissiveIntensity = Math.max(0, 1.2 - glintFrame * 0.12);
+        if (glintFrame >= 10) {
+            glass.material.emissiveIntensity = 0;
+            clearInterval(glintAnim);
+        }
+    }, 30);
 }
 
 function getRoofConfig(houseKey) {
@@ -78,11 +99,12 @@ function getRoofConfig(houseKey) {
         targetGroup = typeof houseGroup !== 'undefined' ? houseGroup : new THREE.Group();
     }
 
-    const panelGapX = 2.0;
-    const panelGapZ = 1.4;
+    const panelGapX = 5.6;
+    const panelGapZ = 4.4;
     const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
-    const max = colsPerSide * rows * 2;
+    const maxRows = Math.floor((roofDepthHalf * 2 - 2.5) / panelGapZ);
+    const max = 3 * maxRows * 2;
     return { roofWidthHalf, roofDepthHalf, startX, startZ, slopeAngle, baseRoofH, targetGroup, panelGapX, panelGapZ, colsPerSide, rows, max };
 }
 
@@ -97,33 +119,7 @@ setTimeout(() => {
     initializeHouseSolar('2bhk');
 }, 500);
 
-// ═══════════════════════════════════════════════
-//  ADD SOLAR PANEL BUTTONS ON HOUSES
-// ═══════════════════════════════════════════════
-(function createSolarButtons() {
-    function makeSolarBtn(houseKey, targetGroup, yPos) {
-        const btn = document.createElement('button');
-        btn.className = 'add-solar-btn';
-        btn.innerHTML = '☀️ Add Solar';
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            selectSolarHouse(houseKey);
-        };
-        const obj = new THREE.CSS2DObject(btn);
-        obj.position.set(0, yPos, 0);
-        targetGroup.add(obj);
-        return obj;
-    }
 
-    setTimeout(() => {
-        if (typeof houseGroup !== 'undefined') {
-            makeSolarBtn('1bhk', houseGroup, H + roofH + 1.5);
-        }
-        if (typeof bhk2Group !== 'undefined') {
-            makeSolarBtn('2bhk', bhk2Group, H + roofH + 2);
-        }
-    }, 600);
-})();
 
 
 
@@ -158,14 +154,23 @@ function updateStats() {
     if (statPanels) statPanels.textContent = activeState.count + ' / ' + panelsNeeded + ' needed';
 
     const coverageRatio = Math.min(activeState.count / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = activeState.count;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
 
     const statSavings = document.getElementById('stat-savings');
     if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
 
     const statCo2 = document.getElementById('stat-co2');
-    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
+    if (statCo2) statCo2.textContent = co2Saved.toLocaleString() + ' kg/yr';
 
     const statFact = document.getElementById('stat-fact');
     if (statFact) statFact.textContent = funFacts[Math.floor(Math.random() * funFacts.length)];
@@ -189,18 +194,18 @@ function updateStats() {
         if (btnText) btnText.textContent = 'Add Solar Panels';
         if (btnIcon) btnIcon.textContent = '☀️';
         if (panelCounter) panelCounter.classList.remove('visible');
-
     }
-
-    updateBarChart(total, coverageRatio);
+    if (typeof updatePowerLines === 'function') updatePowerLines();
 }
 
 function openSolarModal() {
-    document.getElementById('solar-selection-modal').classList.remove('modal-hidden');
+    const modal = document.getElementById('solar-selection-modal');
+    if (modal) modal.classList.remove('modal-hidden');
 }
 
 function closeSolarModal() {
-    document.getElementById('solar-selection-modal').classList.add('modal-hidden');
+    const modal = document.getElementById('solar-selection-modal');
+    if (modal) modal.classList.add('modal-hidden');
 }
 
 function selectSolarHouse(houseKey) {
@@ -309,33 +314,71 @@ function changePanelCount(delta) {
     const config = getRoofConfig(activeKey);
 
     if (delta > 0) {
-        const idx = state.count; // the zero-based index of the panel being added
-        const side = idx % 2 === 0 ? 1 : -1; // 1 for right, -1 for left
-        const pairIdx = Math.floor(idx / 2);
-        const row = pairIdx % config.rows;
-        const col = Math.floor(pairIdx / config.rows);
-
+        const idx = state.count;
         const g = createSolarPanel();
 
-        // Calculate position dynamically
-        const xOffset = config.startX + col * config.panelGapX * 1.05 + 0.9;
-        const xPos = xOffset * side;
-        const zPos = config.startZ + row * config.panelGapZ * 1.05 + 1.25;
-
         const hFallback = typeof H !== 'undefined' ? H : 7;
-        const roofLocalY = hFallback + 0.3 + config.baseRoofH - Math.abs(xPos) * (config.baseRoofH / config.roofWidthHalf);
+        const roofHval = typeof roofH !== 'undefined' ? roofH : 4.5;
+        const ridgeY = hFallback + roofHval;
 
-        g.rotation.set(0, 0, side * -config.slopeAngle);
-        g.position.set(xPos, roofLocalY - 0.2, zPos);
-        g.translateY(0.15); // float off roof slightly
+        const panelsPerRow = 3;
+        const colSpacing = 3.0;
+        const rowSpacing = 2.5;
+        const maxRows = Math.floor((config.roofDepthHalf * 2 - 2.5) / rowSpacing);
+        const panelsPerSide = panelsPerRow * maxRows;
+
+        const isLeft = idx < panelsPerSide;
+        const sideIdx = isLeft ? idx : idx - panelsPerSide;
+        const col = sideIdx % panelsPerRow;
+        const row = Math.floor(sideIdx / panelsPerRow);
+
+        // X position — spread evenly on each slope half
+        const xSign = isLeft ? -1 : 1;
+        const xStart = 1.8;
+        const xPos = xSign * (xStart + col * colSpacing);
+
+        // Hard clamp so panel never goes past roof edge
+        const clampedX = Math.max(
+            -(config.roofWidthHalf - 1.0),
+            Math.min(config.roofWidthHalf - 1.0, xPos)
+        );
+
+        // Z position — rows from front to back
+        const zPos = -(config.roofDepthHalf - 1.8) + row * rowSpacing;
+        const clampedZ = Math.max(
+            -(config.roofDepthHalf - 1.0),
+            Math.min(config.roofDepthHalf - 1.0, zPos)
+        );
+
+        // ── CRITICAL Y FIX ──
+        const distFromRidge = Math.abs(clampedX);
+        const surfaceY = ridgeY - (distFromRidge / config.roofWidthHalf) * roofHval;
+
+        // Different Y offset for each house to account for different roof heights
+        const mountOffset = activeKey === '2bhk' ? 1.1 : 0.80;
+        const yPos = surfaceY + mountOffset;
+
+        // Tilt panel to match roof slope angle exactly
+        const slopeAngle = Math.atan2(roofHval, config.roofWidthHalf);
+        const tiltZ = isLeft ? slopeAngle : -slopeAngle;
+
+        g.rotation.set(0, 0, tiltZ);
+        g.position.set(clampedX, yPos, clampedZ);
 
         config.targetGroup.add(g);
         g.visible = true;
 
         const targetY = g.position.y;
-        g.position.y = targetY + 15; // start from above for drop animation
+        g.position.y = targetY + 10; // drop from above
 
-        state.panels.push({ group: g, targetY: targetY, animating: true, frame: 0, delay: 0 });
+        state.panels.push({
+            group: g,
+            targetY,
+            animating: true,
+            frame: 0
+        });
+
+        if (typeof syncSolarPanels === 'function') syncSolarPanels();
     } else {
         const lastPanel = state.panels.pop();
         if (lastPanel && lastPanel.group && lastPanel.group.parent) {
@@ -344,8 +387,39 @@ function changePanelCount(delta) {
     }
 
     state.count = newCount;
+
+    // Calculate required panels
+    let totalWatt = 0;
+    const appList = activeKey === '2bhk' ? bhk2Appliances : simpleAppliances;
+    appList.forEach(a => { if (a.on) totalWatt += a.watt; });
+    const required = Math.max(1, Math.ceil(totalWatt / 350));
+
+    // Show message
+    let msg = '';
+    let msgColor = '#2ECC8B';
+
+    if (state.count === 0) {
+        msg = '';
+    } else if (state.count < required) {
+        const still = required - state.count;
+        msg = `\u2600\uFE0F ${activeKey.toUpperCase()}: ${state.count} panel${state.count > 1 ? 's' : ''} added \u2014 need ${still} more to fully cover your usage`;
+        msgColor = '#F5A623';
+    } else if (state.count === required) {
+        msg = `\u2705 ${activeKey.toUpperCase()}: Perfect! ${state.count} panels fully cover your electricity needs!`;
+        msgColor = '#2ECC8B';
+    } else if (state.count >= state.max) {
+        msg = `\uD83D\uDD34 ${activeKey.toUpperCase()}: Maximum panels reached! Roof is fully covered.`;
+        msgColor = '#FF6B6B';
+    } else {
+        msg = `\u26A1 ${activeKey.toUpperCase()}: ${state.count} panels \u2014 generating more than needed! Great investment.`;
+        msgColor = '#5B8DEF';
+    }
+
+    if (msg) showSolarMessage(msg, msgColor);
+
     updatePowerLines();
     updateStats();
+    syncSolarPanels();
 }
 
 // Ensure the main animation loop can animate all panels if needed
@@ -353,15 +427,59 @@ if (!window.solarPanelsAnimHook) {
     window.solarPanelsAnimHook = true;
     const originalAnimate = window.animate;
 }
-// Continuously flush all active panels back into global `solarPanels` for animation 
-setInterval(() => {
+function syncSolarPanels() {
     solarPanels.length = 0;
     houseState['1bhk'].panels.forEach(p => solarPanels.push(p));
     houseState['2bhk'].panels.forEach(p => solarPanels.push(p));
-}, 100);
+}
+window.syncSolarPanels = syncSolarPanels;
 
 function refreshSolarPanelsPlacement() {
     if (typeof houseState !== 'undefined') {
         // Re-sync panel counts
     }
+}
+
+(function addSolarLight() {
+    if (typeof scene === 'undefined') return;
+    const solarLight = new THREE.DirectionalLight(0xaaccff, 1.2);
+    solarLight.position.set(0, 30, 10);
+    scene.add(solarLight);
+    const ambBoost = new THREE.AmbientLight(0x88aacc, 0.4);
+    scene.add(ambBoost);
+})();
+
+function showSolarMessage(text, color) {
+    let box = document.getElementById('solar-msg-box');
+    if (!box) {
+        box = document.createElement('div');
+        box.id = 'solar-msg-box';
+        box.style.cssText = `
+            position: fixed;
+            bottom: 90px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a1a2e;
+            border: 2px solid ${color};
+            color: ${color};
+            padding: 10px 24px;
+            border-radius: 30px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: 'Courier New', monospace;
+            z-index: 9999;
+            pointer-events: none;
+            text-align: center;
+            max-width: 480px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            transition: opacity 0.4s ease;
+        `;
+        document.body.appendChild(box);
+    }
+    box.style.borderColor = color;
+    box.style.color = color;
+    box.textContent = text;
+    box.style.opacity = '1';
+    clearTimeout(box._timer);
+    box._timer = setTimeout(() => { box.style.opacity = '0'; }, 3500);
 }
