@@ -70,43 +70,67 @@ function toggleSimpleAppliance(idx, isOn) {
 // ═══════════════════════════════════════════════
 function recalcWattage() {
     let total = 0;
-    if (is2BHK) {
+    const activeKey = typeof is2BHK !== 'undefined' && is2BHK ? '2bhk' : '1bhk';
+    if (activeKey === '2bhk') {
         bhk2Appliances.forEach(a => { if (a.on) total += a.watt; });
     } else {
         simpleAppliances.forEach(a => { if (a.on) total += a.watt; });
     }
-    const el = document.getElementById('stat-consumption');
-    if (el) el.textContent = total.toLocaleString() + ' W';
+
+    // Fallback if houseState isn't fully initialized yet
+    const currentCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+
+    setText('stat-consumption', total.toLocaleString() + ' W');
     const panelsNeeded = Math.max(1, Math.ceil(total / 350));
-    const statPanels = document.getElementById('stat-panels');
-    if (statPanels) statPanels.textContent = currentPanelCount + ' / ' + panelsNeeded + ' needed';
-    const coverageRatio = Math.min(currentPanelCount / panelsNeeded, 1);
-    const monthlySaving = Math.round(coverageRatio * total * 0.72 * 30 / 1000 * 8);
-    const co2Saved = Math.round(coverageRatio * total * 0.0007 * 365);
-    const statSavings = document.getElementById('stat-savings');
-    if (statSavings) statSavings.textContent = '₹' + monthlySaving.toLocaleString();
-    const statCo2 = document.getElementById('stat-co2');
-    if (statCo2) statCo2.textContent = co2Saved + ' kg/yr';
-    updateBarChart(total, coverageRatio);
+    setText('stat-panels', currentCount + ' / ' + panelsNeeded + ' needed');
+
+    const coverageRatio = Math.min(currentCount / panelsNeeded, 1);
+    
+    // FETCH ACCURATE PANEL COUNT AND CALCULATE SOLAR GENERATION
+    const panelCount = (typeof houseState !== 'undefined' && houseState[activeKey]) ? houseState[activeKey].count : 0;
+    const solarKW = panelCount * 0.35; // generic 0.35 kW per panel
+    const solarDailyUnits = solarKW * 4; // generic 4 hrs of sun
+    
+    // We base savings on actual daily solar units generated
+    const totalDailyUnits = (total * 8) / 1000;
+    const effectiveSolarUnits = Math.min(solarDailyUnits, totalDailyUnits); // Can't save more than used in the basic calculation
+    const monthlySaving = Math.round(effectiveSolarUnits * 30 * 6.5); // generic 6.5 INR per unit for simple calc
+    const co2Saved = Math.round(effectiveSolarUnits * 365 * 0.82); // 0.82 kg CO2 per unit
+
+    setText('stat-savings', '₹' + monthlySaving.toLocaleString());
+    setText('stat-co2', co2Saved.toLocaleString() + ' kg/yr');
+
+    updateBarChart(total, coverageRatio, effectiveSolarUnits, totalDailyUnits);
 }
 
-function updateBarChart(totalW, coverageRatio) {
-    const solarPct = Math.round(coverageRatio * 100);
+function updateBarChart(totalW, coverageRatio, effectiveSolarUnits, totalDailyUnits) {
+    const setText = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+    const setWidth = (id, pct) => { const el = document.getElementById(id); if (el) el.style.width = pct; };
+
+    // If effectiveSolarUnits is not passed (from older calls), calculate a generic one based on coverage ratio for fallback
+    if (typeof effectiveSolarUnits === 'undefined' || typeof totalDailyUnits === 'undefined') {
+        totalDailyUnits = (totalW * 8) / 1000;
+        effectiveSolarUnits = totalDailyUnits * coverageRatio;
+    }
+
+    const solarPct = totalDailyUnits > 0 ? Math.round((effectiveSolarUnits / totalDailyUnits) * 100) : 0;
     const gridPct = 100 - solarPct;
-    const gridBar = document.getElementById('grid-bar');
-    if (gridBar) { gridBar.style.width = Math.max(gridPct, 5) + '%'; gridBar.textContent = gridPct + '%'; }
-    const solarBar = document.getElementById('solar-bar');
-    if (solarBar) { solarBar.style.width = Math.max(solarPct, 5) + '%'; solarBar.textContent = solarPct + '%'; }
-    const dailyKwh = totalW * 8 / 1000;
-    const gridCostDaily = Math.round(dailyKwh * (1 - coverageRatio) * 8);
-    const solarSavingsDaily = Math.round(dailyKwh * coverageRatio * 8);
+
+    setWidth('grid-bar', Math.max(gridPct, 5) + '%');
+    setText('grid-bar', gridPct + '%');
+
+    setWidth('solar-bar', Math.max(solarPct, 5) + '%');
+    setText('solar-bar', solarPct + '%');
+
+    const gridCostDaily = Math.round((totalDailyUnits - effectiveSolarUnits) * 6.5); // generic 6.5 INR rate
+    const solarSavingsDaily = Math.round(effectiveSolarUnits * 6.5);
     const monthlyBill = Math.round(gridCostDaily * 30);
-    const calcGrid = document.getElementById('calc-grid');
-    if (calcGrid) calcGrid.textContent = '₹' + gridCostDaily;
-    const calcSolar = document.getElementById('calc-solar');
-    if (calcSolar) calcSolar.textContent = '₹' + solarSavingsDaily;
-    const calcMonthly = document.getElementById('calc-monthly');
-    if (calcMonthly) calcMonthly.textContent = '₹' + monthlyBill;
+
+    setText('calc-grid', '₹' + gridCostDaily);
+    setText('calc-solar', '₹' + solarSavingsDaily);
+    setText('calc-monthly', '₹' + monthlyBill);
 }
 
 // ═══════════════════════════════════════════════
@@ -200,14 +224,15 @@ function buildAppliancePanel() {
 function focusHouse(which) {
     if (which === 'simple') {
         is2BHK = false;
-        controls.target.set(-22, 4, 0);
-        camera.position.set(-22, 20, 35);
+        controls.target.set(-22, 4, -4);
+        camera.position.set(-22, 20, 31);
     } else {
         is2BHK = true;
-        controls.target.set(24, 4, 0);
-        camera.position.set(24, 20, 35);
+        controls.target.set(24, 4, -4);
+        camera.position.set(24, 20, 31);
     }
     controls.update();
+    if (typeof positionSolarPanels === 'function') positionSolarPanels();
     buildAppliancePanel();
     buildRoomNavPanel();
     recalcWattage();
@@ -384,7 +409,39 @@ function toggleRoomNav() {
 }
 
 // ═══════════════════════════════════════════════
-//  ROOM ENTRY POPUP SYSTEM — Clash of Clans Style
+//  STREET OVERVIEW RESET
+// ═══════════════════════════════════════════════
+function resetToStreetOverview() {
+    // Reset camera to standard overview
+    if (typeof camera !== 'undefined' && typeof controls !== 'undefined') {
+        camera.position.set(0, 20, 40);
+        controls.target.set(0, 4, 0);
+        controls.update();
+    }
+
+    // Hide house-specific UI elements
+    const backBtn = document.getElementById('back-btn');
+    if (backBtn) backBtn.classList.remove('visible');
+
+    const roomIndicator = document.getElementById('room-indicator');
+    if (roomIndicator) roomIndicator.classList.remove('visible');
+
+    const enterPrompt = document.getElementById('enter-prompt');
+    if (enterPrompt) enterPrompt.classList.remove('visible');
+
+    // Close panels if open
+    const roomNav = document.getElementById('room-nav-panel');
+    if (roomNav) roomNav.classList.remove('visible');
+
+    // Ensure all houses are visible and environment is visible
+    if (typeof environmentGroup !== 'undefined') environmentGroup.visible = true;
+    if (typeof bhk2Group !== 'undefined') bhk2Group.visible = true;
+    if (typeof houseGroup !== 'undefined') houseGroup.visible = true;
+}
+
+// ═══════════════════════════════════════════════
+//  ROOM ENTRY POPUP HUD
+//  Glassmorphism popup when character enters a room
 // ═══════════════════════════════════════════════
 
 // Room data for popups
@@ -469,55 +526,135 @@ function normalizeRoomName(roomName) {
 }
 
 function showRoomPopup(roomName, houseId) {
-    const normalizedName = normalizeRoomName(roomName);
-    const data = ROOM_DATA[normalizedName];
-    console.log('[UI] Room popup triggered: ' + roomName + ' → ' + normalizedName);
+    createRoomPopupElement();
 
-    let popup = document.getElementById('room-popup');
-    if (!popup) { popup = document.createElement('div'); popup.id = 'room-popup'; document.body.appendChild(popup); }
-    popup.classList.remove('hidden');
+    // Clear previous timers
+    if (roomPopupTimeout) clearTimeout(roomPopupTimeout);
+    if (roomPopupInterval) clearInterval(roomPopupInterval);
 
-    let applianceList = [], totalWatts = 0, tip = '';
-    if (data) {
-        const gameAppliances = houseId === '2bhk' ? bhk2Appliances : simpleAppliances;
-        const roomAppliances = gameAppliances.filter(a => normalizeRoomName(a.room) === normalizedName);
-        if (roomAppliances.length > 0) {
-            roomAppliances.forEach(a => { totalWatts += a.on ? a.watt : 0; applianceList.push({ name: a.name, watts: a.watt, isOn: a.on }); });
-        } else {
-            data.appliances.forEach(a => { totalWatts += a.isOn ? a.watts : 0; applianceList.push(a); });
-        }
-        tip = data.tip;
-    } else { tip = '💡 Every watt saved helps the planet!'; }
+    const roomIcons = { 'Hall': '🏠', 'Kitchen': '🍳', 'Bedroom': '🛏️', 'Bedroom 1': '🛏️', 'Bedroom 2': '🛏️', 'Bathroom': '🚿' };
+    const icon = roomIcons[roomName] || '🏠';
 
-    const appHTML = applianceList.map(a => {
-        const isOn = a.isOn !== undefined ? a.isOn : a.on;
-        const watts = a.watts !== undefined ? a.watts : a.watt;
-        return '<div class="appliance-item"><span>' + a.name + '</span><span class="' + (isOn ? 'status-on' : 'status-off') + '">' + (isOn ? '✅ ' + watts + 'W' : '⬜ OFF') + '</span></div>';
-    }).join('');
+    function renderPopup() {
+        const appList = houseId === '2bhk' ? bhk2Appliances : simpleAppliances;
+        const roomAppliances = appList.filter(a => a.room === roomName);
 
-    popup.innerHTML = '<div class="popup-banner"><span class="popup-icon">' + (data ? data.icon : '🏠') + '</span><span class="popup-title">' + (data ? data.name : normalizedName) + '</span></div>' +
-        '<div class="popup-body">' + appHTML + '<div class="total-watts">⚡ ' + totalWatts + 'W active</div><div class="energy-tip">💡 ' + tip + '</div></div>' +
-        '<button class="popup-explore-btn" onclick="closeRoomPopup()">✨ EXPLORE!</button>';
+        let totalWatts = 0;
+        let appHtml = '';
+        roomAppliances.forEach(a => {
+            const status = a.on ? '<span class="rp-on">ON</span>' : '<span class="rp-off">OFF</span>';
+            const wattDisplay = a.on ? a.watt : 0;
+            if (a.on) totalWatts += a.watt;
+            appHtml += '<div class="rp-appliance">' +
+                '<span class="rp-emoji">' + (a.emoji || '') + '</span>' +
+                '<span class="rp-name">' + a.name + '</span>' +
+                status +
+                '<span class="rp-watt">' + wattDisplay + 'W</span>' +
+                '</div>';
+        });
 
-    requestAnimationFrame(() => popup.classList.add('visible'));
-    clearTimeout(window.popupTimer);
-    window.popupTimer = setTimeout(closeRoomPopup, 6000);
+        const hourlyCost = (totalWatts / 1000 * 8).toFixed(2); // ₹8 per unit approx
+
+        roomPopupEl.innerHTML =
+            '<div class="rp-header">' +
+            '<span class="rp-title">' + icon + ' ' + roomName + '</span>' +
+            '<button class="rp-close" onclick="hideRoomPopup()">×</button>' +
+            '</div>' +
+            '<div class="rp-appliances">' + appHtml + '</div>' +
+            '<div class="rp-footer">' +
+            '<div class="rp-total">⚡ Total: <strong>' + totalWatts + 'W</strong></div>' +
+            '<div class="rp-cost">💰 ~₹' + hourlyCost + '/hr</div>' +
+            '</div>';
+    }
+
+    renderPopup();
+    roomPopupEl.classList.add('visible');
+
+    // Live update every second
+    roomPopupInterval = setInterval(renderPopup, 1000);
+
+    // Auto-dismiss after 5 seconds
+    roomPopupTimeout = setTimeout(() => {
+        hideRoomPopup();
+    }, 5000);
 }
 
-function closeRoomPopup() {
-    const p = document.getElementById('room-popup'); if (!p) return;
-    p.classList.remove('visible'); setTimeout(() => p.classList.add('hidden'), 350);
-    clearTimeout(window.popupTimer);
+function hideRoomPopup() {
+    if (roomPopupEl) roomPopupEl.classList.remove('visible');
+    if (roomPopupTimeout) { clearTimeout(roomPopupTimeout); roomPopupTimeout = null; }
+    if (roomPopupInterval) { clearInterval(roomPopupInterval); roomPopupInterval = null; }
 }
-window.closeRoomPopup = closeRoomPopup;
-function hideRoomPopup() { closeRoomPopup(); }
-
-// NOTE: Solar selector functions moved to solar.js (no duplicates)
-// These are stubs in case legacy code calls them
-// The actual implementations are in solar.js
 
 // ═══════════════════════════════════════════════
-//  DYNAMIC ENERGY
+//  SOLAR PANEL HOUSE SELECTOR MODAL
+// ═══════════════════════════════════════════════
+let solarSelectorEl = null;
+
+function createSolarSelector() {
+    if (solarSelectorEl) return;
+    solarSelectorEl = document.createElement('div');
+    solarSelectorEl.id = 'solar-selector-modal';
+    solarSelectorEl.innerHTML =
+        '<div class="ssm-backdrop" onclick="closeSolarSelector()"></div>' +
+        '<div class="ssm-content">' +
+        '<button class="ssm-close" onclick="closeSolarSelector()">✕</button>' +
+        '<h2 class="ssm-title">☀️ Select Solar Installation</h2>' +
+        '<p class="ssm-subtitle">Choose which house to install solar panels on</p>' +
+        '<div class="ssm-buttons">' +
+        '<button class="ssm-btn ssm-1bhk" onclick="selectSolarHouseUI(\'1bhk\')">🏠 1BHK House</button>' +
+        '<button class="ssm-btn ssm-2bhk" onclick="selectSolarHouseUI(\'2bhk\')">🏢 2BHK House</button>' +
+        '<button class="ssm-btn ssm-both" onclick="selectSolarHouseUI(\'both\')">🏘️ Both Houses</button>' +
+        '</div>' +
+        '<button class="ssm-cancel" onclick="closeSolarSelector()">Cancel</button>' +
+        '</div>';
+    document.body.appendChild(solarSelectorEl);
+}
+
+function showSolarSelector() {
+    createSolarSelector();
+    solarSelectorEl.classList.add('visible');
+}
+
+function closeSolarSelector() {
+    if (solarSelectorEl) solarSelectorEl.classList.remove('visible');
+}
+
+let solarTarget = null; // '1bhk', '2bhk', 'both'
+
+// NOTE: selectSolarHouse is defined in solar.js — do NOT redefine here
+// This was previously causing a conflict/freeze. The solar.js version
+// handles per-house solar state (houseState) correctly.
+function selectSolarHouseUI(target) {
+    solarTarget = target;
+    closeSolarSelector();
+    // Delegate to the solar.js selectSolarHouse
+    if (typeof selectSolarHouse === 'function') {
+        selectSolarHouse(target === 'both' ? '1bhk' : target);
+        if (target === 'both') selectSolarHouse('2bhk');
+    }
+}
+
+function performSolarToggle(target) {
+    isSolarMode = true;
+    const btn = document.getElementById('solar-btn');
+    const btnText = document.getElementById('solar-btn-text');
+    const btnIcon = document.getElementById('solar-btn-icon');
+    const panelCounter = document.getElementById('panel-counter');
+
+    if (btn) btn.className = 'solar-mode bottom-action-btn';
+    if (btnText) btnText.textContent = 'Remove Solar';
+    if (btnIcon) btnIcon.textContent = '⚡';
+    if (panelCounter) panelCounter.classList.add('visible');
+
+    currentPanelCount = 0;
+    solarPanels.forEach(p => { p.group.visible = false; p.group.position.y = p.targetY + 15; });
+
+    if (typeof updatePowerLines === 'function') updatePowerLines();
+    if (typeof updateStats === 'function') updateStats();
+}
+
+// ═══════════════════════════════════════════════
+//  DYNAMIC ENERGY DATA (live updating)
 // ═══════════════════════════════════════════════
 const dynamicEnergy = { sessionStart: Date.now(), cumulativeWh: 0, lastTick: Date.now(), intervalId: null };
 function startEnergyTracking() {
@@ -525,18 +662,37 @@ function startEnergyTracking() {
     dynamicEnergy.intervalId = setInterval(updateDynamicEnergy, 1000);
 }
 function updateDynamicEnergy() {
-    const now = Date.now(), dtH = (now - dynamicEnergy.lastTick) / 3600000; dynamicEnergy.lastTick = now;
-    let aw = 0; (is2BHK ? bhk2Appliances : simpleAppliances).forEach(a => { if (a.on) aw += a.watt; });
-    dynamicEnergy.cumulativeWh += aw * dtH;
-    const em = document.getElementById('stat-per-minute'); if (em) em.textContent = (aw / 60).toFixed(2) + ' Wh/min';
-    const eh = document.getElementById('stat-per-hour'); if (eh) eh.textContent = aw.toFixed(0) + ' W/hr';
-    const ec = document.getElementById('stat-cumulative'); if (ec) ec.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
+    const now = Date.now();
+    const dtHours = (now - dynamicEnergy.lastTick) / 3600000; // ms to hours
+    dynamicEnergy.lastTick = now;
+
+    // Calculate current active wattage
+    let activeWatts = 0;
+    const list = is2BHK ? bhk2Appliances : simpleAppliances;
+    list.forEach(a => { if (a.on) activeWatts += a.watt; });
+
+    // Accumulate energy consumed in this interval
+    dynamicEnergy.cumulativeWh += activeWatts * dtHours;
+
+    // Per-minute = watts / 60 hours worth
+    dynamicEnergy.perMinuteW = activeWatts;
+    dynamicEnergy.perHourW = activeWatts;
+
+    // Update stat displays if they exist
+    const elMinute = document.getElementById('stat-per-minute');
+    if (elMinute) elMinute.textContent = (activeWatts / 60).toFixed(2) + ' Wh/min';
+    const elHour = document.getElementById('stat-per-hour');
+    if (elHour) elHour.textContent = (activeWatts).toFixed(0) + ' W/hr';
+    const elCumulative = document.getElementById('stat-cumulative');
+    if (elCumulative) elCumulative.textContent = dynamicEnergy.cumulativeWh.toFixed(2) + ' Wh';
+
+    // Track per-appliance duration for analytics
     if (typeof trackApplianceDuration === 'function') trackApplianceDuration();
 }
 window.addEventListener('DOMContentLoaded', () => { setTimeout(startEnergyTracking, 500); });
 
 // ═══════════════════════════════════════════════
-//  FLOOR SELECTOR
+//  FLOOR SELECTOR FOR 2BHK
 // ═══════════════════════════════════════════════
 let current2BHKFloor = 1;
 function showFloorSelector() {
@@ -554,7 +710,7 @@ function selectFloor(n) {
 }
 
 // ═══════════════════════════════════════════════
-//  GAMIFIED SAVINGS
+//  GAMIFIED TASK LIST & SAVINGS MODE
 // ═══════════════════════════════════════════════
 const savingsBaseline = { totalWatts: 3500, dailyCost: 224 };
 const gameTasks = [

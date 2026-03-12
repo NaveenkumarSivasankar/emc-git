@@ -4,7 +4,7 @@
 //  Canvas floor textures, ceiling fixtures, proper room colors
 // ═══════════════════════════════════════════════
 const bhk2Group = new THREE.Group();
-bhk2Group.position.set(24, 0, 0);
+bhk2Group.position.set(24, 0, -4);
 scene.add(bhk2Group);
 let is2BHK = true;
 
@@ -21,22 +21,9 @@ Object.values(roomGroups).forEach(g => bhk2Group.add(g));
 
 // Enlarged Dimensions
 const W2 = 28, D2 = 24;
-
-// ═══════════════════════════════════════════════
-//  STEP 2 — ALL WALL MATERIALS SOLID
-// ═══════════════════════════════════════════════
-const bhk2WallMat = new THREE.MeshStandardMaterial({
-    color: 0xe0d0b8, roughness: 0.88, metalness: 0.0,
-    transparent: false, opacity: 1.0, depthWrite: true, side: THREE.FrontSide
-});
-const bhk2RoofMat = new THREE.MeshStandardMaterial({
-    color: 0x6B3410, roughness: 0.7, metalness: 0.1,
-    transparent: false, opacity: 1.0, depthWrite: true
-});
-const bhk2DoorMat = new THREE.MeshStandardMaterial({
-    color: 0x5c3a1e, roughness: 0.7, metalness: 0.0,
-    transparent: false, opacity: 1.0, depthWrite: true
-});
+const bhk2WallMat = new THREE.MeshStandardMaterial({ color: 0xe0d0b8, roughness: 0.8, transparent: true, opacity: 1, side: THREE.DoubleSide });
+const bhk2RoofMat = new THREE.MeshStandardMaterial({ color: 0x6B3410, roughness: 0.7, metalness: 0.1, transparent: true, opacity: 1 });
+const bhk2DoorMat = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7, transparent: true, opacity: 1 });
 const bhk2TransWalls = [];
 
 function addBhk2Wall(w, h, d, x, y, z, transp) {
@@ -83,31 +70,12 @@ addBhk2Window(-7, 4, D2 / 2 + 0.15, 0); addBhk2Window(7, 4, D2 / 2 + 0.15, 0);
 addBhk2Window(-W2 / 2 - 0.15, 4, -4, Math.PI / 2); addBhk2Window(W2 / 2 + 0.15, 4, -4, Math.PI / 2);
 addBhk2Window(-W2 / 2 - 0.15, 4, 5, Math.PI / 2); addBhk2Window(W2 / 2 + 0.15, 4, 5, Math.PI / 2);
 
-// Ceiling
-const bhk2CeilingMat = new THREE.MeshStandardMaterial({
-    color: 0xF8F6F2, roughness: 0.9, metalness: 0.0,
-    transparent: false, opacity: 1.0, depthWrite: true, side: THREE.DoubleSide
-});
-const bhk2Ceiling = new THREE.Mesh(new THREE.PlaneGeometry(W2 - 0.4, D2 - 0.4), bhk2CeilingMat);
-bhk2Ceiling.rotation.x = Math.PI / 2; bhk2Ceiling.position.set(0, H + 0.2, 0);
-bhk2Ceiling.receiveShadow = true; roomGroups['Structure'].add(bhk2Ceiling);
 
-// 2BHK label
-const bhk2LabelDiv = document.createElement('div');
-bhk2LabelDiv.className = 'appliance-label';
-bhk2LabelDiv.innerHTML = '<span class="name" style="font-size:1.1rem;">🏢 2BHK House</span>';
-const bhk2Label = new THREE.CSS2DObject(bhk2LabelDiv);
-bhk2Label.position.set(0, H + roofH + 4, 0);
-bhk2Group.add(bhk2Label);
 
 // ═══════════════════════════════════════════════
 //  PARTITION WALLS — these CAN be semi-transparent when boy is near
 // ═══════════════════════════════════════════════
-const partWallMat = new THREE.MeshStandardMaterial({
-    color: 0xf0e6d3, roughness: 0.85,
-    transparent: true, opacity: 0.35,
-    depthWrite: true, depthTest: true
-});
+const partWallMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
 const bhk2PartWalls = [];
 function addPartWall(w, h, d, x, y, z, room) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), partWallMat.clone());
@@ -116,47 +84,29 @@ function addPartWall(w, h, d, x, y, z, room) {
     bhk2PartWalls.push(m); return m;
 }
 
-addPartWall(W2 - 0.4, H, 0.2, 0, H / 2 + 0.3, -5);
+// Horizontal wall at z=-5 — door gaps at x=-3 (Bed1, gap: -3.9 to -2.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+// Segment 1: x=-13.8 to -3.9 → center=-8.85, w=9.9
+addPartWall(9.9, H, 0.2, -8.85, H / 2 + 0.3, -5);
+// Segment 2: x=-2.1 to 8.1 → center=3, w=10.2
+addPartWall(10.2, H, 0.2, 3, H / 2 + 0.3, -5);
+// Segment 3: x=9.9 to 13.8 → center=11.85, w=3.9
+addPartWall(3.9, H, 0.2, 11.85, H / 2 + 0.3, -5);
+
+// Vertical wall at x=0 (Bedroom 1 / Bedroom 2 separator, NO door — solid)
 addPartWall(0.2, H, 7, 0, H / 2 + 0.3, -8.5);
-addPartWall(0.2, H, 17, -5, H / 2 + 0.3, 3.5);
+
+// Vertical wall at x=-5 — door gaps at z=-1 (Kitchen, gap: -1.9 to -0.1) and z=7 (Bathroom, gap: 6.1 to 7.9)
+// Segment 1: z=-5 to -1.9 → center=-3.45, d=3.1
+addPartWall(0.2, H, 3.1, -5, H / 2 + 0.3, -3.45);
+// Segment 2: z=-0.1 to 6.1 → center=3, d=6.2
+addPartWall(0.2, H, 6.2, -5, H / 2 + 0.3, 3);
+// Segment 3: z=7.9 to 12 → center=9.95, d=4.1
+addPartWall(0.2, H, 4.1, -5, H / 2 + 0.3, 9.95);
+
+// Horizontal wall at z=3 (Kitchen/Bathroom separator, NO door — solid)
 addPartWall(9, H, 0.2, -9.5, H / 2 + 0.3, 3);
 
-// Room doors
-createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, 24, 0);
-createInteractiveDoor(bhk2Group, 5, 2.05, -5, 0, { x: -0.75, z: 0 }, -Math.PI / 2, 24, 0);
-createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);
-createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, 24, 0);
-
-// ═══════════════════════════════════════════════
-//  CANVAS-GENERATED FLOOR TEXTURES — STEP 5
-// ═══════════════════════════════════════════════
-function createBathroomMosaicTexture() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512; canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#E8E8E8'; ctx.fillRect(0, 0, 512, 512);
-    ctx.strokeStyle = '#C8C8C8'; ctx.lineWidth = 1;
-    for (let x = 0; x <= 512; x += 24) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 512); ctx.stroke();
-    }
-    for (let y = 0; y <= 512; y += 24) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(512, y); ctx.stroke();
-    }
-    ctx.fillStyle = '#BBBBBB';
-    for (let x = 0; x <= 512; x += 24) {
-        for (let y = 0; y <= 512; y += 24) {
-            ctx.beginPath(); ctx.arc(x, y, 2, 0, Math.PI * 2); ctx.fill();
-        }
-    }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(4, 5);
-    return tex;
-}
-
-const bhk2WoodTex = createWoodFloorTexture();
-const bhk2KitchenTex = createKitchenTileTexture();
-const bhk2BathTex = createBathroomMosaicTexture();
+// Room doors are created in interiors.js initInteriors() — no duplicates here
 
 // ═══════════════════════════════════════════════
 //  FLOOR TILES — with proper textures and room colors
@@ -226,133 +176,137 @@ const roomLabels = [
 const bhk2Appliances = [];
 const bhk2AnimData = { fans: [], tableFans: [], acs: [], lights: [] };
 
-// Beds
-function createBed(x, y, z, color, room) {
-    const g = new THREE.Group();
-    const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7, transparent: false, opacity: 1.0, depthWrite: true });
-    function addPart(geo, mat, px, py, pz, shadow) {
-        const m = new THREE.Mesh(geo, mat);
-        m.position.set(px, py, pz); if (shadow) m.castShadow = true; g.add(m);
+let hallTvScreen = null;
+let waterStream = null;
+
+window.load2BHKFurniture = function () {
+    if (window.bhk2FurnitureLoaded) return;
+    window.bhk2FurnitureLoaded = true;
+
+    // Beds (centered in each bedroom)
+    function createBed(x, y, z, color, room) {
+        const g = new THREE.Group();
+        const frameMat2 = new THREE.MeshStandardMaterial({ color: 0x5c3a1e, roughness: 0.7 });
+        function addPart(geo, mat, px, py, pz, shadow) {
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set(px, py, pz); if (shadow) m.castShadow = true; g.add(m);
+        }
+        addPart(new THREE.BoxGeometry(2.8, 0.5, 3.5), frameMat2, 0, 0.25, 0, true);
+        addPart(new THREE.BoxGeometry(2.6, 0.3, 3.3), new THREE.MeshStandardMaterial({ color: color, roughness: 0.9 }), 0, 0.65, 0, false);
+        const pillowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 });
+        addPart(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat, -0.5, 0.88, -1.3, false);
+        addPart(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat, 0.5, 0.88, -1.3, false);
+        addPart(new THREE.BoxGeometry(2.8, 1.5, 0.2), frameMat2, 0, 1, -1.7, false);
+        g.position.set(x, y, z); roomGroups[room].add(g);
     }
-    addPart(new THREE.BoxGeometry(2.8, 0.5, 3.5), frameMat2, 0, 0.25, 0, true);
-    addPart(new THREE.BoxGeometry(2.6, 0.3, 3.3), new THREE.MeshStandardMaterial({ color: color, roughness: 0.9, transparent: false, opacity: 1.0, depthWrite: true }), 0, 0.65, 0, false);
-    const pillowMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85, transparent: false, opacity: 1.0, depthWrite: true });
-    addPart(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat, -0.5, 0.88, -1.3, false);
-    addPart(new THREE.BoxGeometry(0.8, 0.15, 0.5), pillowMat, 0.5, 0.88, -1.3, false);
-    addPart(new THREE.BoxGeometry(2.8, 1.5, 0.2), frameMat2, 0, 1, -1.7, false);
-    g.position.set(x, y, z); roomGroups[room].add(g);
-}
-createBed(-7, 0.3, -9, 0x6495ED, 'Bedroom 1');
-createBed(7, 0.3, -9, 0xDDA0DD, 'Bedroom 2');
+    createBed(-7, 0.3, -9, 0x6495ED, 'Bedroom 1');
+    createBed(7, 0.3, -9, 0xDDA0DD, 'Bedroom 2');
 
-// Hall Furniture
-const hallSofaMat = new THREE.MeshStandardMaterial({ color: 0x4a6fa5, roughness: 0.8, transparent: false, opacity: 1.0, depthWrite: true });
-const hallSofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.6, 2), hallSofaMat);
-hallSofaSeat.position.set(11, 0.9, 3); hallSofaSeat.castShadow = true; roomGroups['Hall'].add(hallSofaSeat);
-const hallSofaBack = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.2, 0.4), hallSofaMat);
-hallSofaBack.position.set(11, 1.5, 4); hallSofaBack.castShadow = true; roomGroups['Hall'].add(hallSofaBack);
-const hallArmMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80, roughness: 0.75, transparent: false, opacity: 1.0, depthWrite: true });
-const hallArmL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
-hallArmL.position.set(8.9, 1.1, 3); roomGroups['Hall'].add(hallArmL);
-const hallArmR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
-hallArmR.position.set(13.1, 1.1, 3); roomGroups['Hall'].add(hallArmR);
-for (let ci = 0; ci < 2; ci++) {
-    const cush = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 1.6), new THREE.MeshStandardMaterial({ color: 0x6b8fc4, roughness: 0.85, transparent: false, opacity: 1.0, depthWrite: true }));
-    cush.position.set(11 + ci * 2.2 - 1.1, 1.3, 3); roomGroups['Hall'].add(cush);
-}
+    // Hall Furniture — sofa against right wall
+    const hallSofaMat = new THREE.MeshStandardMaterial({ color: 0x4a6fa5, roughness: 0.8 });
+    const hallSofaSeat = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.6, 2), hallSofaMat);
+    hallSofaSeat.position.set(11, 0.9, 3); hallSofaSeat.castShadow = true; roomGroups['Hall'].add(hallSofaSeat);
+    const hallSofaBack = new THREE.Mesh(new THREE.BoxGeometry(4.5, 1.2, 0.4), hallSofaMat);
+    hallSofaBack.position.set(11, 1.5, 4); hallSofaBack.castShadow = true; roomGroups['Hall'].add(hallSofaBack);
+    const hallArmMat = new THREE.MeshStandardMaterial({ color: 0x3d5a80, roughness: 0.75 });
+    const hallArmL = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
+    hallArmL.position.set(8.9, 1.1, 3); roomGroups['Hall'].add(hallArmL);
+    const hallArmR = new THREE.Mesh(new THREE.BoxGeometry(0.35, 1.0, 2), hallArmMat);
+    hallArmR.position.set(13.1, 1.1, 3); roomGroups['Hall'].add(hallArmR);
+    for (let ci = 0; ci < 2; ci++) {
+        const cush = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 1.6), new THREE.MeshStandardMaterial({ color: 0x6b8fc4, roughness: 0.85 }));
+        cush.position.set(11 + ci * 2.2 - 1.1, 1.3, 3); roomGroups['Hall'].add(cush);
+    }
 
-// Coffee Table
-const coffeeTableMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.7, transparent: false, opacity: 1.0, depthWrite: true });
-const coffeeTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 1.2), coffeeTableMat);
-coffeeTop.position.set(5, 0.95, 3); coffeeTop.castShadow = true; roomGroups['Hall'].add(coffeeTop);
-for (let li = 0; li < 4; li++) {
-    const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.6, 6), coffeeTableMat);
-    leg.position.set(5 + (li < 2 ? -1 : 1), 0.62, 3 + (li % 2 === 0 ? -0.45 : 0.45));
-    roomGroups['Hall'].add(leg);
-}
+    // Coffee Table (in front of sofa)
+    const coffeeTableMat = new THREE.MeshStandardMaterial({ color: 0x8B6914, roughness: 0.7 });
+    const coffeeTop = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.12, 1.2), coffeeTableMat);
+    coffeeTop.position.set(5, 0.95, 3); coffeeTop.castShadow = true; roomGroups['Hall'].add(coffeeTop);
+    for (let li = 0; li < 4; li++) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.6, 6), coffeeTableMat);
+        leg.position.set(5 + (li < 2 ? -1 : 1), 0.62, 3 + (li % 2 === 0 ? -0.45 : 0.45));
+        roomGroups['Hall'].add(leg);
+    }
 
-// Hall TV
-const hallTvFrame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 0.15), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.5, transparent: false, opacity: 1.0, depthWrite: true }));
-hallTvFrame.position.set(5, 4.2, -4.8); roomGroups['Hall'].add(hallTvFrame);
-const tvMat2bhk = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000, roughness: 0.1, transparent: false, opacity: 1.0, depthWrite: true });
-const hallTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.9), tvMat2bhk);
-hallTvScreen.position.set(5, 4.2, -4.72); roomGroups['Hall'].add(hallTvScreen);
+    // Hall TV (on partition wall facing sofa)
+    const hallTvFrame = new THREE.Mesh(new THREE.BoxGeometry(4, 2.2, 0.15), new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.3, metalness: 0.5 }));
+    hallTvFrame.position.set(5, 4.2, -4.8); roomGroups['Hall'].add(hallTvFrame);
+    const tvMat2bhk = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000, roughness: 0.1 });
+    hallTvScreen = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.9), tvMat2bhk);
+    hallTvScreen.position.set(5, 4.2, -4.72); roomGroups['Hall'].add(hallTvScreen);
 
-// Decorative plant
-const potMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8, transparent: false, opacity: 1.0, depthWrite: true });
-const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.6, 8), potMat);
-pot.position.set(-4, 0.6, 10); roomGroups['Hall'].add(pot);
-const plant = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.9, transparent: false, opacity: 1.0, depthWrite: true }));
-plant.position.set(-4, 1.3, 10); roomGroups['Hall'].add(plant);
+    // Decorative plant (near entrance)
+    const potMat = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.8 });
+    const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.6, 8), potMat);
+    pot.position.set(-4, 0.6, 10); roomGroups['Hall'].add(pot);
+    const plant = new THREE.Mesh(new THREE.SphereGeometry(0.5, 8, 8), new THREE.MeshStandardMaterial({ color: 0x228B22, roughness: 0.9 }));
+    plant.position.set(-4, 1.3, 10); roomGroups['Hall'].add(plant);
 
-// Kitchen
-const counterMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.3, transparent: false, opacity: 1.0, depthWrite: true });
-const counter = new THREE.Mesh(new THREE.BoxGeometry(4, 1.8, 0.8), counterMat);
-counter.position.set(-11, 1.2, -3.5); counter.castShadow = true; roomGroups['Kitchen'].add(counter);
-const stove = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.3, transparent: false, opacity: 1.0, depthWrite: true }));
-stove.position.set(-11, 2.15, -3.5); roomGroups['Kitchen'].add(stove);
-const kitchenSink = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 0.8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7, roughness: 0.2, transparent: false, opacity: 1.0, depthWrite: true }));
-kitchenSink.position.set(-11, 2.12, -1); roomGroups['Kitchen'].add(kitchenSink);
-const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7, transparent: false, opacity: 1.0, depthWrite: true });
-const cabinet = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 0.5), cabinetMat);
-cabinet.position.set(-11, 4.5, -4.2); roomGroups['Kitchen'].add(cabinet);
+    // Kitchen (x=-14 to -5, z=-5 to 3)
+    const counterMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 0.4, metalness: 0.3 });
+    const counter = new THREE.Mesh(new THREE.BoxGeometry(4, 1.8, 0.8), counterMat);
+    counter.position.set(-11, 1.2, -3.5); counter.castShadow = true; roomGroups['Kitchen'].add(counter);
+    const stove = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.1, 0.6), new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.6, roughness: 0.3 }));
+    stove.position.set(-11, 2.15, -3.5); roomGroups['Kitchen'].add(stove);
+    const kitchenSink = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.15, 0.8), new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.7, roughness: 0.2 }));
+    kitchenSink.position.set(-11, 2.12, -1); roomGroups['Kitchen'].add(kitchenSink);
+    const cabinetMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
+    const cabinet = new THREE.Mesh(new THREE.BoxGeometry(4, 1.2, 0.5), cabinetMat);
+    cabinet.position.set(-11, 4.5, -4.2); roomGroups['Kitchen'].add(cabinet);
 
-// ═══════════════════════════════════════════════
-//  BATHROOM FIXTURES
-// ═══════════════════════════════════════════════
-const bathX = -9.5;
-const bathZ = 7.5;
-const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.3, transparent: false, opacity: 1.0, depthWrite: true });
-const chromeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1, transparent: false, opacity: 1.0, depthWrite: true });
+    // ═══════════════════════════════════════════════
+    //  BATHROOM FIXTURES (x=-14 to -5, z=3 to 12)
+    // ═══════════════════════════════════════════════
+    const bathX = -9.5;
+    const bathZ = 7.5;
+    const whiteMat = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.3 });
+    const chromeMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.9, roughness: 0.1 });
 
-// Toilet
-const toiletBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.3, 0.7, 12), whiteMat);
-toiletBowl.position.set(bathX + 2, 0.65, bathZ + 2.5); roomGroups['Bathroom'].add(toiletBowl);
-const toiletSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.06, 12), whiteMat);
-toiletSeat.position.set(bathX + 2, 1.03, bathZ + 2.5); roomGroups['Bathroom'].add(toiletSeat);
-const toiletTank = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), whiteMat);
-toiletTank.position.set(bathX + 2, 0.9, bathZ + 3.2); roomGroups['Bathroom'].add(toiletTank);
-const flush = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.15), chromeMat);
-flush.position.set(bathX + 2, 1.35, bathZ + 3.1); roomGroups['Bathroom'].add(flush);
+    // Toilet
+    const toiletBowl = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.3, 0.7, 12), whiteMat);
+    toiletBowl.position.set(bathX + 2, 0.65, bathZ + 2.5); roomGroups['Bathroom'].add(toiletBowl);
+    const toiletSeat = new THREE.Mesh(new THREE.CylinderGeometry(0.38, 0.38, 0.06, 12), whiteMat);
+    toiletSeat.position.set(bathX + 2, 1.03, bathZ + 2.5); roomGroups['Bathroom'].add(toiletSeat);
+    const toiletTank = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.3), whiteMat);
+    toiletTank.position.set(bathX + 2, 0.9, bathZ + 3.2); roomGroups['Bathroom'].add(toiletTank);
+    const flush = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.04, 0.15), chromeMat);
+    flush.position.set(bathX + 2, 1.35, bathZ + 3.1); roomGroups['Bathroom'].add(flush);
 
-// Basin
-const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 0.15, 12), whiteMat);
-basin.position.set(bathX - 1.5, 1.3, bathZ - 1.5); roomGroups['Bathroom'].add(basin);
-const basinStand = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.2, 8), whiteMat);
-basinStand.position.set(bathX - 1.5, 0.6, bathZ - 1.5); roomGroups['Bathroom'].add(basinStand);
-const tap = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), chromeMat);
-tap.position.set(bathX - 1.5, 1.55, bathZ - 1.8); roomGroups['Bathroom'].add(tap);
-const tapSpout = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.2), chromeMat);
-tapSpout.position.set(bathX - 1.5, 1.73, bathZ - 1.6); roomGroups['Bathroom'].add(tapSpout);
+    // Basin
+    const basin = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.35, 0.15, 12), whiteMat);
+    basin.position.set(bathX - 1.5, 1.3, bathZ - 1.5); roomGroups['Bathroom'].add(basin);
+    const basinStand = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.1, 1.2, 8), whiteMat);
+    basinStand.position.set(bathX - 1.5, 0.6, bathZ - 1.5); roomGroups['Bathroom'].add(basinStand);
+    const tap = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.4, 6), chromeMat);
+    tap.position.set(bathX - 1.5, 1.55, bathZ - 1.8); roomGroups['Bathroom'].add(tap);
+    const tapSpout = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.2), chromeMat);
+    tapSpout.position.set(bathX - 1.5, 1.73, bathZ - 1.6); roomGroups['Bathroom'].add(tapSpout);
 
-// Water stream — this is allowed to be transparent (water effect)
-const waterStream = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1), new THREE.MeshStandardMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.6 }));
-waterStream.position.set(bathX - 1.5, 1.2, bathZ - 1.5); waterStream.visible = false; roomGroups['Bathroom'].add(waterStream);
+    // Water stream
+    waterStream = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 1), new THREE.MeshStandardMaterial({ color: 0x4fc3f7, transparent: true, opacity: 0.6 }));
+    waterStream.position.set(bathX - 1.5, 1.2, bathZ - 1.5); waterStream.visible = false; roomGroups['Bathroom'].add(waterStream);
 
-// Shower partition — allowed transparent (glass)
-const showerPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 3.5, 6), chromeMat);
-showerPipe.position.set(bathX + 2, 2.05, bathZ - 1.5); roomGroups['Bathroom'].add(showerPipe);
-const showerHead = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.08, 12), chromeMat);
-showerHead.position.set(bathX + 2, 3.8, bathZ - 1.5); roomGroups['Bathroom'].add(showerHead);
-const showerTap = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.15, 6), chromeMat);
-showerTap.position.set(bathX + 2, 2.5, bathZ - 1.35); roomGroups['Bathroom'].add(showerTap);
+    // Shower
+    const showerPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 3.5, 6), chromeMat);
+    showerPipe.position.set(bathX + 2, 2.05, bathZ - 1.5); roomGroups['Bathroom'].add(showerPipe);
+    const showerHead = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.15, 0.08, 12), chromeMat);
+    showerHead.position.set(bathX + 2, 3.8, bathZ - 1.5); roomGroups['Bathroom'].add(showerHead);
+    const showerTap = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.15, 6), chromeMat);
+    showerTap.position.set(bathX + 2, 2.5, bathZ - 1.35); roomGroups['Bathroom'].add(showerTap);
 
-// Bucket
-const bucketMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.6, transparent: false, opacity: 1.0, depthWrite: true });
-const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.5, 10), bucketMat);
-bucket.position.set(bathX + 0.5, 0.55, bathZ + 0.5); roomGroups['Bathroom'].add(bucket);
-const bucketHandle = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.015, 6, 12, Math.PI), chromeMat);
-bucketHandle.position.set(bathX + 0.5, 0.85, bathZ + 0.5);
-bucketHandle.rotation.x = Math.PI; roomGroups['Bathroom'].add(bucketHandle);
+    // Bucket
+    const bucketMat = new THREE.MeshStandardMaterial({ color: 0x2196F3, roughness: 0.6 });
+    const bucket = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.5, 10), bucketMat);
+    bucket.position.set(bathX + 0.5, 0.55, bathZ + 0.5); roomGroups['Bathroom'].add(bucket);
+    const bucketHandle = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.015, 6, 12, Math.PI), chromeMat);
+    bucketHandle.position.set(bathX + 0.5, 0.85, bathZ + 0.5);
+    bucketHandle.rotation.x = Math.PI; roomGroups['Bathroom'].add(bucketHandle);
 
-// Mirror — allowed transparent with metalness
-const mirrorMat = new THREE.MeshStandardMaterial({
-    color: 0xCCDDFF, transparent: true, opacity: 0.30,
-    metalness: 0.95, roughness: 0.05, depthWrite: false
-});
-const mirror = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 1.6), mirrorMat);
-mirror.position.set(bathX - 1.5, 2.5, bathZ - 2.2);
-roomGroups['Bathroom'].add(mirror);
+    // Connect lazily created TV screen to appliance data
+    const tvApp = bhk2Appliances.find(a => a.kind === 'tv');
+    if (tvApp && tvApp.mesh) tvApp.mesh.screen = hallTvScreen;
+
+}; // end load2BHKFurniture
 
 // ═══════════════════════════════════════════════
 //  2BHK ROOM APPLIANCE DEFINITIONS
@@ -434,7 +388,7 @@ bhk2RoomDefs.forEach(roomDef => {
             obj = { ...a, mesh: tf, on: true, kind: 'tablefan' };
             bhk2AnimData.tableFans.push(obj);
         } else if (a.type === 'tv') {
-            obj = { ...a, mesh: { screen: hallTvScreen }, on: false, kind: 'tv' };
+            obj = { ...a, mesh: { screen: null }, on: false, kind: 'tv' };
         } else if (a.type === 'tap') {
             obj = { ...a, on: false, kind: 'tap' };
         } else if (a.type === 'generic') {
