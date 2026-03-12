@@ -12,144 +12,39 @@ const panelFrameMat = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, metalnes
 
 function createSolarPanel() {
     const g = new THREE.Group();
-
-    // Main dark blue panel body
-    const panelMat = new THREE.MeshStandardMaterial({
-        color: 0x1a2744,
-        roughness: 0.3,
-        metalness: 0.7
-    });
-    const panel = new THREE.Mesh(new THREE.BoxGeometry(3.9, 0.09, 2.7), panelMat);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(5.2, 0.12, 3.6), panelMat);
     g.add(panel);
-
-    // Blue tinted glass overlay
-    const glassMat = new THREE.MeshStandardMaterial({
-        color: 0x2255aa,
-        roughness: 0.1,
-        metalness: 0.6,
-        transparent: true,
-        opacity: 0.75
-    });
-    const glass = new THREE.Mesh(new THREE.BoxGeometry(3.8, 0.022, 2.6), glassMat);
-    glass.position.y = 0.055;
-    g.add(glass);
-
-    // Silver cell grid lines horizontal
-    const gridMat = new THREE.MeshStandardMaterial({ color: 0x8899bb, roughness: 0.2, metalness: 0.8 });
-    for (let i = -2; i <= 2; i++) {
-        const h = new THREE.Mesh(new THREE.BoxGeometry(3.76, 0.016, 0.013), gridMat);
-        h.position.set(0, 0.061, i * 0.48);
-        g.add(h);
-    }
+    const gridMat = new THREE.MeshBasicMaterial({ color: 0x283593 });
     for (let i = -3; i <= 3; i++) {
-        const v = new THREE.Mesh(new THREE.BoxGeometry(0.013, 0.016, 2.56), gridMat);
-        v.position.set(i * 0.52, 0.061, 0);
-        g.add(v);
+        const hLine = new THREE.Mesh(new THREE.BoxGeometry(5.1, 0.01, 0.03), gridMat);
+        hLine.position.set(0, 0.07, i * 0.5); g.add(hLine);
     }
-
-    // Silver aluminium frame
-    const frameMat = new THREE.MeshStandardMaterial({ color: 0xbbccdd, metalness: 0.95, roughness: 0.1 });
-    const topBar = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.11, 0.09), frameMat);
-    topBar.position.set(0, 0.01, 1.4); g.add(topBar);
-    const botBar = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.11, 0.09), frameMat);
-    botBar.position.set(0, 0.01, -1.4); g.add(botBar);
-    const leftBar = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.11, 2.9), frameMat);
-    leftBar.position.set(-1.99, 0.01, 0); g.add(leftBar);
-    const rightBar = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.11, 2.9), frameMat);
-    rightBar.position.set(1.99, 0.01, 0); g.add(rightBar);
-
-    // ── MOUNTING LEG SYSTEM — firmly attached to roof ──
-    const legMat2 = new THREE.MeshStandardMaterial({
-        color: 0x777e88,
-        metalness: 0.92,
-        roughness: 0.15
+    for (let i = -4; i <= 4; i++) {
+        const vLine = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.01, 3.5), gridMat);
+        vLine.position.set(i * 0.58, 0.07, 0); g.add(vLine);
+    }
+    const frameParts = [
+        new THREE.BoxGeometry(5.3, 0.16, 0.08), new THREE.BoxGeometry(5.3, 0.16, 0.08),
+        new THREE.BoxGeometry(0.08, 0.16, 3.6), new THREE.BoxGeometry(0.08, 0.16, 3.6)
+    ];
+    const framePositions = [[0, 0, 1.8], [0, 0, -1.8], [-2.6, 0, 0], [2.6, 0, 0]];
+    frameParts.forEach((geo, i) => {
+        const mesh = new THREE.Mesh(geo, panelFrameMat);
+        mesh.position.set(...framePositions[i]); g.add(mesh);
     });
 
-    // Two horizontal mounting rails running across full panel width
-    const frontRail = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.07, 0.07), legMat2);
-    frontRail.position.set(0, -0.06, 0.8);
-    g.add(frontRail);
-
-    const backRail = new THREE.Mesh(new THREE.BoxGeometry(4.0, 0.07, 0.07), legMat2);
-    backRail.position.set(0, -0.06, -0.8);
-    g.add(backRail);
-
-    // Four L-shaped leg brackets — two front two back
-    const bracketMat = new THREE.MeshStandardMaterial({
-        color: 0x666e78,
-        metalness: 0.95,
-        roughness: 0.1
-    });
-
-    [[-1.5, 0.8], [1.5, 0.8], [-1.5, -0.8], [1.5, -0.8]].forEach(([x, z]) => {
-        // Vertical part of L-bracket
-        const legV = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.32, 0.07), bracketMat);
-        legV.position.set(x, -0.22, z);
-        g.add(legV);
-
-        // Horizontal foot of L-bracket — presses flat on roof
-        const legH = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.05, 0.28), bracketMat);
-        legH.position.set(x, -0.37, z + (z > 0 ? 0.1 : -0.1));
-        g.add(legH);
-
-        // Roof clamp — grips directly onto roof surface
-        const clampBase = new THREE.Mesh(
-            new THREE.BoxGeometry(0.28, 0.06, 0.45),
-            new THREE.MeshStandardMaterial({ color: 0x444a52, metalness: 0.92, roughness: 0.2 })
-        );
-        clampBase.position.set(x, -0.76, 0.0);
-        g.add(clampBase);
-
-        // Clamp top jaw — presses down on roof
-        const clampTop = new THREE.Mesh(
-            new THREE.BoxGeometry(0.32, 0.05, 0.48),
-            new THREE.MeshStandardMaterial({ color: 0x555c64, metalness: 0.9, roughness: 0.2 })
-        );
-        clampTop.position.set(x, -0.71, 0.0);
-        g.add(clampTop);
-
-        // Two tightening bolts on clamp
-        [-0.12, 0.12].forEach(bz => {
-            const bShaft = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.022, 0.022, 0.14, 8),
-                new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 1.0, roughness: 0.05 })
-            );
-            bShaft.position.set(x, -0.70, bz);
-            g.add(bShaft);
-
-            const bHead = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.042, 0.042, 0.035, 6),
-                new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 1.0, roughness: 0.08 })
-            );
-            bHead.position.set(x, -0.64, bz);
-            g.add(bHead);
-        });
-
-        // Rubber grip strip on bottom of clamp
-        const grip = new THREE.Mesh(
-            new THREE.BoxGeometry(0.26, 0.022, 0.43),
-            new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.95, metalness: 0.0 })
-        );
-        grip.position.set(x, -0.79, 0.0);
-        g.add(grip);
-    });
-
-    // Mid support bracket — center of panel for extra rigidity
-    const midBracketL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.06), bracketMat);
-    midBracketL.position.set(0, -0.20, 0.65);
-    g.add(midBracketL);
-
-    const midBracketR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.28, 0.06), bracketMat);
-    midBracketR.position.set(0, -0.20, -0.65);
-    g.add(midBracketR);
-
-    // Cable management clip on back rail
-    const clipMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
-    [-0.8, 0, 0.8].forEach(x => {
-        const clip = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.07), clipMat);
-        clip.position.set(x, -0.065, -0.68);
-        g.add(clip);
-    });
+    // ── MOUNTING STAND (scaled for doubled panel) ──
+    const standMat = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.7, roughness: 0.4 });
+    const frontLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.9, 0.12), standMat);
+    frontLeg.position.set(0, -0.50, 1.2); g.add(frontLeg);
+    const backLeg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.4, 0.12), standMat);
+    backLeg.position.set(0, -0.75, -1.2); g.add(backLeg);
+    const crossRail = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 2.8), standMat);
+    crossRail.position.set(0, -0.95, 0); g.add(crossRail);
+    const sideLegL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegL.position.set(-1.8, -0.52, 0); g.add(sideLegL);
+    const sideLegR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.95, 0.08), standMat);
+    sideLegR.position.set(1.8, -0.52, 0); g.add(sideLegR);
 
     g.visible = false;
     return g;
@@ -202,9 +97,9 @@ function getRoofConfig(houseKey) {
         targetGroup = typeof houseGroup !== 'undefined' ? houseGroup : new THREE.Group();
     }
 
-    const panelGapX = 3.6;
-    const panelGapZ = 3.8;
-    const colsPerSide = 4;
+    const panelGapX = 5.6;
+    const panelGapZ = 4.4;
+    const colsPerSide = Math.floor((roofWidthHalf - startX) / panelGapX);
     const rows = Math.floor((roofDepthHalf * 2 - 2.0) / panelGapZ);
     const maxRows = Math.floor((roofDepthHalf * 2 - 2.5) / panelGapZ);
     const max = 3 * maxRows * 2;
@@ -417,8 +312,20 @@ function changePanelCount(delta) {
     const config = getRoofConfig(activeKey);
 
     if (delta > 0) {
-        const idx = state.count;
-        const config = getRoofConfig(activeKey);
+        const idx = state.count; // the zero-based index of the panel being added
+        // Fill left side fully (colsPerSide * rows), then right side
+        const panelsPerSide = config.colsPerSide * config.rows;
+        const side = idx < panelsPerSide ? -1 : 1; // -1 for left, 1 for right
+        const sideIdx = idx < panelsPerSide ? idx : idx - panelsPerSide;
+        const col = Math.floor(sideIdx / config.rows);
+        const row = sideIdx % config.rows;
+
+        const g = createSolarPanel();
+
+        // Calculate position with clean grid alignment (no 1.05 multiplier)
+        const xOffset = config.startX + col * config.panelGapX + 2.8;
+        const xPos = xOffset * side;
+        const zPos = config.startZ + row * config.panelGapZ + 2.2;
 
         const hFallback = typeof H !== 'undefined' ? H : 7;
         const roofHval = typeof roofH !== 'undefined' ? roofH : 4.5;
@@ -465,9 +372,9 @@ function changePanelCount(delta) {
         const slopeAngle = Math.atan2(roofHval, config.roofWidthHalf);
         const tiltZ = isLeft ? slopeAngle : -slopeAngle;
 
-        const g = createSolarPanel();
-        g.rotation.set(0, 0, tiltZ);
-        g.position.set(clampedX, yPos, clampedZ);
+        g.rotation.set(0, 0, side * -config.slopeAngle);
+        g.position.set(xPos, roofLocalY - 0.15, zPos);
+        g.translateY(0.55); // lift panel so mounting stands are visible above roof
 
         config.targetGroup.add(g);
         g.visible = true;

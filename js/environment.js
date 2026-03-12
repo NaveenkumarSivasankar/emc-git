@@ -7,7 +7,7 @@ scene.add(environmentGroup);
 // ═══════════════════════════════════════════════
 //  GROUND
 // ═══════════════════════════════════════════════
-const groundGeo = new THREE.PlaneGeometry(120, 120);
+const groundGeo = new THREE.PlaneGeometry(240, 240);
 const groundMat = new THREE.MeshStandardMaterial({ color: 0x4a8c3f, roughness: 0.9, metalness: 0.0 });
 const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI / 2;

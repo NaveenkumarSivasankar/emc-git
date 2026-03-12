@@ -2,13 +2,10 @@
 const _camPos = new THREE.Vector3();
 
 function updateWallTransparency() {
-    // Skip visibility updates during entry/exit transition to avoid overriding manual hide commands
+    // Skip visibility updates during entry/exit transition
     if (typeof boyState !== 'undefined' && boyState.mode === 'transitioning') return;
 
-    _camPos.copy(camera.position);
-
-    // When indoor, make outer walls fully transparent so interior is visible
-    // Room partition transparency is handled by updateRoomTransparency() in interiors.js
+    // When indoor, hide roof and other house, but keep walls and doors visible
     if (typeof boyState !== 'undefined' && boyState.mode === 'indoor') {
         if (boyState.insideHouse === '1bhk') {
             transparentWalls.forEach(wall => {
@@ -16,8 +13,8 @@ function updateWallTransparency() {
                 wall.material.transparent = true;
                 wall.material.needsUpdate = true;
             });
-            roofMat.opacity = 0; roofMat.needsUpdate = true;
-            doorMat.opacity = 0; doorMat.needsUpdate = true;
+            roofMat.opacity = 1; roofMat.needsUpdate = true; // Keep roof SOLID to hide objects above
+            // Keep door visible (don't set doorMat.opacity to 0)
             labels.forEach(label => {
                 label.element.style.opacity = 1;
                 label.element.style.display = 'block';
@@ -33,9 +30,8 @@ function updateWallTransparency() {
                 wall.material.transparent = true;
                 wall.material.needsUpdate = true;
             });
-            bhk2RoofMat.opacity = 0; bhk2RoofMat.needsUpdate = true;
-            bhk2DoorMat.opacity = 0; bhk2DoorMat.needsUpdate = true;
-            bhk2WallMat.opacity = 0; bhk2WallMat.needsUpdate = true;
+            bhk2RoofMat.opacity = 1; bhk2RoofMat.needsUpdate = true; // Keep roof SOLID
+            // Keep door visible (don't set bhk2DoorMat.opacity to 0)
             roomLabels.forEach(label => {
                 label.element.style.opacity = 1;
                 label.element.style.display = 'block';
@@ -49,7 +45,7 @@ function updateWallTransparency() {
         return;
     }
 
-    // Outdoor: restore visibility
+    // Outdoor: restore visibility — walls stay SOLID (no camera-distance transparency)
     houseGroup.visible = true;
     bhk2Group.visible = true;
     environmentGroup.visible = true;
@@ -57,39 +53,30 @@ function updateWallTransparency() {
     if (typeof entry1BHK !== 'undefined') entry1BHK.visible = true;
     if (typeof entry2BHK !== 'undefined') entry2BHK.visible = true;
 
-    // Camera-distance-based transparency for 1BHK
-    const distSimple = _camPos.distanceTo(new THREE.Vector3(-22, 4, -4));
-    const tSimple = THREE.MathUtils.clamp((distSimple - 6) / 14, 0, 1);
-    if (tSimple < 1.0 && typeof window.load1BHKFurniture === 'function') window.load1BHKFurniture();
-
+    // Restore wall opacity to full (solid)
     transparentWalls.forEach(wall => {
-        wall.material.opacity = tSimple;
-        wall.material.transparent = true;
+        wall.material.opacity = 1;
+        wall.material.transparent = false;
         wall.material.needsUpdate = true;
     });
-    roofMat.opacity = tSimple; roofMat.needsUpdate = true;
-    doorMat.opacity = tSimple; doorMat.needsUpdate = true;
+    roofMat.opacity = 1; roofMat.needsUpdate = true;
+    doorMat.opacity = 1; doorMat.needsUpdate = true;
     labels.forEach(label => {
-        label.element.style.opacity = 1 - tSimple;
-        label.element.style.display = (1 - tSimple) > 0.2 ? 'block' : 'none';
+        label.element.style.opacity = 0;
+        label.element.style.display = 'none';
     });
-
-    // Camera-distance-based transparency for 2BHK
-    const dist2BHK = _camPos.distanceTo(new THREE.Vector3(24, 4, -4));
-    const t2BHK = THREE.MathUtils.clamp((dist2BHK - 8) / 14, 0, 1);
-    if (t2BHK < 1.0 && typeof window.load2BHKFurniture === 'function') window.load2BHKFurniture();
 
     bhk2TransWalls.forEach(wall => {
-        wall.material.opacity = t2BHK;
-        wall.material.transparent = true;
+        wall.material.opacity = 1;
+        wall.material.transparent = false;
         wall.material.needsUpdate = true;
     });
-    bhk2RoofMat.opacity = t2BHK; bhk2RoofMat.needsUpdate = true;
-    bhk2DoorMat.opacity = t2BHK; bhk2DoorMat.needsUpdate = true;
-    bhk2WallMat.opacity = t2BHK; bhk2WallMat.needsUpdate = true;
+    bhk2RoofMat.opacity = 1; bhk2RoofMat.needsUpdate = true;
+    bhk2DoorMat.opacity = 1; bhk2DoorMat.needsUpdate = true;
+    bhk2WallMat.opacity = 1; bhk2WallMat.needsUpdate = true;
     roomLabels.forEach(label => {
-        label.element.style.opacity = 1 - t2BHK;
-        label.element.style.display = (1 - t2BHK) > 0.2 ? 'block' : 'none';
+        label.element.style.opacity = 0;
+        label.element.style.display = 'none';
     });
 }
 
