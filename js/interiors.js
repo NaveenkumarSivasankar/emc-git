@@ -158,11 +158,11 @@ function initFurnitureCollision() {
     // ── 2BHK WALL SEGMENTS (partition walls with door gaps) ──
 
     // Wall 1: horizontal at z=-5
-    // Door gap at x=-5 (Bed1, gap: -5.9 to -4.1) and x=9 (Bed2, gap: 8.1 to 9.9)
-    // Segment 1: x=-14 to -5.9
-    addCollisionBox(furnitureBoxes2BHK, -9.85, -5, 3.95, wt, ox2, oz2);
-    // Segment 2: x=-4.1 to 8.1
-    addCollisionBox(furnitureBoxes2BHK, 2, -5, 6.1, wt, ox2, oz2);
+    // Door gap at x=-3 (Bed1, gap: -3.9 to -2.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+    // Segment 1: x=-14 to -3.9
+    addCollisionBox(furnitureBoxes2BHK, -8.95, -5, 5.05, wt, ox2, oz2);
+    // Segment 2: x=-2.1 to 8.1
+    addCollisionBox(furnitureBoxes2BHK, 3, -5, 5.1, wt, ox2, oz2);
     // Segment 3: x=9.9 to 14
     addCollisionBox(furnitureBoxes2BHK, 11.85, -5, 1.95, wt, ox2, oz2);
 
@@ -239,12 +239,12 @@ function checkFurnitureCollision(newX, newZ) {
             let dx, dz;
             if (Math.abs(door.baseRY) < 0.1) {
                 // Rotated 0 (aligned along X)
-                dx = 0.75; // half of 1.5 width
+                dx = 0.9; // half of 1.8 width
                 dz = 0.15; // slightly larger than half of 0.25 depth
             } else {
                 // Rotated 90 deg (aligned along Z)
                 dx = 0.15;
-                dz = 0.75;
+                dz = 0.9;
             }
 
             const xMin = door.worldX - dx;
@@ -268,11 +268,13 @@ function checkFurnitureCollision(newX, newZ) {
 // ═══════════════════════════════════════════════
 const interactiveDoors = [];
 
-function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, houseOriginX, houseOriginZ) {
+function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, houseOriginX, houseOriginZ, wallColor) {
     const doorMat = new THREE.MeshStandardMaterial({ color: 0x6b4226, roughness: 0.7 });
     const frameMat = new THREE.MeshStandardMaterial({ color: 0x4a2e10, roughness: 0.6 });
     const handleMat2 = new THREE.MeshStandardMaterial({ color: 0xd4a843, metalness: 0.9, roughness: 0.2 });
-    const wallFillMat = new THREE.MeshStandardMaterial({ color: 0xf0e6d3, roughness: 0.85, side: THREE.DoubleSide });
+    const wallFillMat = new THREE.MeshStandardMaterial({ color: wallColor || 0xe8d5b7, roughness: 0.85, side: THREE.DoubleSide });
+
+    const isVerticalWall = Math.abs(ry - Math.PI / 2) < 0.1;
 
     // Pivot group positioned at hinge edge
     const pivot = new THREE.Group();
@@ -281,36 +283,52 @@ function createInteractiveDoor(parent, x, y, z, ry, hingeOffset, openAngle, hous
     parent.add(pivot);
 
     // Door mesh offset from pivot (so it swings around the hinge)
-    const door = new THREE.Mesh(new THREE.BoxGeometry(1.5, 3.5, 0.25), doorMat);
-    door.position.set(-hingeOffset.x, y, -hingeOffset.z);
+    // For vertical walls (ry=PI/2), the pivot is rotated, so we must compute
+    // the local-space offset that produces the correct world-space position.
+    // The door center should be at (x, y, z) in parent space.
+    // Pivot is at (x + hingeOffset.x, 0, z + hingeOffset.z).
+    // We need local offset that, after rotation by ry, lands at (-hingeOffset.x, y, -hingeOffset.z) in world.
+    // For ry=PI/2: world(x,z) = local(z, -x), so local(x,z) = world(-z, x)
+    let doorLocalX, doorLocalZ;
+    let handleLocalX, handleLocalZ;
+    if (isVerticalWall) {
+        // World offset needed: (-hingeOffset.x, -hingeOffset.z) = (0, 0.9)
+        // local = world rotated back: (-worldZ, worldX) = (-0.9, 0)
+        doorLocalX = hingeOffset.z;   // = -0.9 for hingeOffset.z = -0.9
+        doorLocalZ = -hingeOffset.x;  // = 0 for hingeOffset.x = 0
+        handleLocalX = hingeOffset.z - 0.6;
+        handleLocalZ = -hingeOffset.x + 0.15;
+    } else {
+        doorLocalX = -hingeOffset.x;
+        doorLocalZ = -hingeOffset.z;
+        handleLocalX = -hingeOffset.x + 0.6;
+        handleLocalZ = -hingeOffset.z + 0.15;
+    }
+
+    const door = new THREE.Mesh(new THREE.BoxGeometry(1.8, 3.5, 0.25), doorMat);
+    door.position.set(doorLocalX, y, doorLocalZ);
     pivot.add(door);
 
     // Handle
     const handle = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), handleMat2);
-    handle.position.set(-hingeOffset.x + 0.5, y, -hingeOffset.z + 0.15);
+    handle.position.set(handleLocalX, y, handleLocalZ);
     pivot.add(handle);
 
     // Frame top
-    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.15, 0.28), frameMat);
-    frameTop.position.set(-hingeOffset.x, y + 1.85, -hingeOffset.z);
+    const frameTop = new THREE.Mesh(new THREE.BoxGeometry(1.9, 0.15, 0.28), frameMat);
+    frameTop.position.set(doorLocalX, y + 1.85, doorLocalZ);
     pivot.add(frameTop);
 
     // ── TRANSOM (wall above door to fill gap to ceiling) ──
     // Door top: y + 1.85 + 0.075 ≈ y + 1.93 = ~4.0
     // Wall top: H/2 + 0.3 + H/2 = 7.3 (H=7)
     const transomH = 3.3; // from ~4.0 to ~7.3
-    const transom = new THREE.Mesh(new THREE.BoxGeometry(1.8, transomH, 0.22), wallFillMat);
+    const transomGeo = isVerticalWall
+        ? new THREE.BoxGeometry(0.22, transomH, 1.8)
+        : new THREE.BoxGeometry(1.8, transomH, 0.22);
+    const transom = new THREE.Mesh(transomGeo, wallFillMat);
     transom.position.set(x, y + 1.93 + transomH / 2, z);
     parent.add(transom);
-
-    // ── SIDE FRAME POSTS (fill 0.15 gap on each side, full height) ──
-    const sideH = y + 1.85; // from floor to frame top
-    const sidePostL = new THREE.Mesh(new THREE.BoxGeometry(0.15, sideH, 0.22), frameMat);
-    sidePostL.position.set(x - 0.825, sideH / 2, z);
-    parent.add(sidePostL);
-    const sidePostR = new THREE.Mesh(new THREE.BoxGeometry(0.15, sideH, 0.22), frameMat);
-    sidePostR.position.set(x + 0.825, sideH / 2, z);
-    parent.add(sidePostR);
 
     // Store base rotation for animation
     pivot.userData.baseRY = ry || 0;
@@ -399,23 +417,25 @@ function initInteriors() {
     const ox2 = 24, oz2 = -4;
 
     // 1BHK interior doors (in partition walls)
-    // Bedroom door (in horizontal wall at z=-5, gap at local x≈2)
+    // Wall color for 1BHK: 0xe8d5b7, door gap width: 1.8, door width: 1.8
+    // Bedroom door (horizontal wall z=-5, gap center x=2, hingeOffset=-0.9)
     if (typeof houseGroup !== 'undefined') {
-        createInteractiveDoor(houseGroup, 2, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox1, oz1);
-        // Kitchen door (in vertical wall at x=-4, gap at local z≈3)
-        createInteractiveDoor(houseGroup, -4, 2.05, 3, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox1, oz1);
+        createInteractiveDoor(houseGroup, 2, 2.05, -5, 0, { x: -0.9, z: 0 }, Math.PI / 2, ox1, oz1, 0xe8d5b7);
+        // Kitchen door (vertical wall x=-4, gap center z=3, hingeOffset=-0.9)
+        createInteractiveDoor(houseGroup, -4, 2.05, 3, Math.PI / 2, { x: 0, z: -0.9 }, Math.PI / 2, ox1, oz1, 0xe8d5b7);
     }
 
     // 2BHK interior doors (in partition walls)
+    // Wall color for 2BHK: 0xe0d0b8, door gap width: 1.8, door width: 1.8
     if (typeof bhk2Group !== 'undefined') {
-        // Bedroom 1 door (horizontal wall z=-5, gap at local x≈-5)
-        createInteractiveDoor(bhk2Group, -5, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
-        // Bedroom 2 door (horizontal wall z=-5, gap at local x≈9, moved away from TV)
-        createInteractiveDoor(bhk2Group, 9, 2.05, -5, 0, { x: -0.75, z: 0 }, Math.PI / 2, ox2, oz2);
-        // Kitchen door (vertical wall x=-5, gap at local z≈-1)
-        createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox2, oz2);
-        // Bathroom door (vertical wall x=-5, gap at local z≈7)
-        createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.75 }, Math.PI / 2, ox2, oz2);
+        // Bedroom 1 door (horizontal wall z=-5, gap center x=-3, hingeOffset=-0.9)
+        createInteractiveDoor(bhk2Group, -3, 2.05, -5, 0, { x: -0.9, z: 0 }, Math.PI / 2, ox2, oz2, 0xe0d0b8);
+        // Bedroom 2 door (horizontal wall z=-5, gap center x=9, hingeOffset=-0.9)
+        createInteractiveDoor(bhk2Group, 9, 2.05, -5, 0, { x: -0.9, z: 0 }, Math.PI / 2, ox2, oz2, 0xe0d0b8);
+        // Kitchen door (vertical wall x=-5, gap center z=-1, hingeOffset=-0.9)
+        createInteractiveDoor(bhk2Group, -5, 2.05, -1, Math.PI / 2, { x: 0, z: -0.9 }, Math.PI / 2, ox2, oz2, 0xe0d0b8);
+        // Bathroom door (vertical wall x=-5, gap center z=7, hingeOffset=-0.9)
+        createInteractiveDoor(bhk2Group, -5, 2.05, 7, Math.PI / 2, { x: 0, z: -0.9 }, Math.PI / 2, ox2, oz2, 0xe0d0b8);
     }
 }
 

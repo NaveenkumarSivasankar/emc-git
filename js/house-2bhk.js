@@ -89,11 +89,11 @@ function addPartWall(w, h, d, x, y, z, room) {
     bhk2PartWalls.push(m); return m;
 }
 
-// Horizontal wall at z=-5 — door gaps at x=-5 (Bed1, gap: -5.9 to -4.1) and x=9 (Bed2, gap: 8.1 to 9.9)
-// Segment 1: x=-13.8 to -5.9 → center=-9.85, w=7.9
-addPartWall(7.9, H, 0.2, -9.85, H / 2 + 0.3, -5);
-// Segment 2: x=-4.1 to 8.1 → center=2, w=12.2
-addPartWall(12.2, H, 0.2, 2, H / 2 + 0.3, -5);
+// Horizontal wall at z=-5 — door gaps at x=-3 (Bed1, gap: -3.9 to -2.1) and x=9 (Bed2, gap: 8.1 to 9.9)
+// Segment 1: x=-13.8 to -3.9 → center=-8.85, w=9.9
+addPartWall(9.9, H, 0.2, -8.85, H / 2 + 0.3, -5);
+// Segment 2: x=-2.1 to 8.1 → center=3, w=10.2
+addPartWall(10.2, H, 0.2, 3, H / 2 + 0.3, -5);
 // Segment 3: x=9.9 to 13.8 → center=11.85, w=3.9
 addPartWall(3.9, H, 0.2, 11.85, H / 2 + 0.3, -5);
 
