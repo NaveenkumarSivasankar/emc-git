@@ -222,33 +222,7 @@ setTimeout(() => {
     initializeHouseSolar('2bhk');
 }, 500);
 
-// ═══════════════════════════════════════════════
-//  ADD SOLAR PANEL BUTTONS ON HOUSES
-// ═══════════════════════════════════════════════
-(function createSolarButtons() {
-    function makeSolarBtn(houseKey, targetGroup, yPos) {
-        const btn = document.createElement('button');
-        btn.className = 'add-solar-btn';
-        btn.innerHTML = '☀️ Add Solar';
-        btn.onclick = (e) => {
-            e.stopPropagation();
-            selectSolarHouse(houseKey);
-        };
-        const obj = new THREE.CSS2DObject(btn);
-        obj.position.set(0, yPos, 0);
-        targetGroup.add(obj);
-        return obj;
-    }
 
-    setTimeout(() => {
-        if (typeof houseGroup !== 'undefined') {
-            makeSolarBtn('1bhk', houseGroup, H + roofH + 1.5);
-        }
-        if (typeof bhk2Group !== 'undefined') {
-            makeSolarBtn('2bhk', bhk2Group, H + roofH + 2);
-        }
-    }, 600);
-})();
 
 
 
